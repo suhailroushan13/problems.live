@@ -1,0 +1,282 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ---------------------------------------------------------------------------
+   problems.live design tokens
+
+   Warm, rounded and friendly. One geometric sans carries everything, surfaces
+   are softly tinted rather than outlined, controls are fully rounded, and a
+   single coral accent marks the numbers and actions that matter.
+--------------------------------------------------------------------------- */
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* The single accent. */
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-muted: var(--brand-muted);
+  --color-brand-border: var(--brand-border);
+
+  --color-elevated: var(--elevated);
+  --color-sunken: var(--sunken);
+  --color-hairline: var(--hairline);
+  --color-rule: var(--rule);
+  /* Warm tint used for list rows — softer than a border, calmer than a card. */
+  --color-tint: var(--tint);
+  --color-tint-strong: var(--tint-strong);
+
+  --color-status-open: var(--status-open);
+  --color-status-solving: var(--status-solving);
+  --color-status-solved: var(--status-solved);
+  --color-status-stale: var(--status-stale);
+
+  /* Generous, consistent rounding is most of this look. */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 1.75rem;
+  --radius-4xl: 2rem;
+
+  --container-page: 78rem;
+}
+
+:root {
+  --background: oklch(0.9925 0.003 75);
+  --foreground: oklch(0.18 0.008 55);
+
+  --elevated: oklch(1 0 0);
+  --sunken: oklch(0.968 0.005 70);
+  --hairline: oklch(0.93 0.005 70);
+  --rule: oklch(0.9 0.006 70);
+
+  /* Row tints: a whisper of the accent, warming the whole page. */
+  --tint: oklch(0.973 0.012 45);
+  --tint-strong: oklch(0.945 0.028 42);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.008 55);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.008 55);
+
+  /* Muted coral, dark enough to carry white text at 4.5:1. */
+  --primary: oklch(0.552 0.156 33);
+  --primary-foreground: oklch(0.995 0.004 75);
+
+  --brand: oklch(0.552 0.156 33);
+  --brand-foreground: oklch(0.995 0.004 75);
+  --brand-soft: oklch(0.815 0.082 38);
+  --brand-muted: oklch(0.955 0.024 42);
+  --brand-border: oklch(0.9 0.045 40);
+
+  --secondary: oklch(0.962 0.005 70);
+  --secondary-foreground: oklch(0.24 0.008 55);
+  --muted: oklch(0.964 0.005 70);
+  --muted-foreground: oklch(0.505 0.012 62);
+  --accent: oklch(0.955 0.006 70);
+  --accent-foreground: oklch(0.24 0.008 55);
+
+  --destructive: oklch(0.555 0.19 25);
+  --destructive-foreground: oklch(0.995 0.004 75);
+
+  --border: oklch(0.925 0.005 70);
+  --input: oklch(0.905 0.006 70);
+  --ring: oklch(0.552 0.156 33);
+
+  --status-open: oklch(0.52 0.015 250);
+  --status-solving: oklch(0.54 0.115 235);
+  --status-solved: oklch(0.5 0.11 155);
+  --status-stale: oklch(0.58 0.008 70);
+
+  --radius: 1rem;
+}
+
+.dark {
+  --background: oklch(0.165 0.006 55);
+  --foreground: oklch(0.96 0.004 75);
+
+  --elevated: oklch(0.205 0.007 55);
+  --sunken: oklch(0.195 0.006 55);
+  --hairline: oklch(1 0 0 / 8%);
+  --rule: oklch(1 0 0 / 13%);
+
+  --tint: oklch(0.225 0.018 40);
+  --tint-strong: oklch(0.262 0.036 38);
+
+  --card: oklch(0.205 0.007 55);
+  --card-foreground: oklch(0.96 0.004 75);
+  --popover: oklch(0.218 0.007 55);
+  --popover-foreground: oklch(0.96 0.004 75);
+
+  --primary: oklch(0.7 0.145 38);
+  --primary-foreground: oklch(0.165 0.012 40);
+
+  --brand: oklch(0.725 0.14 40);
+  --brand-foreground: oklch(0.165 0.012 40);
+  --brand-soft: oklch(0.5 0.1 38);
+  --brand-muted: oklch(0.28 0.04 38);
+  --brand-border: oklch(0.38 0.07 38);
+
+  --secondary: oklch(0.262 0.007 55);
+  --secondary-foreground: oklch(0.96 0.004 75);
+  --muted: oklch(0.255 0.007 55);
+  --muted-foreground: oklch(0.725 0.01 70);
+  --accent: oklch(0.268 0.007 55);
+  --accent-foreground: oklch(0.96 0.004 75);
+
+  --destructive: oklch(0.68 0.175 24);
+  --destructive-foreground: oklch(0.165 0.012 40);
+
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.725 0.14 40);
+
+  --status-open: oklch(0.74 0.014 250);
+  --status-solving: oklch(0.73 0.11 235);
+  --status-solved: oklch(0.73 0.12 155);
+  --status-stale: oklch(0.64 0.008 70);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply font-sans;
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  :where(.num) {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+
+  :target {
+    scroll-margin-top: 6.5rem;
+  }
+
+  ::selection {
+    background: var(--brand-muted);
+    color: var(--foreground);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-md);
+  }
+}
+
+@layer components {
+  .page {
+    width: 100%;
+    max-width: var(--container-page);
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+  @media (min-width: 640px) {
+    .page {
+      padding-inline: 1.5rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .page {
+      padding-inline: 2rem;
+    }
+  }
+
+  /* Fully rounded controls — the signature of this look. */
+  .pill {
+    border-radius: 999px;
+  }
+
+  .label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    line-height: 1.2;
+  }
+
+  .prose-body {
+    @apply text-[0.9375rem] leading-[1.7] text-foreground/85;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  @media (pointer: coarse) {
+    .tap {
+      min-height: 44px;
+    }
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
