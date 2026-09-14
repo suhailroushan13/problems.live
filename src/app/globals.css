@@ -2,8 +2,6 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
-
 /* ---------------------------------------------------------------------------
    problems.live design tokens
 
@@ -117,52 +115,6 @@
   --status-stale: oklch(0.58 0.008 70);
 
   --radius: 1rem;
-}
-
-.dark {
-  --background: oklch(0.165 0.006 55);
-  --foreground: oklch(0.96 0.004 75);
-
-  --elevated: oklch(0.205 0.007 55);
-  --sunken: oklch(0.195 0.006 55);
-  --hairline: oklch(1 0 0 / 8%);
-  --rule: oklch(1 0 0 / 13%);
-
-  --tint: oklch(0.225 0.018 40);
-  --tint-strong: oklch(0.262 0.036 38);
-
-  --card: oklch(0.205 0.007 55);
-  --card-foreground: oklch(0.96 0.004 75);
-  --popover: oklch(0.218 0.007 55);
-  --popover-foreground: oklch(0.96 0.004 75);
-
-  --primary: oklch(0.7 0.145 38);
-  --primary-foreground: oklch(0.165 0.012 40);
-
-  --brand: oklch(0.725 0.14 40);
-  --brand-foreground: oklch(0.165 0.012 40);
-  --brand-soft: oklch(0.5 0.1 38);
-  --brand-muted: oklch(0.28 0.04 38);
-  --brand-border: oklch(0.38 0.07 38);
-
-  --secondary: oklch(0.262 0.007 55);
-  --secondary-foreground: oklch(0.96 0.004 75);
-  --muted: oklch(0.255 0.007 55);
-  --muted-foreground: oklch(0.725 0.01 70);
-  --accent: oklch(0.268 0.007 55);
-  --accent-foreground: oklch(0.96 0.004 75);
-
-  --destructive: oklch(0.68 0.175 24);
-  --destructive-foreground: oklch(0.165 0.012 40);
-
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.725 0.14 40);
-
-  --status-open: oklch(0.74 0.014 250);
-  --status-solving: oklch(0.73 0.11 235);
-  --status-solved: oklch(0.73 0.12 155);
-  --status-stale: oklch(0.64 0.008 70);
 }
 
 @layer base {

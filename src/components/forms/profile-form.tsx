@@ -18,8 +18,11 @@ type FormValues = z.input<typeof updateProfileSchema>;
 
 export function ProfileForm({
   defaults,
+  canChangeUsername,
 }: {
   defaults: { name: string; username: string; bio?: string };
+  /** A username may be changed exactly once — false once that change has been used. */
+  canChangeUsername: boolean;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -75,11 +78,14 @@ export function ProfileForm({
             className="rounded-l-none"
             autoComplete="off"
             spellCheck={false}
+            disabled={!canChangeUsername}
             aria-invalid={Boolean(errors.username)}
           />
         </div>
         <p className="text-xs text-muted-foreground">
-          This is your public profile URL. Changing it breaks existing links.
+          {canChangeUsername
+            ? "This is your public profile URL. You can change it once — choose carefully."
+            : "You've already used your one username change. This can't be changed again."}
         </p>
         {errors.username ? (
           <p className="text-xs text-destructive">{errors.username.message}</p>

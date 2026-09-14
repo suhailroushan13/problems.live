@@ -175,3 +175,32 @@ export const SEED_CATEGORIES = [
   { name: "Local Problems", slug: "local-problems", icon: "MapPin", description: "Neighbourhood issues that only locals really feel." },
   { name: "Other", slug: "other", icon: "Shapes", description: "Everything that does not fit anywhere else yet." },
 ];
+
+/**
+ * Usernames nobody but us should be able to claim: every top-level route
+ * (a matching username would collide with a real page), auth/account
+ * vocabulary reserved defensively for routes that don't exist yet, staff-
+ * sounding handles that would let someone impersonate the team, and the
+ * brand itself. Checked at both signup auto-provisioning and manual edit —
+ * see `src/lib/auth/provision.ts` and `src/actions/auth.ts`.
+ */
+export const RESERVED_USERNAMES = new Set([
+  // Real top-level routes.
+  "admin", "api", "categories", "guidelines", "leaderboard", "notifications",
+  "problems", "settings", "solutions", "u",
+  // Auth/account vocabulary — reserved even though today's auth lives under
+  // /api/auth, so a future route can never collide with someone's handle.
+  "login", "logout", "signin", "signout", "sign-in", "sign-up", "signup",
+  "register", "password", "verify", "oauth", "callback", "session",
+  "account", "accounts", "me", "you", "new", "edit", "delete", "create",
+  // Staff / official-sounding handles.
+  "support", "help", "moderator", "moderators", "mod", "mods", "official",
+  "staff", "team", "contact", "security", "abuse", "report", "legal",
+  "privacy", "terms", "dmca", "root", "superuser", "sysadmin", "webmaster",
+  // The brand.
+  "problemslive", "problems-live", "problems.live",
+]);
+
+export function isReservedUsername(username: string): boolean {
+  return RESERVED_USERNAMES.has(username.trim().toLowerCase());
+}

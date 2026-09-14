@@ -9,6 +9,7 @@ import { clearSessionCookie } from "@/lib/auth/session";
 import { updateProfileSchema } from "@/lib/validation/schemas";
 import { stripUnsafe } from "@/lib/utils/text";
 import { objectId } from "@/lib/utils/sanitize-query";
+import { isReservedUsername } from "@/lib/constants";
 import {
   DomainError,
   isDuplicateKeyError,
@@ -31,13 +32,24 @@ export async function updateProfile(
     const input = updateProfileSchema.parse(raw);
     await connectToDatabase();
 
-    const RESERVED = new Set([
-      "admin", "api", "problems", "categories", "solutions", "leaderboard",
-      "notifications", "settings", "search", "u", "about", "login", "signin",
-      "signout", "new", "me", "moderator", "support", "help",
-    ]);
-    if (RESERVED.has(input.username)) {
-      throw new DomainError("That username is reserved. Pick another.");
+    const current = await User.findById(objectId(user.id), {
+      username: 1,
+      usernameChangedAt: 1,
+    })
+      .lean()
+      .exec();
+
+    const changingUsername = current?.username !== input.username;
+
+    if (changingUsername) {
+      if (current?.usernameChangedAt) {
+        throw new DomainError(
+          "You've already changed your username once — it can only be changed one time."
+        );
+      }
+      if (isReservedUsername(input.username)) {
+        throw new DomainError("That username is reserved. Pick another.");
+      }
     }
 
     try {
@@ -48,6 +60,7 @@ export async function updateProfile(
             name: stripUnsafe(input.name),
             username: input.username,
             bio: input.bio ? stripUnsafe(input.bio) : undefined,
+            ...(changingUsername ? { usernameChangedAt: new Date() } : {}),
           },
         }
       ).exec();

@@ -17,6 +17,10 @@ export interface IUser {
   emailVerified: boolean;
   name: string;
   username: string;
+  /** Set the first time a user changes their username away from the one
+   * they were provisioned with. Once set, further changes are refused —
+   * a username may be changed exactly once. */
+  usernameChangedAt?: Date | null;
   avatar?: string;
   bio?: string;
   role: UserRole;
@@ -52,6 +56,7 @@ const UserSchema = new Schema<IUser>(
       minlength: 2,
       maxlength: 30,
     },
+    usernameChangedAt: { type: Date, default: null },
     avatar: { type: String },
     bio: { type: String, maxlength: 280 },
     role: { type: String, enum: USER_ROLES, default: "user", index: true },

@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
-import { ThemeProvider } from "@/components/theme-provider";
 import { SiteHeader } from "@/components/navigation/site-header";
 import { SiteFooter } from "@/components/navigation/site-footer";
 import { AuthErrorToast } from "@/components/navigation/auth-error-toast";
@@ -50,10 +49,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fdfcfb" },
-    { media: "(prefers-color-scheme: dark)", color: "#1a1817" },
-  ],
+  themeColor: "#fdfcfb",
   width: "device-width",
   initialScale: 1,
 };
@@ -76,24 +72,13 @@ export default async function RootLayout({
   ]);
 
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-      className={`${jakarta.variable} h-full`}
-    >
+    <html lang="en" className={`${jakarta.variable} h-full`}>
       <body className="flex min-h-full flex-col bg-background">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <SiteHeader user={user} unreadCount={unreadCount} stats={stats} />
-          <div className="flex-1">{children}</div>
-          <SiteFooter />
-          <Toaster position="top-center" />
-          <AuthErrorToast />
-        </ThemeProvider>
+        <SiteHeader user={user} unreadCount={unreadCount} stats={stats} />
+        <div className="flex-1">{children}</div>
+        <SiteFooter />
+        <Toaster position="top-center" />
+        <AuthErrorToast />
       </body>
     </html>
   );

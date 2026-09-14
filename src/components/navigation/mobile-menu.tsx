@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { NAV_LINKS } from "./nav-links";
-import { ThemeToggle } from "./theme-toggle";
 import { signOut } from "@/actions/auth";
 import { formatCount } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
@@ -52,11 +51,8 @@ export function MobileMenu({ user }: { user: SessionUser | null }) {
       </SheetTrigger>
 
       <SheetContent side="right" className="w-[19rem] p-0">
-        <SheetHeader className="flex-row items-center justify-between px-5 pt-5 pb-3">
+        <SheetHeader className="px-5 pt-5 pb-3">
           <SheetTitle className="label text-muted-foreground">Menu</SheetTitle>
-          <div className="sm:hidden">
-            <ThemeToggle />
-          </div>
         </SheetHeader>
 
         <nav className="px-3">

@@ -19,7 +19,11 @@ export default async function SettingsPage() {
   if (!user) redirect("/api/auth/google?next=/settings");
 
   await connectToDatabase();
-  const doc = await User.findById(toObjectId(user.id), { bio: 1, problemCredits: 1 })
+  const doc = await User.findById(toObjectId(user.id), {
+    bio: 1,
+    problemCredits: 1,
+    usernameChangedAt: 1,
+  })
     .lean()
     .exec();
 
@@ -68,6 +72,7 @@ export default async function SettingsPage() {
             username: user.username,
             bio: doc?.bio,
           }}
+          canChangeUsername={!doc?.usernameChangedAt}
         />
       </section>
 

@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "./logo";
 import { NavLinks } from "./nav-links";
 import { SearchCommand } from "./search-command";
-import { ThemeToggle } from "./theme-toggle";
 import { UserMenu } from "./user-menu";
 import { MobileMenu } from "./mobile-menu";
 import { LivePill } from "./live-pill";
@@ -32,10 +31,6 @@ export function SiteHeader({
           <NavLinks className="hidden lg:flex" />
 
           <SearchCommand />
-
-          <div className="hidden sm:block">
-            <ThemeToggle />
-          </div>
 
           <Button
             asChild
