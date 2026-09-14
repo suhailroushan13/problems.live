@@ -24,6 +24,7 @@ const SORT_LABELS: Record<ProblemSort, string> = {
   validated: "Most people have it",
   trending: "Trending now",
   newest: "Newest",
+  oldest: "Oldest",
   discussed: "Most discussed",
   solutions: "Most solutions",
 };

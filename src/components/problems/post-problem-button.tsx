@@ -73,7 +73,7 @@ export function PostProblemButton({
         className={cn("gap-1.5 whitespace-nowrap", className)}
       >
         <Plus className="size-3.5" />
-        <span className="hidden sm:inline">Post problem</span>
+        <span className="hidden sm:inline">{label}</span>
         <span className="sm:hidden">Post</span>
       </Button>
 

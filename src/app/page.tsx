@@ -1,21 +1,16 @@
-import Link from "next/link";
-import { ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { CategoryBar } from "@/components/navigation/category-bar";
 import { ShareProblemForm } from "@/components/problems/share-problem-form";
-import { RankingToggle } from "@/components/problems/ranking-toggle";
-import { ProblemList, ProblemMini } from "@/components/problems/problem-item";
+import { ProblemsToolbar } from "@/components/problems/problems-toolbar";
+import { PostProblemButton } from "@/components/problems/post-problem-button";
+import { ProblemTable } from "@/components/problems/problem-table";
+import { PaginationBar } from "@/components/shared/pagination-bar";
 import { EmptyState } from "@/components/shared/empty-state";
 import { getCurrentUser } from "@/lib/auth/current-user";
-import { listProblems, listRecentProblems } from "@/lib/data/problems";
+import { listProblems } from "@/lib/data/problems";
 import { listCategories } from "@/lib/data/categories";
 import { getPlatformStats } from "@/lib/data/stats";
+import { problemFiltersSchema } from "@/lib/validation/schemas";
 import { formatCount } from "@/lib/utils/format";
-
-const RANKINGS = [
-  { key: "all", label: "All-time", sort: "validated" as const },
-  { key: "today", label: "Trending", sort: "trending" as const },
-];
 
 export default async function HomePage({
   searchParams,
@@ -23,45 +18,34 @@ export default async function HomePage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const ranking = RANKINGS.find((r) => r.key === params.rank) ?? RANKINGS[0];
-  const category =
-    typeof params.category === "string" ? params.category : undefined;
 
-  const [user, ranked, recent, categories, stats] = await Promise.all([
+  // The directory defaults to "Most validated" — the app's one upvote-
+  // equivalent signal — rather than the sitewide "trending" default.
+  const filters = problemFiltersSchema.parse({
+    sort: params.sort ?? "validated",
+    category: params.category,
+    status: params.status,
+    q: params.q,
+    page: params.page,
+  });
+
+  const [user, categories, stats, result] = await Promise.all([
     getCurrentUser(),
-    listProblems({ sort: ranking.sort, category, pageSize: 12 }),
-    listRecentProblems(9),
     listCategories(),
     getPlatformStats(),
+    listProblems(filters),
   ]);
 
-  const isAuthenticated = Boolean(user);
+  const activeCategory = categories.find((c) => c.slug === filters.category);
+  const isFiltered = Boolean(filters.q || filters.category || filters.status);
 
-  function rankHref(key: string) {
-    const query = new URLSearchParams();
-    if (key !== "all") query.set("rank", key);
-    if (category) query.set("category", category);
-    const q = query.toString();
-    return q ? `/?${q}` : "/";
-  }
-
-  const activeCategory = categories.find((c) => c.slug === category);
+  const rangeStart = result.total === 0 ? 0 : (result.page - 1) * result.pageSize + 1;
+  const rangeEnd = Math.min(result.page * result.pageSize, result.total);
 
   return (
     <>
-      <CategoryBar categories={categories} activeSlug={category} />
-
       {/* Hero ----------------------------------------------------------- */}
       <section className="page pt-12 pb-10 text-center sm:pt-16">
-        <RankingToggle
-          options={RANKINGS.map((r) => ({
-            key: r.key,
-            label: r.label,
-            href: rankHref(r.key),
-          }))}
-          activeKey={ranking.key}
-        />
-
         <h1 className="mx-auto mt-10 max-w-4xl text-2xl leading-[1.15] font-extrabold tracking-[-0.03em] text-balance text-foreground sm:text-4xl lg:text-5xl">
           {activeCategory ? (
             <>
@@ -104,75 +88,68 @@ export default async function HomePage({
         </p>
       </section>
 
-      {/* The register ---------------------------------------------------- */}
-      <div className="page pb-24">
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-10">
-          <main className="min-w-0">
-            {ranked.items.length > 0 ? (
-              <>
-                <ProblemList
-                  problems={ranked.items}
-                  isAuthenticated={isAuthenticated}
-                  ranked
-                  compact
-                />
+      {/* Problems directory ---------------------------------------------- */}
+      <div className="pb-16">
+        <div className="page mt-2 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-extrabold tracking-[-0.02em] text-foreground sm:text-2xl">
+              Problems
+            </h2>
+            <p className="num mt-1 text-sm text-muted-foreground">
+              {formatCount(stats.problems)}{" "}
+              {stats.problems === 1 ? "problem" : "problems"}
+            </p>
+          </div>
 
-                <div className="mt-8 flex justify-center">
-                  <Button
-                    asChild
-                    variant="outline"
-                    size="lg"
-                    className="pill h-10 border-hairline bg-elevated px-6 text-xs font-bold"
-                  >
-                    <Link href={`/problems?sort=${ranking.sort}`}>
-                      See all {formatCount(ranked.total)} problems
-                    </Link>
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <EmptyState
-                title="Nothing here yet."
-                description="No problems match this filter. Be the first to share one."
-                action={{ label: "Share a problem", href: "/problems/new" }}
+          <PostProblemButton
+            user={user}
+            categories={categories}
+            label="Post a problem"
+            className="pill h-10 gap-1.5 px-5 text-sm font-bold"
+          />
+        </div>
+
+        <div className="page mt-5">
+          <ProblemsToolbar categories={categories} />
+        </div>
+
+        <CategoryBar
+          categories={categories}
+          activeSlug={filters.category}
+          className="mt-3.5"
+        />
+
+        <div className="page mt-4">
+          {result.items.length > 0 ? (
+            <>
+              <ProblemTable
+                problems={result.items}
+                startRank={(result.page - 1) * result.pageSize + 1}
               />
-            )}
-          </main>
 
-          {/* Sidebar ---------------------------------------------------- */}
-          {recent.length > 0 ? (
-            <aside className="hidden min-w-0 lg:block">
-              <div className="rounded-3xl bg-sunken/60 p-4">
-                <div className="mb-2 flex items-center justify-between gap-3 px-2">
-                  <h2 className="flex items-center gap-2 text-xs font-extrabold tracking-[-0.015em] text-foreground">
-                    <span
-                      className="size-2 rounded-full bg-brand"
-                      aria-hidden="true"
-                    />
-                    Recently added
-                  </h2>
-                  <Link
-                    href="/problems?sort=newest"
-                    className="inline-flex items-center gap-0.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-brand"
-                  >
-                    See all
-                    <ChevronRight className="size-3" aria-hidden="true" />
-                  </Link>
-                </div>
-
-                <ul>
-                  {recent.map((problem, index) => (
-                    <ProblemMini
-                      key={problem.id}
-                      problem={problem}
-                      rank={index + 1}
-                      compact
-                    />
-                  ))}
-                </ul>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                <p className="text-xs text-muted-foreground">
+                  Showing {formatCount(rangeStart)}–{formatCount(rangeEnd)} of{" "}
+                  {formatCount(result.total)} problems
+                </p>
               </div>
-            </aside>
-          ) : null}
+
+              <PaginationBar page={result.page} totalPages={result.totalPages} />
+            </>
+          ) : isFiltered ? (
+            <EmptyState
+              title="Nothing matches these filters."
+              description="Try widening them, or be the first to share a problem that fits."
+              action={{ label: "Post a problem", href: "/problems/new" }}
+              secondaryAction={{ label: "Clear filters", href: "/" }}
+            />
+          ) : (
+            <EmptyState
+              title="No problems yet."
+              description="Be the first person to share a problem worth solving."
+              action={{ label: "Post a problem", href: "/problems/new" }}
+            />
+          )}
         </div>
       </div>
     </>
