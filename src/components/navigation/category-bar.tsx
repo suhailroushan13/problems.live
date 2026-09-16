@@ -57,7 +57,7 @@ export function CategoryBar({
           scroll={false}
           aria-current={!active ? "page" : undefined}
           className={cn(
-            "tap inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border px-3 text-[0.8125rem] font-semibold whitespace-nowrap transition-colors sm:h-auto sm:rounded-full sm:border-0 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm sm:font-bold",
+            "tap inline-flex h-11 shrink-0 items-center gap-1.5 rounded-[0.625rem] border px-3.5 text-sm font-semibold whitespace-nowrap transition-colors sm:h-auto sm:rounded-full sm:border-0 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm sm:font-bold",
             !active
               ? "border-brand bg-brand text-brand-foreground"
               : "border-hairline bg-elevated text-foreground/75 hover:bg-sunken hover:text-foreground sm:border-0 sm:bg-transparent sm:hover:bg-elevated"
@@ -76,7 +76,7 @@ export function CategoryBar({
               scroll={false}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "tap inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border px-3 text-[0.8125rem] font-semibold whitespace-nowrap transition-colors sm:h-auto sm:rounded-full sm:border-0 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm",
+                "tap inline-flex h-11 shrink-0 items-center gap-1.5 rounded-[0.625rem] border px-3.5 text-sm font-semibold whitespace-nowrap transition-colors sm:h-auto sm:rounded-full sm:border-0 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm",
                 isActive
                   ? "border-brand bg-brand text-brand-foreground"
                   : "border-hairline bg-elevated text-foreground/75 hover:bg-sunken hover:text-foreground sm:border-0 sm:bg-transparent sm:hover:bg-elevated"

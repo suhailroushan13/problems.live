@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { useId } from "react";
+import { usePathname } from "next/navigation";
 import { Logo } from "./logo";
+import { MobileSiteFooter } from "./mobile-site-footer";
 import { version as APP_VERSION } from "../../../package.json";
 
 const EXPLORE_LINKS = [
@@ -8,6 +12,7 @@ const EXPLORE_LINKS = [
   { href: "/categories", label: "Categories" },
   { href: "/solutions", label: "Solutions" },
   { href: "/leaderboard", label: "Leaderboard" },
+  { href: "/contribute", label: "Contribute" },
 ];
 
 const LEGAL_LINKS = [
@@ -17,9 +22,21 @@ const LEGAL_LINKS = [
 ];
 
 export function SiteFooter() {
+  const pathname = usePathname();
+  if (pathname === "/login") return null;
+
   return (
-    <footer className="mt-24 border-t border-hairline pb-24 lg:pb-0">
-      <div className="page grid gap-10 py-12 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:gap-x-16 sm:py-16">
+    <footer className="mt-12 border-t border-hairline sm:mt-24">
+      <div className="sm:hidden">
+        <MobileSiteFooter
+          exploreLinks={EXPLORE_LINKS}
+          legalLinks={LEGAL_LINKS}
+          version={APP_VERSION}
+        />
+      </div>
+
+      <div className="hidden sm:block">
+        <div className="page grid gap-10 py-12 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:gap-x-16 sm:py-16">
         <div className="max-w-sm">
           <Logo />
           <p className="mt-3 text-[0.8125rem] leading-relaxed text-muted-foreground">
@@ -30,32 +47,33 @@ export function SiteFooter() {
 
         <FooterNav heading="Explore" links={EXPLORE_LINKS} />
         <FooterNav heading="Legal" links={LEGAL_LINKS} />
-      </div>
+        </div>
 
-      <Link
-        href="/"
-        aria-label="problems.live, home"
-        className="page block pb-6 text-center transition-opacity hover:opacity-80 sm:pb-10"
-      >
-        <FooterWordmark />
-      </Link>
+        <Link
+          href="/"
+          aria-label="problems.live, home"
+          className="page block pb-6 text-center transition-opacity hover:opacity-80 sm:pb-10"
+        >
+          <FooterWordmark />
+        </Link>
 
-      <div className="page flex flex-col items-center gap-2 border-t border-hairline py-6 text-xs text-muted-foreground sm:flex-row sm:justify-between">
-        <p>
-          © {new Date().getFullYear()} problems.live. Built for problems worth
-          solving.
-        </p>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/llms.txt"
-            className="tap transition-colors hover:text-foreground"
-          >
-            llms.txt
-          </Link>
-          <span aria-hidden="true">·</span>
-          <span className="num" title={`Version ${APP_VERSION}`}>
-            v{APP_VERSION}
-          </span>
+        <div className="page flex flex-col items-center gap-2 border-t border-hairline py-6 text-xs text-muted-foreground sm:flex-row sm:justify-between">
+          <p>
+            © {new Date().getFullYear()} problems.live. Built for problems worth
+            solving.
+          </p>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/llms.txt"
+              className="tap transition-colors hover:text-foreground"
+            >
+              llms.txt
+            </Link>
+            <span aria-hidden="true">·</span>
+            <span className="num" title={`Version ${APP_VERSION}`}>
+              v{APP_VERSION}
+            </span>
+          </div>
         </div>
       </div>
     </footer>

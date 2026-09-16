@@ -166,6 +166,7 @@ export function ValidationPanel({
         initialActive={hasBookmarked}
         isAuthenticated={isAuthenticated}
         className="size-10 rounded-md"
+        iconClassName="size-4"
         showCount={false}
       />
     </div>

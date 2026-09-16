@@ -1,5 +1,4 @@
 import { Avatar, Style } from "@dicebear/core";
-import avataaars from "@dicebear/styles/avataaars.json";
 import bigSmile from "@dicebear/styles/big-smile.json";
 import bottts from "@dicebear/styles/bottts.json";
 import pixelArt from "@dicebear/styles/pixel-art.json";

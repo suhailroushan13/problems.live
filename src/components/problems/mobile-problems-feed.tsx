@@ -1,21 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type TouchEvent } from "react";
-import { LoaderCircle, RefreshCw } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
 import { ProblemCard } from "./problem-card";
-import { cn } from "@/lib/utils";
 import type { ProblemFilters } from "@/lib/validation/schemas";
 import type { Paginated, ProblemDTO } from "@/types";
-
-const PULL_THRESHOLD = 72;
 
 type FeedPage = Pick<Paginated<ProblemDTO>, "items" | "page" | "hasMore">;
 
 /**
  * Touch-first feed behavior for small screens. Desktop retains visible,
- * link-based pagination; mobile gets progressive loading and a deliberate
- * pull-to-refresh gesture only when the document is already at the top.
+ * link-based pagination; mobile gets progressive loading as the user scrolls.
  */
 export function MobileProblemsFeed({
   initial,
@@ -28,13 +26,11 @@ export function MobileProblemsFeed({
   isAuthenticated: boolean;
   isModerator: boolean;
 }) {
+  const pathname = usePathname();
   const [items, setItems] = useState(initial.items);
   const [page, setPage] = useState(initial.page);
   const [hasMore, setHasMore] = useState(initial.hasMore);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [pullDistance, setPullDistance] = useState(0);
-  const startY = useRef<number | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(false);
 
@@ -76,79 +72,39 @@ export function MobileProblemsFeed({
     }
   }, [hasMore, loadPage, page]);
 
-  const refresh = useCallback(async () => {
-    if (refreshing || loadingRef.current) return;
-    setRefreshing(true);
-    try {
-      const latest = await loadPage(1);
-      setItems(latest.items);
-      setPage(latest.page);
-      setHasMore(latest.hasMore);
-    } catch {
-      toast.error("Couldn’t refresh the feed. Try again.");
-    } finally {
-      setRefreshing(false);
-      setPullDistance(0);
-    }
-  }, [loadPage, refreshing]);
+  const canLoadMore = isAuthenticated && hasMore;
+  const visibleItems = isAuthenticated ? items : items.slice(0, 4);
+  const hasMoreForGuest = !isAuthenticated && (items.length > 4 || hasMore);
 
   useEffect(() => {
     const node = sentinelRef.current;
-    if (!node || !hasMore) return;
+    if (!node || !canLoadMore) return;
     const observer = new IntersectionObserver(
       (entries) => { if (entries[0]?.isIntersecting) void loadMore(); },
       { rootMargin: "320px 0px" },
     );
     observer.observe(node);
     return () => observer.disconnect();
-  }, [hasMore, loadMore]);
-
-  function onTouchStart(event: TouchEvent<HTMLDivElement>) {
-    startY.current = window.scrollY <= 0 ? event.touches[0]?.clientY ?? null : null;
-  }
-
-  function onTouchMove(event: TouchEvent<HTMLDivElement>) {
-    if (startY.current === null || refreshing) return;
-    const distance = Math.max(0, (event.touches[0]?.clientY ?? startY.current) - startY.current);
-    setPullDistance(Math.min(PULL_THRESHOLD + 28, distance * 0.45));
-  }
-
-  function onTouchEnd() {
-    const shouldRefresh = pullDistance >= PULL_THRESHOLD;
-    startY.current = null;
-    if (shouldRefresh) void refresh();
-    else setPullDistance(0);
-  }
-
-  const ready = pullDistance >= PULL_THRESHOLD;
+  }, [canLoadMore, loadMore]);
 
   return (
-    <div
-      className="relative sm:hidden"
-      onTouchStart={onTouchStart}
-      onTouchMove={onTouchMove}
-      onTouchEnd={onTouchEnd}
-      onTouchCancel={onTouchEnd}
-    >
-      <div
-        aria-live="polite"
-        className={cn(
-          "pointer-events-none absolute inset-x-0 top-0 z-10 flex h-12 -translate-y-full items-center justify-center gap-2 text-xs font-medium text-muted-foreground transition-transform",
-          (pullDistance > 0 || refreshing) && "translate-y-0",
-        )}
-      >
-        <RefreshCw className={cn("size-4 transition-transform", refreshing && "animate-spin", ready && "text-brand")} aria-hidden="true" />
-        <span>{refreshing ? "Refreshing…" : ready ? "Release to refresh" : "Pull to refresh"}</span>
-      </div>
-
-      <div className="space-y-0" style={{ transform: `translateY(${refreshing ? 28 : pullDistance}px)` }}>
-        {items.map((problem) => (
+    <div className="sm:hidden">
+      <div className="space-y-0">
+        {visibleItems.map((problem) => (
           <ProblemCard key={problem.id} problem={problem} isAuthenticated={isAuthenticated} isModerator={isModerator} />
         ))}
       </div>
-      <div ref={sentinelRef} className="flex h-16 items-center justify-center" aria-live="polite">
-        {loadingMore ? <LoaderCircle className="size-4 animate-spin text-muted-foreground" aria-label="Loading more problems" /> : null}
-      </div>
+      {hasMoreForGuest ? (
+        <section className="border-t border-hairline py-7 text-center">
+          <p className="text-sm font-semibold text-foreground">Sign in to see more problems</p>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">Join the community to explore the full directory.</p>
+          <Link href={`/login?next=${encodeURIComponent(pathname)}`} className="mt-4 inline-flex h-10 items-center justify-center rounded-md bg-brand px-4 text-sm font-semibold text-brand-foreground transition-colors hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/25">Sign in</Link>
+        </section>
+      ) : (
+        <div ref={sentinelRef} className="flex h-16 items-center justify-center" aria-live="polite">
+          {loadingMore ? <LoaderCircle className="size-4 animate-spin text-muted-foreground" aria-label="Loading more problems" /> : null}
+        </div>
+      )}
     </div>
   );
 }

@@ -61,7 +61,7 @@ export function LivePill({ className }: { className?: string }) {
         <span className="absolute -inset-0.5 inline-flex animate-ping rounded-full bg-success/40 [animation-duration:2.4s]" />
         <span className="relative inline-flex size-1.5 rounded-full bg-success ring-1 ring-success-subtle" />
       </span>
-      <span className="font-[family-name:var(--font-inter)]">{formatCount(livePeople)}</span>
+      <span className="num font-[family-name:var(--font-inter)]">{formatCount(livePeople)}</span>
       <span className="home-landing__stats-divider text-muted-foreground" aria-hidden="true">|</span>
       <span className="home-landing__stats-total inline-flex items-center gap-1 text-muted-foreground">
         <Users className="size-3 shrink-0" strokeWidth={1.75} aria-hidden="true" />

@@ -5,6 +5,7 @@ import { MobileProblemsFeed } from "@/components/problems/mobile-problems-feed";
 import { PaginationBar } from "@/components/shared/pagination-bar";
 import { EmptyState } from "@/components/shared/empty-state";
 import { GithubBadge } from "@/components/shared/github-badge";
+// import { SignInSoundControl } from "@/components/auth/sign-in-sound-control";
 import { NumberTicker } from "@/components/ui/number-ticker";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { listProblems } from "@/lib/data/problems";
@@ -50,10 +51,17 @@ export default async function HomePage({
     <>
       {/* Hero — logged-out only ------------------------------------------ */}
       {!isLoggedIn ? (
-        <section className="page hidden pt-5 pb-4 text-left sm:block sm:pt-16 sm:pb-10 sm:text-center">
-          <GithubBadge className="hidden sm:mx-auto sm:inline-flex" />
+        <section className="page pt-3 pb-2 text-left sm:pt-16 sm:pb-10 sm:text-center">
+          <div className="hidden sm:block">
+            <GithubBadge className="sm:translate-y-3" />
+          </div>
 
-          <h1 className="mx-auto max-w-4xl text-h3 text-balance text-foreground sm:mt-6 sm:text-4xl sm:tracking-[-0.03em] lg:text-5xl">
+          <h1
+            className={cn(
+              "mx-auto max-w-4xl text-[clamp(1.25rem,8vw,1.875rem)] leading-[1.08] font-bold tracking-[-0.04em] text-foreground sm:mt-6 sm:text-4xl sm:tracking-[-0.03em] lg:text-5xl",
+              activeCategory ? "text-balance" : "whitespace-nowrap"
+            )}
+          >
             {activeCategory ? (
               <>
                 Problems in{" "}
@@ -66,16 +74,19 @@ export default async function HomePage({
             )}
           </h1>
 
-          <p className="mx-auto mt-1 max-w-xl text-[0.8125rem] text-muted-foreground sm:mt-4 sm:text-sm">
+          <p className="mt-1 text-[0.9375rem] font-medium text-muted-foreground sm:hidden">
+            {formatCount(result.total)} live {result.total === 1 ? "problem" : "problems"}
+          </p>
+          <p className="mx-auto mt-3 hidden max-w-[20rem] text-[0.8125rem] leading-5 text-muted-foreground sm:mt-4 sm:block sm:max-w-xl sm:text-sm sm:leading-relaxed">
             A public directory of problems people face, share, and want solved.
           </p>
         </section>
       ) : null}
 
       {/* Problems directory ---------------------------------------------- */}
-      <div className={cn("pb-28 sm:pb-16", isLoggedIn && "pt-4 sm:pt-10")}>
-        <div className="page mt-2">
-          <p className="mb-2 flex items-baseline gap-1.5 text-[0.8125rem] font-medium text-muted-foreground sm:mb-3 sm:text-sm">
+      <div className={cn(isLoggedIn ? "pb-28 pt-3 sm:pb-16 sm:pt-10" : "pb-6 sm:pb-16")}>
+        <div className="page mt-2 sm:mt-2">
+          <p className="mb-3 hidden items-baseline gap-1.5 text-[0.8125rem] font-medium text-muted-foreground sm:flex sm:text-sm">
             <NumberTicker
               value={result.total}
               className="num font-bold text-brand"
@@ -92,14 +103,14 @@ export default async function HomePage({
         <CategoryBar
           categories={categories}
           activeSlug={filters.category}
-          className="mt-3.5"
+          className="mt-3 sm:mt-3.5"
         />
 
-        <div className="page mt-4">
+        <div className="page mt-3 sm:mt-4">
           {result.items.length > 0 ? (
             <>
-              <p className="num mb-1 text-[0.8125rem] font-medium text-muted-foreground sm:hidden">
-                {formatCount(result.total)} {result.total === 1 ? "problem" : "problems"}
+              <p className="num mb-2 text-sm font-semibold text-muted-foreground sm:hidden">
+                Problems <span aria-hidden="true">·</span> {formatCount(result.total)}
               </p>
               <MobileProblemsFeed
                 key={JSON.stringify(filters)}

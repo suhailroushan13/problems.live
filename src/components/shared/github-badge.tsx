@@ -11,7 +11,7 @@ export function GithubBadge({ className }: { className?: string }) {
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        "tap inline-flex h-7 items-center gap-1.5 rounded-full border border-hairline bg-elevated px-3 text-xs font-medium text-foreground shadow-xs transition-colors hover:border-rule hover:bg-sunken",
+        "inline-flex h-8 items-center gap-2 rounded-md px-1 text-[0.8125rem] leading-none font-medium text-muted-foreground transition-colors hover:text-foreground sm:h-7 sm:gap-1.5 sm:rounded-full sm:border sm:border-hairline sm:bg-elevated sm:px-3 sm:text-xs sm:text-foreground sm:shadow-xs sm:hover:border-rule sm:hover:bg-sunken",
         className
       )}
     >

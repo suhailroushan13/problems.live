@@ -5,6 +5,7 @@ import { Bell, Plus } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Logo } from "./logo";
+import { LivePill } from "./live-pill";
 import { UserMenu } from "./user-menu";
 import type { SessionUser } from "@/lib/auth/current-user";
 
@@ -21,6 +22,8 @@ export function SiteHeader({
 }) {
   const pathname = usePathname();
   const isPosting = pathname === "/problems/new";
+  const isAuthenticating = pathname === "/login";
+  const postHref = user ? "/problems/new" : "/login?next=%2F";
 
   if (isPosting) {
     return (
@@ -40,19 +43,20 @@ export function SiteHeader({
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background">
-      <div className="flex h-16 items-center px-4 sm:px-6 lg:px-8">
-        <Logo className="tap shrink-0" />
+      <div className="flex h-14 items-center px-4 sm:h-16 sm:px-6 lg:px-8">
+        <Logo compact className="tap shrink-0" />
 
         <div className="ml-auto flex items-center gap-1 sm:gap-6">
-          <Button asChild className="hidden shrink-0 gap-1.5 sm:inline-flex">
-            <Link href="/problems/new" title="Post a problem">
+          <LivePill className="hidden md:inline-flex" />
+          {!isAuthenticating ? <Button asChild className="hidden shrink-0 gap-1.5 sm:inline-flex">
+            <Link href={postHref} title="Post a problem">
               <Plus className="size-4" aria-hidden="true" />
               <span className="hidden sm:inline">Post a problem</span>
               <span className="sr-only sm:not-sr-only sm:hidden">
                 Post a problem
               </span>
             </Link>
-          </Button>
+          </Button> : null}
 
           {user ? (
             <div className="flex items-center gap-1">
@@ -73,17 +77,17 @@ export function SiteHeader({
 
               <UserMenu user={user} unreadCount={unreadCount} />
             </div>
-          ) : <Button asChild variant="outline" size="sm" className="hidden sm:inline-flex"><Link href={`/login?next=${encodeURIComponent(pathname ?? "/")}`}>Sign in</Link></Button>}
+          ) : null}
 
-          <Button
+          {!isAuthenticating ? <Button
             asChild
             size="icon"
-            className="size-9 shrink-0 rounded-md sm:hidden"
+            className="size-10 shrink-0 rounded-md sm:hidden"
           >
-            <Link href="/problems/new" aria-label="Post a problem">
-              <Plus className="size-[1.125rem]" aria-hidden="true" />
+            <Link href={postHref} aria-label="Post a problem">
+              <Plus className="size-4" aria-hidden="true" />
             </Link>
-          </Button>
+          </Button> : null}
         </div>
       </div>
     </header>

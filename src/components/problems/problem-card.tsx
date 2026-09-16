@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { AuthorLine } from "@/components/shared/author-line";
+import { AnonymousAvatar, UserAvatar } from "@/components/shared/user-avatar";
 import { CategoryIcon } from "@/components/shared/category-icon";
 import { ProblemActions } from "./problem-actions";
 import { BookmarkButton } from "./bookmark-button";
@@ -19,6 +20,7 @@ import { ProblemLink } from "./problem-link";
 import { StatusDot } from "./status-dot";
 import { useValidation } from "./validate-button";
 import { formatCount } from "@/lib/utils/format";
+import { timeAgo } from "@/lib/utils/time";
 import { cn } from "@/lib/utils";
 import type { ProblemDTO } from "@/types";
 
@@ -119,16 +121,37 @@ export function ProblemCard({
             openProblem();
           }
         }}
-        className="cursor-pointer border-b border-hairline py-5 first:pt-2 outline-none focus-visible:ring-3 focus-visible:ring-brand/25 sm:hidden"
+        className="cursor-pointer border-b border-hairline py-5 first:pt-1 outline-none focus-visible:ring-3 focus-visible:ring-brand/25 sm:hidden"
       >
         <div className="flex items-center justify-between gap-3">
-          <AuthorLine
-            author={problem.author}
-            createdAt={problem.createdAt}
-            editedAt={problem.editedAt}
-            avatarSize="md"
-            className="min-w-0"
-          />
+          <div className="flex min-w-0 items-center gap-2.5">
+            {problem.author ? (
+              <UserAvatar
+                name={problem.author.name}
+                username={problem.author.username}
+                avatar={problem.author.avatar}
+                size="mobile"
+              />
+            ) : (
+              <AnonymousAvatar size="mobile" />
+            )}
+            <div className="min-w-0 text-sm">
+              {problem.author ? (
+                <Link
+                  href={`/u/${problem.author.username}`}
+                  className="truncate font-semibold text-foreground transition-colors hover:text-brand"
+                >
+                  {problem.author.name}
+                </Link>
+              ) : (
+                <span className="font-semibold text-foreground">Anonymous</span>
+              )}
+              <span className="mx-1.5 text-muted-foreground" aria-hidden="true">·</span>
+              <time dateTime={problem.createdAt} className="text-[0.8125rem] text-muted-foreground">
+                {timeAgo(problem.createdAt).replace(" ago", "")}
+              </time>
+            </div>
+          </div>
           <div className="shrink-0">
             <ProblemActions
               problemId={problem.id}
@@ -137,6 +160,10 @@ export function ProblemCard({
               isOwn={problem.isOwn}
               isModerator={isModerator}
               isAuthenticated={isAuthenticated}
+              bookmark={{
+                initialCount: problem.bookmarkCount,
+                initialActive: problem.hasBookmarked,
+              }}
             />
           </div>
         </div>
@@ -145,11 +172,10 @@ export function ProblemCard({
           <Link
             href={`/categories/${problem.category.slug}`}
             className={cn(
-              "mt-3 inline-flex h-6 items-center gap-1 rounded-md px-2 text-[0.75rem] font-semibold transition-colors",
-              categoryPillTone(problem.category.slug),
+              "mt-3 inline-flex h-[30px] items-center gap-1.5 rounded-[0.625rem] border border-hairline bg-elevated px-2.5 text-[0.8125rem] font-semibold text-foreground transition-colors hover:bg-sunken",
             )}
           >
-            <CategoryIcon name={problem.category.icon} className="size-3.5" />
+            <CategoryIcon name={problem.category.icon} className="size-3.5 text-brand" />
             {problem.category.name}
           </Link>
         ) : null}
@@ -157,19 +183,19 @@ export function ProblemCard({
         <ProblemLink
           problemId={problem.id}
           slug={problem.slug}
-          className="mt-2 block line-clamp-2 text-xl leading-[1.22] font-bold tracking-[-0.025em] text-foreground transition-colors hover:text-brand"
+          className="mt-2.5 block line-clamp-3 text-[1.375rem] leading-[1.18] font-bold tracking-[-0.025em] text-foreground transition-colors hover:text-brand"
         >
           {problem.title}
         </ProblemLink>
 
         {problem.excerpt ? (
-          <p className="mt-2 line-clamp-3 text-[0.9375rem] leading-6 text-muted-foreground">
+          <p className="mt-2 line-clamp-2 text-[0.9375rem] leading-[1.5] text-muted-foreground">
             {problem.excerpt}
           </p>
         ) : null}
 
-        <div className="mt-4 flex min-h-11 items-center gap-0 border-t border-hairline pt-2.5 text-muted-foreground">
-          <div className="inline-flex h-11 items-center rounded-md bg-sunken px-0.5">
+        <div className="mt-3 flex h-11 items-center gap-1 border-t border-hairline pt-2 text-muted-foreground">
+          <div className="inline-flex h-10 items-center rounded-lg border border-hairline bg-sunken px-0.5">
             <button
               type="button"
               onClick={() => {
@@ -179,15 +205,15 @@ export function ProblemCard({
               aria-label="I have this too"
               aria-pressed={active}
               className={cn(
-                "tap flex size-11 items-center justify-center rounded transition-colors disabled:opacity-60",
+                "flex size-9 items-center justify-center rounded-md transition-colors disabled:opacity-60",
                 active
                   ? "bg-brand-muted text-brand"
                   : "hover:bg-emerald-50 hover:text-emerald-700",
               )}
             >
-              <ArrowUp className="size-[1.125rem]" strokeWidth={2.4} />
+              <ArrowUp className="size-4" strokeWidth={2.4} />
             </button>
-            <span className="num min-w-5 text-center text-sm font-semibold text-foreground">
+            <span className="num min-w-5 text-center text-[0.8125rem] font-semibold text-foreground">
               {formatCount(count)}
             </span>
             <button
@@ -197,44 +223,28 @@ export function ProblemCard({
               }}
               disabled={pending}
               aria-label="Retract, I don't have this"
-              className="tap flex size-11 items-center justify-center rounded transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-60"
+              className="flex size-9 items-center justify-center rounded-md transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-60"
             >
-              <ArrowDown className="size-[1.125rem]" strokeWidth={2.4} />
+              <ArrowDown className="size-4" strokeWidth={2.4} />
             </button>
           </div>
-
-          <span
-            title={`${formatCount(problem.clickCount)} ${problem.clickCount === 1 ? "click" : "clicks"}`}
-            className="inline-flex h-11 items-center gap-1 px-1.5 text-sm font-medium text-muted-foreground"
-          >
-            <MousePointerClick className="size-[1.125rem]" />
-            <span className="num">{formatCount(problem.clickCount)}</span>
-          </span>
 
           <Link
             href={`/problems/${problem.slug}#discussion`}
             onClick={recordOpen}
             aria-label={`${formatCount(problem.commentCount)} comments`}
-            className="tap inline-flex h-11 items-center gap-1 px-1.5 text-sm font-medium transition-colors hover:text-foreground"
+            className="inline-flex h-10 items-center gap-1 px-2 text-sm font-medium transition-colors hover:text-foreground"
           >
-            <MessageCircle className="size-[1.125rem]" />
+            <MessageCircle className="size-4" />
             <span className="num">{formatCount(problem.commentCount)}</span>
           </Link>
-
-          <BookmarkButton
-            problemId={problem.id}
-            initialCount={problem.bookmarkCount}
-            initialActive={problem.hasBookmarked}
-            isAuthenticated={isAuthenticated}
-            className="tap h-11 px-1.5 text-sm font-medium"
-          />
 
           <button
             type="button"
             onClick={handleShare}
-            className="tap ml-auto inline-flex h-11 items-center gap-1 px-1.5 text-sm font-medium transition-colors hover:text-foreground"
+            className="ml-auto inline-flex h-10 items-center gap-1 px-2 text-sm font-medium transition-colors hover:text-foreground"
           >
-            <Share2 className="size-[1.125rem]" />
+            <Share2 className="size-4" />
             <span>Share</span>
           </button>
         </div>

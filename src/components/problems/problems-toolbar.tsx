@@ -106,23 +106,23 @@ export function ProblemsToolbar({
   return (
     <div className={className}>
       <div className="sm:hidden">
-        <InputGroup className="h-13 rounded-[0.875rem] border-hairline bg-elevated shadow-none">
-          <InputGroupAddon className="pl-3.5">
+        <InputGroup className="h-12 rounded-xl border-hairline bg-elevated shadow-none">
+          <InputGroupAddon className="pl-3">
             <Search
-              className="size-5 text-muted-foreground"
+              className="size-4 text-muted-foreground"
               aria-hidden="true"
             />
           </InputGroupAddon>
           <InputGroupInput
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search problems..."
+            placeholder="Search problems"
             aria-label="Search problems"
-            className="text-[0.9375rem]"
+            className="text-sm"
           />
         </InputGroup>
 
-        <div className="mt-3 grid grid-cols-3 gap-3">
+        <div className="hidden">
           <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
             <SheetTrigger asChild>
               <Button

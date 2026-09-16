@@ -32,6 +32,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ReportDialog } from "@/components/shared/report-dialog";
+import { BookmarkButton } from "./bookmark-button";
 import { deleteProblem, setProblemStatus } from "@/actions/problems";
 import type { ProblemStatus } from "@/lib/constants";
 import { goToSignIn } from "@/lib/auth/sign-in-redirect";
@@ -54,6 +55,7 @@ export function ProblemActions({
   isOwn,
   isModerator,
   isAuthenticated,
+  bookmark,
   onEdit,
 }: {
   problemId: string;
@@ -62,6 +64,10 @@ export function ProblemActions({
   isOwn: boolean;
   isModerator: boolean;
   isAuthenticated: boolean;
+  bookmark?: {
+    initialCount: number;
+    initialActive: boolean;
+  };
   onEdit?: () => void;
 }) {
   const router = useRouter();
@@ -165,6 +171,19 @@ export function ProblemActions({
               >
                 <Flag className="size-4" /> Report
               </DropdownMenuItem>
+            </>
+          ) : null}
+
+          {bookmark ? (
+            <>
+              <DropdownMenuSeparator />
+              <BookmarkButton
+                problemId={problemId}
+                initialCount={bookmark.initialCount}
+                initialActive={bookmark.initialActive}
+                isAuthenticated={isAuthenticated}
+                menuItem
+              />
             </>
           ) : null}
         </DropdownMenuContent>

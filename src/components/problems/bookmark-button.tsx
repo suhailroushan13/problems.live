@@ -4,6 +4,7 @@ import { Bookmark } from "lucide-react";
 import { useState, useTransition } from "react";
 import { usePathname } from "next/navigation";
 import { toast } from "sonner";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { toggleProblemBookmark } from "@/actions/votes";
 import { goToSignIn } from "@/lib/auth/sign-in-redirect";
 import { formatCount } from "@/lib/utils/format";
@@ -16,14 +17,18 @@ export function BookmarkButton({
   initialActive,
   isAuthenticated,
   className,
+  iconClassName,
   showCount = true,
+  menuItem = false,
 }: {
   problemId: string;
   initialCount: number;
   initialActive: boolean;
   isAuthenticated: boolean;
   className?: string;
+  iconClassName?: string;
   showCount?: boolean;
+  menuItem?: boolean;
 }) {
   const [count, setCount] = useState(initialCount);
   const [active, setActive] = useState(initialActive);
@@ -53,6 +58,21 @@ export function BookmarkButton({
     });
   }
 
+  if (menuItem) {
+    return (
+      <DropdownMenuItem
+        disabled={pending}
+        onSelect={(event) => {
+          event.preventDefault();
+          toggle();
+        }}
+      >
+        <Bookmark className="size-4" fill={active ? "currentColor" : "none"} />
+        {active ? "Remove bookmark" : "Bookmark"}
+      </DropdownMenuItem>
+    );
+  }
+
   return (
     <button
       type="button"
@@ -68,7 +88,7 @@ export function BookmarkButton({
       )}
     >
       <Bookmark
-        className="size-3.5"
+        className={cn("size-3.5", iconClassName)}
         fill={active ? "currentColor" : "none"}
         aria-hidden="true"
       />

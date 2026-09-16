@@ -17,7 +17,6 @@ import { UserAvatar } from "@/components/shared/user-avatar";
 import { signOut } from "@/actions/auth";
 import { formatCount } from "@/lib/utils/format";
 import type { SessionUser } from "@/lib/auth/current-user";
-import { LivePill } from "./live-pill";
 
 /** A one-handed mobile dock with a secondary account sheet. */
 export function MobileMenu({ user }: { user: SessionUser | null }) {
@@ -70,10 +69,6 @@ export function MobileMenu({ user }: { user: SessionUser | null }) {
             <SheetHeader className="px-5 pt-5 pb-3">
               <SheetTitle className="label text-muted-foreground">Menu</SheetTitle>
             </SheetHeader>
-
-            <div className="px-5 pb-3">
-              <LivePill className="w-full justify-center py-2" />
-            </div>
 
             <div className="px-3">
               <div className="flex min-h-11 items-center justify-between rounded-lg px-2.5 text-[0.9375rem] text-muted-foreground">

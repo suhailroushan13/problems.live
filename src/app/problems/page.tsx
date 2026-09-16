@@ -45,8 +45,17 @@ export default async function ProblemsPage({
   const isCardView = params.view === "card";
 
   return (
-    <div className="pb-28 sm:pb-12">
-      <header className="page hidden pt-5 sm:block sm:pt-16">
+    <div className={cn(user ? "pb-28 sm:pb-12" : "pb-6 sm:pb-12")}>
+      <header className="page pt-3 sm:pt-16">
+        <div className="sm:hidden">
+          <h1 className="text-[clamp(1.25rem,8vw,1.875rem)] leading-[1.08] font-bold tracking-[-0.04em] text-foreground whitespace-nowrap">
+            The problems directory
+          </h1>
+          <p className="mt-1 text-[0.9375rem] font-medium text-muted-foreground">
+            {formatCount(result.total)} live {result.total === 1 ? "problem" : "problems"}
+          </p>
+        </div>
+        <div className="hidden sm:block">
         <h1 className="text-h3 text-foreground sm:text-[2.75rem] sm:tracking-[-0.035em]">
           {isSearch ? `“${filters.q}”` : "Problems"}
         </h1>
@@ -57,6 +66,7 @@ export default async function ProblemsPage({
               } your search`
             : `${formatCount(result.total)} problems people are experiencing`}
         </p>
+        </div>
       </header>
 
       <div className="page mt-3 sm:mt-6">
@@ -71,9 +81,9 @@ export default async function ProblemsPage({
 
       {result.items.length > 0 ? (
         <>
-          <div className="page mt-4 sm:mt-5">
-            <p className="num mb-1 text-[0.8125rem] font-medium text-muted-foreground sm:hidden">
-              {formatCount(result.total)} {result.total === 1 ? "problem" : "problems"}
+          <div className="page mt-3 sm:mt-5">
+            <p className="num mb-2 text-sm font-semibold text-muted-foreground sm:hidden">
+              Problems <span aria-hidden="true">·</span> {formatCount(result.total)}
             </p>
             <MobileProblemsFeed
               key={JSON.stringify(filters)}

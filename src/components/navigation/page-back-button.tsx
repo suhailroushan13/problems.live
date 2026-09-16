@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 function hasLocalBackPath(pathname: string): boolean {
   return (
     pathname === "/" ||
+    pathname === "/login" ||
     pathname === "/problems/new" ||
     pathname.startsWith("/admin") ||
     (/^\/categories\/[^/]+$/.test(pathname)) ||
@@ -29,7 +30,7 @@ export function PageBackButton() {
   }
 
   return (
-    <div className="page pt-3 sm:pt-4">
+    <div className={pathname === "/login" ? "page max-w-[68rem] pt-3 sm:pt-4" : "page pt-3 sm:pt-4"}>
       <button
         type="button"
         onClick={goBack}

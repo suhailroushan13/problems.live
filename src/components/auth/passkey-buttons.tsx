@@ -4,6 +4,7 @@ import { KeyRound, Loader2 } from "lucide-react";
 import { startAuthentication, startRegistration } from "@simplewebauthn/browser";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 async function json(url: string, body?: unknown) {
   const response = await fetch(url, { method: "POST", headers: body ? { "content-type": "application/json" } : undefined, body: body ? JSON.stringify(body) : undefined });
@@ -27,7 +28,7 @@ export function PasskeySetupButton() {
   return <Button type="button" variant="outline" size="sm" onClick={setup} disabled={pending}>{pending ? <Loader2 className="animate-spin" /> : <KeyRound />} {pending ? "Setting up" : "Create a passkey"}</Button>;
 }
 
-export function PasskeySignInButton({ next = "/" }: { next?: string }) {
+export function PasskeySignInButton({ next = "/", className }: { next?: string; className?: string }) {
   const [pending, setPending] = useState(false);
   async function signIn() {
     try {
@@ -38,5 +39,5 @@ export function PasskeySignInButton({ next = "/" }: { next?: string }) {
       window.location.assign(result.destination);
     } catch (error) { toast.error(error instanceof Error ? error.message : "Passkey sign-in failed."); setPending(false); }
   }
-  return <Button type="button" variant="outline" onClick={signIn} disabled={pending}>{pending ? <Loader2 className="animate-spin" /> : <KeyRound />} {pending ? "Signing in" : "Sign in with passkey"}</Button>;
+  return <Button type="button" variant="outline" onClick={signIn} disabled={pending} className={cn(className)}>{pending ? <Loader2 className="animate-spin" /> : <KeyRound />} {pending ? "Signing in" : "Sign in with passkey"}</Button>;
 }
