@@ -2,9 +2,11 @@ import { Schema, model, models, type Model, type Types } from "mongoose";
 import {
   LOCATION_SCOPES,
   MODERATION_STATUSES,
+  PROBLEM_PRIORITIES,
   PROBLEM_STATUSES,
   type LocationScope,
   type ModerationStatus,
+  type ProblemPriority,
   type ProblemStatus,
 } from "@/lib/constants";
 
@@ -42,10 +44,12 @@ export interface IProblem {
   location: ProblemLocation;
   images: PostImage[];
   isAnonymous: boolean;
+  priority: ProblemPriority;
   status: ProblemStatus;
   moderationStatus: ModerationStatus;
   moderation: ModerationMeta;
   validationCount: number;
+  bookmarkCount: number;
   commentCount: number;
   solutionCount: number;
   viewCount: number;
@@ -68,7 +72,7 @@ const HOT_EPOCH = 1_700_000_000; // seconds
 
 export function computeHotScore(
   signal: number,
-  createdAt: Date | number
+  createdAt: Date | number,
 ): number {
   const seconds = Math.floor(new Date(createdAt).getTime() / 1000) - HOT_EPOCH;
   const order = Math.log10(Math.max(Math.abs(signal), 1));
@@ -91,7 +95,7 @@ const ImageSchema = new Schema<PostImage>(
     height: Number,
     alt: { type: String, maxlength: 160 },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const ModerationSchema = new Schema<ModerationMeta>(
@@ -103,7 +107,7 @@ const ModerationSchema = new Schema<ModerationMeta>(
     reviewedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
     reviewedAt: { type: Date, default: null },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const ProblemSchema = new Schema<IProblem>(
@@ -132,6 +136,11 @@ const ProblemSchema = new Schema<IProblem>(
     },
     images: { type: [ImageSchema], default: [] },
     isAnonymous: { type: Boolean, default: false },
+    priority: {
+      type: String,
+      enum: PROBLEM_PRIORITIES,
+      default: "normal",
+    },
     status: {
       type: String,
       enum: PROBLEM_STATUSES,
@@ -146,6 +155,7 @@ const ProblemSchema = new Schema<IProblem>(
     },
     moderation: { type: ModerationSchema, default: () => ({}) },
     validationCount: { type: Number, default: 0 },
+    bookmarkCount: { type: Number, default: 0 },
     commentCount: { type: Number, default: 0 },
     solutionCount: { type: Number, default: 0 },
     viewCount: { type: Number, default: 0 },
@@ -161,24 +171,33 @@ const ProblemSchema = new Schema<IProblem>(
     solvedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
     editedAt: { type: Date, default: null },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Feed indexes: every sort in the explore UI is index-backed and prefixed by
 // the visibility filter so we never scan removed/pending content.
 ProblemSchema.index({ moderationStatus: 1, hotScore: -1 });
-ProblemSchema.index({ moderationStatus: 1, validationCount: -1, createdAt: -1 });
+ProblemSchema.index({
+  moderationStatus: 1,
+  validationCount: -1,
+  createdAt: -1,
+});
+ProblemSchema.index({ moderationStatus: 1, viewCount: -1, createdAt: -1 });
 ProblemSchema.index({ moderationStatus: 1, createdAt: -1 });
 ProblemSchema.index({ moderationStatus: 1, commentCount: -1, createdAt: -1 });
 ProblemSchema.index({ moderationStatus: 1, solutionCount: -1, createdAt: -1 });
 ProblemSchema.index({ categoryId: 1, moderationStatus: 1, hotScore: -1 });
 ProblemSchema.index({ status: 1, moderationStatus: 1, hotScore: -1 });
 ProblemSchema.index({ authorId: 1, createdAt: -1 });
-ProblemSchema.index({ "location.country": 1, moderationStatus: 1, hotScore: -1 });
+ProblemSchema.index({
+  "location.country": 1,
+  moderationStatus: 1,
+  hotScore: -1,
+});
 ProblemSchema.index({ featured: 1, moderationStatus: 1, hotScore: -1 });
 ProblemSchema.index(
   { title: "text", description: "text" },
-  { name: "problem_search", weights: { title: 10, description: 2 } }
+  { name: "problem_search", weights: { title: 10, description: 2 } },
 );
 
 export const Problem: Model<IProblem> =

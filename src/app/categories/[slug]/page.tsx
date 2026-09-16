@@ -78,7 +78,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
   ]);
 
   return (
-    <div className="page max-w-4xl py-12 sm:py-16">
+    <div className="page py-12 sm:py-16">
       <Link
         href="/categories"
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -88,7 +88,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
       </Link>
 
       <header className="mt-8 max-w-2xl">
-        <h1 className="text-[2rem] font-extrabold tracking-[-0.035em] text-foreground sm:text-[2.75rem]">
+        <h1 className="text-[2rem] font-bold tracking-[-0.035em] text-foreground sm:text-[2.75rem]">
           {category.name}
         </h1>
         {category.description ? (
@@ -132,7 +132,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
       ) : (
         <EmptyState
           title={`No problems in ${category.name} yet.`}
-          description="Be the first person to share one — it takes two minutes."
+          description="Be the first person to share one, it takes two minutes."
           action={{ label: "Share a problem", href: "/problems/new" }}
         />
       )}

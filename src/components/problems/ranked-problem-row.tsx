@@ -26,7 +26,7 @@ export function RankedProblemRow({
       <div className="min-w-0 flex-1">
         <Link
           href={`/problems/${problem.slug}`}
-          className="block truncate text-[0.9375rem] font-medium text-foreground transition-colors group-hover:text-brand"
+          className="block truncate text-sm font-medium text-foreground transition-colors group-hover:text-brand"
         >
           {problem.title}
         </Link>
@@ -49,7 +49,7 @@ export function RankedProblemRow({
         <div className="num text-base font-semibold text-foreground">
           {formatCount(problem.validationCount)}
         </div>
-        <div className="text-[11px] text-muted-foreground">have this</div>
+        <div className="text-xs text-muted-foreground">have this</div>
       </div>
 
       <div className="shrink-0">

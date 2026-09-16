@@ -116,7 +116,7 @@ export function SolutionCard({
 
           {solution.moderationStatus === "pending" ? (
             <p className="mt-2 text-[0.8125rem] text-muted-foreground">
-              Awaiting review — only you can see this.
+              Awaiting review, only you can see this.
             </p>
           ) : null}
         </div>
@@ -186,7 +186,6 @@ export function SolutionCard({
         <div className="flex items-center gap-2">
           <HelpfulButton
             targetId={solution.id}
-            kind="solution"
             initialCount={solution.helpfulCount}
             initialActive={solution.hasVoted}
             isAuthenticated={isAuthenticated}

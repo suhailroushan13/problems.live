@@ -12,7 +12,7 @@ import { SOLUTION_SORTS, SOLUTION_SORT_LABELS } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "Solutions",
-  description:"Every solution people have proposed to the problems on problems.live — ranked by how many found them useful.",
+  description:"Every solution people have proposed to the problems on problems.live, ranked by how many found them useful.",
   alternates: { canonical: "/solutions" },
 };
 
@@ -31,9 +31,9 @@ export default async function SolutionsPage({
   ]);
 
   return (
-    <div className="page max-w-4xl py-12 sm:py-16">
+    <div className="page py-12 sm:py-16">
       <header className="max-w-2xl">
-        <h1 className="text-[2rem] font-extrabold tracking-[-0.035em] text-foreground sm:text-[2.75rem]">
+        <h1 className="text-[2rem] font-bold tracking-[-0.035em] text-foreground sm:text-[2.75rem]">
           Solutions
         </h1>
         <p className="num mt-3 text-[0.9375rem] text-muted-foreground">

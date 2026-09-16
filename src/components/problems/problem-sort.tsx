@@ -21,7 +21,8 @@ import { cn } from "@/lib/utils";
  * view is shareable and server-rendered.
  */
 const SORT_LABELS: Record<ProblemSort, string> = {
-  validated: "Most people have it",
+  validated: "Most upvoted",
+  clicks: "Most clicked",
   trending: "Trending now",
   newest: "Newest",
   oldest: "Oldest",
@@ -44,7 +45,7 @@ export function ProblemSort({ className }: { className?: string }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const sort = (searchParams.get("sort") ?? "trending") as ProblemSort;
+  const sort = (searchParams.get("sort") ?? "validated") as ProblemSort;
   const status = searchParams.get("status") ?? ALL;
 
   const setParam = useCallback(
@@ -56,7 +57,7 @@ export function ProblemSort({ className }: { className?: string }) {
       const next = params.toString();
       router.push(next ? `${pathname}?${next}` : pathname, { scroll: false });
     },
-    [pathname, router, searchParams]
+    [pathname, router, searchParams],
   );
 
   return (
@@ -77,7 +78,10 @@ export function ProblemSort({ className }: { className?: string }) {
         </SelectContent>
       </Select>
 
-      <Select value={status} onValueChange={(value) => setParam("status", value)}>
+      <Select
+        value={status}
+        onValueChange={(value) => setParam("status", value)}
+      >
         <SelectTrigger
           aria-label="Filter by status"
           className="pill h-11! w-auto min-w-36 border-hairline bg-elevated px-5 text-sm font-semibold shadow-none"

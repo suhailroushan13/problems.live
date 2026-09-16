@@ -1,6 +1,6 @@
 import "server-only";
 import type { Types } from "mongoose";
-import { excerpt } from "@/lib/utils/text";
+import { excerpt, stripMarkdown } from "@/lib/utils/text";
 import { trustTierFor } from "@/lib/auth/current-user";
 import type {
   AuthorRef,
@@ -27,11 +27,15 @@ export function id(value: unknown): string {
 }
 
 function isPopulatedUser(value: unknown): value is IUser {
-  return Boolean(value && typeof value === "object" && "username" in (value as object));
+  return Boolean(
+    value && typeof value === "object" && "username" in (value as object),
+  );
 }
 
 function isPopulatedCategory(value: unknown): value is ICategory {
-  return Boolean(value && typeof value === "object" && "slug" in (value as object));
+  return Boolean(
+    value && typeof value === "object" && "slug" in (value as object),
+  );
 }
 
 export function toAuthorRef(value: unknown): AuthorRef | null {
@@ -69,7 +73,7 @@ export function toCategoryDTO(value: ICategory): CategoryDTO {
 export function locationLabel(location: IProblem["location"]): string {
   if (!location || location.scope === "global") return "Global";
   const parts = [location.city, location.region, location.country].filter(
-    Boolean
+    Boolean,
   ) as string[];
   return parts.length ? parts.join(", ") : "Global";
 }
@@ -100,7 +104,7 @@ function toImages(images: IProblem["images"]): ImageRef[] {
  */
 function resolveAuthor(
   raw: unknown,
-  isAnonymous: boolean
+  isAnonymous: boolean,
 ): { author: MaybeAuthor; authorId: string } {
   const ref = toAuthorRef(raw);
   const authorId = ref ? ref.id : id(raw);
@@ -109,7 +113,11 @@ function resolveAuthor(
 
 export function toProblemDTO(
   doc: Populated<IProblem>,
-  ctx: { viewerId?: string | null; validatedIds?: Set<string> } = {}
+  ctx: {
+    viewerId?: string | null;
+    validatedIds?: Set<string>;
+    bookmarkedIds?: Set<string>;
+  } = {},
 ): ProblemDTO {
   const { author, authorId } = resolveAuthor(doc.authorId, doc.isAnonymous);
   const problemId = id(doc._id);
@@ -119,7 +127,7 @@ export function toProblemDTO(
     slug: doc.slug,
     title: doc.title,
     description: doc.description,
-    excerpt: excerpt(doc.description, 190),
+    excerpt: excerpt(stripMarkdown(doc.description), 190),
     category: toCategoryRef(doc.categoryId),
     author,
     isAnonymous: doc.isAnonymous,
@@ -127,13 +135,19 @@ export function toProblemDTO(
     location: toLocationRef(doc.location),
     images: toImages(doc.images),
     status: doc.status,
+    priority: doc.priority ?? "normal",
     moderationStatus: doc.moderationStatus,
     validationCount: doc.validationCount ?? 0,
+    bookmarkCount: doc.bookmarkCount ?? 0,
+    clickCount: doc.viewCount ?? 0,
     commentCount: doc.commentCount ?? 0,
     solutionCount: doc.solutionCount ?? 0,
     hasValidated: ctx.validatedIds?.has(problemId) ?? false,
+    hasBookmarked: ctx.bookmarkedIds?.has(problemId) ?? false,
     featured: doc.featured ?? false,
-    acceptedSolutionId: doc.acceptedSolutionId ? id(doc.acceptedSolutionId) : null,
+    acceptedSolutionId: doc.acceptedSolutionId
+      ? id(doc.acceptedSolutionId)
+      : null,
     createdAt: new Date(doc.createdAt).toISOString(),
     editedAt: doc.editedAt ? new Date(doc.editedAt).toISOString() : null,
     solvedAt: doc.solvedAt ? new Date(doc.solvedAt).toISOString() : null,
@@ -148,7 +162,7 @@ export function toSolutionDTO(
     acceptedSolutionId?: string | null;
     problemSlug?: string;
     problemTitle?: string;
-  } = {}
+  } = {},
 ): SolutionDTO {
   const { author, authorId } = resolveAuthor(doc.authorId, doc.isAnonymous);
   const solutionId = id(doc._id);
@@ -177,7 +191,7 @@ export function toSolutionDTO(
     status: doc.status,
     moderationStatus: doc.moderationStatus,
     isAccepted: Boolean(
-      ctx.acceptedSolutionId && ctx.acceptedSolutionId === solutionId
+      ctx.acceptedSolutionId && ctx.acceptedSolutionId === solutionId,
     ),
     createdAt: new Date(doc.createdAt).toISOString(),
     editedAt: doc.editedAt ? new Date(doc.editedAt).toISOString() : null,
@@ -186,7 +200,11 @@ export function toSolutionDTO(
 
 export function toCommentDTO(
   doc: Populated<IComment>,
-  ctx: { viewerId?: string | null; votedIds?: Set<string> } = {}
+  ctx: {
+    viewerId?: string | null;
+    voteDirections?: Map<string, "up" | "down">;
+    awardedIds?: Set<string>;
+  } = {},
 ): CommentDTO {
   const { author, authorId } = resolveAuthor(doc.authorId, doc.isAnonymous);
   const commentId = id(doc._id);
@@ -201,7 +219,9 @@ export function toCommentDTO(
     author: isDeleted ? null : author,
     isOwn: Boolean(ctx.viewerId && authorId === ctx.viewerId && !isDeleted),
     helpfulCount: doc.helpfulCount ?? 0,
-    hasVoted: ctx.votedIds?.has(commentId) ?? false,
+    voteDirection: ctx.voteDirections?.get(commentId) ?? null,
+    awardCount: doc.awardCount ?? 0,
+    hasAwarded: ctx.awardedIds?.has(commentId) ?? false,
     replyCount: doc.replyCount ?? 0,
     moderationStatus: doc.moderationStatus,
     isDeleted,
@@ -218,6 +238,7 @@ export function toProfileDTO(doc: IUser): ProfileDTO {
     username: doc.username,
     avatar: doc.avatar,
     bio: doc.bio,
+    socialLinks: doc.socialLinks,
     role: doc.role,
     reputation: doc.reputation ?? 0,
     trust: trustTierFor(doc.reputation ?? 0),

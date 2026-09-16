@@ -18,7 +18,7 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col items-center px-4 py-24 text-center sm:px-6">
+    <div className="page flex flex-col items-center py-24 text-center">
       <div className="mb-4 flex size-10 items-center justify-center rounded-full bg-destructive/10 text-destructive">
         <TriangleAlert className="size-5" />
       </div>
@@ -27,7 +27,7 @@ export default function Error({
         Something went wrong.
       </h1>
       <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">
-        This one is on us. Try again — and if it keeps happening, the reference
+        This one is on us. Try again, and if it keeps happening, the reference
         below helps us track it down.
       </p>
 

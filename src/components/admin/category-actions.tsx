@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Merge, X } from "lucide-react";
+import { Check, Merge, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   approveCategory,
+  deleteCategory,
   mergeCategories,
   rejectCategory,
 } from "@/actions/admin";
@@ -39,6 +40,7 @@ export function CategoryActions({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [mergeOpen, setMergeOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [target, setTarget] = useState("");
 
   function run(action: () => Promise<{ ok: boolean; error?: string; message?: string }>) {
@@ -50,6 +52,7 @@ export function CategoryActions({
       }
       toast.success(result.message ?? "Done.");
       setMergeOpen(false);
+      setDeleteOpen(false);
       router.refresh();
     });
   }
@@ -91,6 +94,17 @@ export function CategoryActions({
             Merge
           </Button>
         ) : null}
+
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => setDeleteOpen(true)}
+          disabled={pending}
+          className="text-destructive"
+        >
+          <Trash2 className="size-3.5" />
+          Delete
+        </Button>
       </div>
 
       <AlertDialog open={mergeOpen} onOpenChange={setMergeOpen}>
@@ -126,6 +140,32 @@ export function CategoryActions({
               }}
             >
               {pending ? "Merging…" : "Merge"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete “{category.name}”?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {category.problemCount > 0
+                ? `This category still has ${category.problemCount} ${category.problemCount === 1 ? "problem" : "problems"}. Merge it into another category first, deletion will be blocked until it's empty.`
+                : "This removes the category permanently. This cannot be undone."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={pending}
+              onClick={(event) => {
+                event.preventDefault();
+                run(() => deleteCategory(category.id));
+              }}
+            >
+              {pending ? "Deleting…" : "Delete category"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

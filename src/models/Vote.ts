@@ -53,10 +53,13 @@ export const SolutionVote: Model<ISolutionVote> =
   (models.SolutionVote as Model<ISolutionVote>) ||
   model<ISolutionVote>("SolutionVote", SolutionVoteSchema);
 
+export type VoteDirection = "up" | "down";
+
 export interface ICommentVote {
   _id: Types.ObjectId;
   commentId: Types.ObjectId;
   userId: Types.ObjectId;
+  direction: VoteDirection;
   createdAt: Date;
 }
 
@@ -64,6 +67,7 @@ const CommentVoteSchema = new Schema<ICommentVote>(
   {
     commentId: { type: Schema.Types.ObjectId, ref: "Comment", required: true },
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    direction: { type: String, enum: ["up", "down"], required: true },
   },
   { timestamps: { createdAt: true, updatedAt: false } }
 );
@@ -74,3 +78,30 @@ CommentVoteSchema.index({ userId: 1, createdAt: -1 });
 export const CommentVote: Model<ICommentVote> =
   (models.CommentVote as Model<ICommentVote>) ||
   model<ICommentVote>("CommentVote", CommentVoteSchema);
+
+/**
+ * A free, single-tier "award" — one per user per comment, toggled the same
+ * way a vote is. No currency or purchasable tiers, just a lightweight signal
+ * plus a small reputation bump for the recipient.
+ */
+export interface ICommentAward {
+  _id: Types.ObjectId;
+  commentId: Types.ObjectId;
+  userId: Types.ObjectId;
+  createdAt: Date;
+}
+
+const CommentAwardSchema = new Schema<ICommentAward>(
+  {
+    commentId: { type: Schema.Types.ObjectId, ref: "Comment", required: true },
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+  },
+  { timestamps: { createdAt: true, updatedAt: false } }
+);
+
+CommentAwardSchema.index({ commentId: 1, userId: 1 }, { unique: true });
+CommentAwardSchema.index({ userId: 1, createdAt: -1 });
+
+export const CommentAward: Model<ICommentAward> =
+  (models.CommentAward as Model<ICommentAward>) ||
+  model<ICommentAward>("CommentAward", CommentAwardSchema);

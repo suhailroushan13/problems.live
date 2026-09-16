@@ -1,10 +1,12 @@
 import "server-only";
+import { randomUUID } from "node:crypto";
 import { connectToDatabase } from "@/lib/db/mongoose";
 import { User, type IUser } from "@/models";
 import { usernameFromEmail } from "@/lib/utils/slug";
 import { env } from "@/lib/env";
 import { getSetting } from "@/lib/config/settings";
 import { isReservedUsername } from "@/lib/constants";
+import { generatedAvatarUrl } from "@/lib/avatar";
 import type { GoogleProfile } from "./google";
 
 async function claimUsername(seed: string): Promise<string> {
@@ -44,9 +46,20 @@ export async function provisionUserFromGoogle(
     existing.email = profile.email;
     existing.emailVerified = profile.emailVerified;
     existing.name = profile.name;
-    // Only refresh the avatar while the user is still on their Google picture.
-    if (profile.picture && (!existing.avatar || existing.avatar.includes("googleusercontent.com"))) {
-      existing.avatar = profile.picture;
+    if (profile.picture) {
+      existing.googleAvatarUrl = profile.picture;
+      if (existing.avatarType === "google" || !existing.avatarType) {
+        existing.avatarType = "google";
+        existing.avatar = profile.picture;
+      }
+    }
+    if (!existing.avatarSeed) {
+      existing.avatarSeed = randomUUID();
+      existing.avatarStyle = existing.avatarStyle ?? "people";
+      if (!existing.avatar || existing.avatarType === "generated") {
+        existing.avatarType = "generated";
+        existing.avatar = generatedAvatarUrl(existing.avatarSeed, existing.avatarStyle);
+      }
     }
     if (shouldBeAdmin && existing.role !== "admin") existing.role = "admin";
     existing.lastSeenAt = new Date();
@@ -56,6 +69,7 @@ export async function provisionUserFromGoogle(
 
   const startingCredits = await getSetting("startingProblemCredits");
   const username = await claimUsername(usernameFromEmail(profile.email));
+  const avatarSeed = randomUUID();
 
   const created = await User.create({
     googleId: profile.googleId,
@@ -63,7 +77,11 @@ export async function provisionUserFromGoogle(
     emailVerified: profile.emailVerified,
     name: profile.name,
     username,
-    avatar: profile.picture,
+    avatar: profile.picture ?? generatedAvatarUrl(avatarSeed, "people"),
+    avatarType: profile.picture ? "google" : "generated",
+    avatarStyle: "people",
+    avatarSeed,
+    googleAvatarUrl: profile.picture,
     role: shouldBeAdmin ? "admin" : "user",
     reputation: 0,
     problemCredits: startingCredits,

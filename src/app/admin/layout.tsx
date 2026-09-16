@@ -26,7 +26,7 @@ export default async function AdminLayout({
   const stats = await getAdminStats();
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
+    <div className="page py-8 sm:py-10">
       <Link
         href="/"
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"

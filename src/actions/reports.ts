@@ -85,7 +85,7 @@ export async function reportContent(
 
     revalidatePath("/admin/reports");
 
-    return okVoid("Thanks — a moderator will review this.");
+    return okVoid("Thanks, a moderator will review this.");
   } catch (error) {
     return toActionError(error);
   }

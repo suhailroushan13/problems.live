@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Search } from "lucide-react";
+import { Grid2X2, List, Search, SlidersHorizontal } from "lucide-react";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
-  InputGroupText,
 } from "@/components/ui/input-group";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -16,26 +16,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { PROBLEM_STATUSES, PROBLEM_STATUS_LABELS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import type { CategoryDTO } from "@/types";
 
 const ALL = "__all__";
-
-/**
- * The directory's sort options, in the order the dropdown shows them. Kept
- * local rather than reusing the sitewide PROBLEM_SORT_LABELS map because this
- * toolbar deliberately excludes "Trending" and "Most discussed" — validation
- * count is the one upvote-equivalent signal the data model has, so it is the
- * default and the only "most X" option beyond solutions.
- */
 const SORTS = [
-  { value: "validated", label: "Most validated" },
+  { value: "validated", label: "Most upvoted" },
+  { value: "clicks", label: "Most clicked" },
   { value: "solutions", label: "Most solutions" },
   { value: "newest", label: "Newest" },
   { value: "oldest", label: "Oldest" },
 ] as const;
 
+/** Mobile keeps discovery to search + two controls; detailed filters live in a sheet. */
 export function ProblemsToolbar({
   categories,
   className,
@@ -46,19 +48,17 @@ export function ProblemsToolbar({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-
   const urlQuery = searchParams.get("q") ?? "";
   const category = searchParams.get("category") ?? ALL;
   const status = searchParams.get("status") ?? ALL;
   const sort = searchParams.get("sort") ?? "validated";
-
+  const view = searchParams.get("view") === "card" ? "card" : "list";
   const [query, setQuery] = useState(urlQuery);
-  // Re-sync the editable draft when the URL changes from outside this input
-  // (back/forward, a filter reset link) — done during render, per React's
-  // guidance for adjusting state from a changing prop, so it never fires an
-  // extra commit the way a `useEffect(() => setQuery(urlQuery), [urlQuery])`
-  // would.
   const [syncedQuery, setSyncedQuery] = useState(urlQuery);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [draftCategory, setDraftCategory] = useState(category);
+  const [draftStatus, setDraftStatus] = useState(status);
+
   if (urlQuery !== syncedQuery) {
     setSyncedQuery(urlQuery);
     setQuery(urlQuery);
@@ -75,94 +75,339 @@ export function ProblemsToolbar({
     router.push(next ? `${pathname}?${next}` : pathname, { scroll: false });
   }
 
-  // Debounced so typing never fires a request per keystroke.
   useEffect(() => {
     const trimmed = query.trim();
     if (trimmed === urlQuery) return;
-    const timer = setTimeout(() => {
-      pushParams({ q: trimmed || undefined });
-    }, 300);
+    const timer = setTimeout(
+      () => pushParams({ q: trimmed || undefined }),
+      300,
+    );
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-run when the draft changes; pushParams/urlQuery read fresh values from the latest render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
-  return (
-    <div className={cn("flex flex-col gap-3 sm:flex-row sm:items-center", className)}>
-      <InputGroup className="h-11 flex-1 border-hairline bg-elevated shadow-none">
-        <InputGroupAddon>
-          <Search className="text-muted-foreground" aria-hidden="true" />
-        </InputGroupAddon>
-        <InputGroupInput
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search problems…"
-          aria-label="Search problems"
-          className="text-sm"
-        />
-        <InputGroupAddon align="inline-end">
-          <InputGroupText className="hidden rounded-md border border-hairline px-1.5 py-0.5 font-mono text-[0.6875rem] sm:inline-flex">
-            ⌘K
-          </InputGroupText>
-        </InputGroupAddon>
-      </InputGroup>
+  const activeFilterCount = Number(category !== ALL) + Number(status !== ALL);
+  const openFilters = () => {
+    setDraftCategory(category);
+    setDraftStatus(status);
+    setFilterOpen(true);
+  };
+  const applyFilters = () => {
+    pushParams({ category: draftCategory, status: draftStatus });
+    setFilterOpen(false);
+  };
+  const resetFilters = () => {
+    setDraftCategory(ALL);
+    setDraftStatus(ALL);
+    pushParams({ category: undefined, status: undefined });
+    setFilterOpen(false);
+  };
 
-      <div className="grid grid-cols-2 gap-2 sm:flex sm:shrink-0 sm:items-center">
-        <Select
-          value={category}
-          onValueChange={(value) => pushParams({ category: value })}
-        >
-          <SelectTrigger
-            aria-label="Filter by category"
-            className="h-11! w-full border-hairline bg-elevated text-sm shadow-none sm:w-44"
+  return (
+    <div className={className}>
+      <div className="sm:hidden">
+        <InputGroup className="h-13 rounded-[0.875rem] border-hairline bg-elevated shadow-none">
+          <InputGroupAddon className="pl-3.5">
+            <Search
+              className="size-5 text-muted-foreground"
+              aria-hidden="true"
+            />
+          </InputGroupAddon>
+          <InputGroupInput
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search problems..."
+            aria-label="Search problems"
+            className="text-[0.9375rem]"
+          />
+        </InputGroup>
+
+        <div className="mt-3 grid grid-cols-3 gap-3">
+          <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
+            <SheetTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={openFilters}
+                className="h-11 justify-between rounded-md border-hairline bg-elevated px-3.5 text-sm"
+              >
+                <span className="flex items-center gap-2 font-semibold">
+                  <SlidersHorizontal className="size-4" aria-hidden="true" />
+                  Filter
+                </span>
+                {activeFilterCount > 0 ? (
+                  <span className="rounded-full bg-brand px-1.5 py-0.5 text-[0.6875rem] font-bold text-brand-foreground">
+                    {activeFilterCount}
+                  </span>
+                ) : null}
+              </Button>
+            </SheetTrigger>
+            <SheetContent
+              side="bottom"
+              className="max-h-[85vh] rounded-t-xl p-0"
+            >
+              <SheetHeader className="border-b border-hairline px-5 pt-5 pb-4">
+                <SheetTitle className="text-lg font-bold">
+                  Filter problems
+                </SheetTitle>
+              </SheetHeader>
+              <div className="overflow-y-auto px-5 py-5">
+                <FilterSection title="Category">
+                  <FilterOption
+                    active={draftCategory === ALL}
+                    onClick={() => setDraftCategory(ALL)}
+                  >
+                    All
+                  </FilterOption>
+                  {categories.map((item) => (
+                    <FilterOption
+                      key={item.id}
+                      active={draftCategory === item.slug}
+                      onClick={() => setDraftCategory(item.slug)}
+                    >
+                      {item.name}
+                    </FilterOption>
+                  ))}
+                </FilterSection>
+                <FilterSection title="Status" className="mt-7">
+                  <FilterOption
+                    active={draftStatus === ALL}
+                    onClick={() => setDraftStatus(ALL)}
+                  >
+                    All
+                  </FilterOption>
+                  {PROBLEM_STATUSES.map((value) => (
+                    <FilterOption
+                      key={value}
+                      active={draftStatus === value}
+                      onClick={() => setDraftStatus(value)}
+                    >
+                      {PROBLEM_STATUS_LABELS[value]}
+                    </FilterOption>
+                  ))}
+                </FilterSection>
+              </div>
+              <SheetFooter className="grid grid-cols-2 gap-3 border-t border-hairline bg-elevated px-5 py-4 sm:flex-row">
+                <Button
+                  variant="outline"
+                  onClick={resetFilters}
+                  className="h-11 rounded-md"
+                >
+                  Reset
+                </Button>
+                <Button onClick={applyFilters} className="h-11 rounded-md">
+                  Apply filters
+                </Button>
+              </SheetFooter>
+            </SheetContent>
+          </Sheet>
+
+          <Select
+            value={sort}
+            onValueChange={(value) => pushParams({ sort: value })}
           >
-            <SelectValue placeholder="All categories" />
-          </SelectTrigger>
-          <SelectContent className="max-h-72">
+            <SelectTrigger
+              aria-label="Sort problems"
+              className="h-11! rounded-md border-hairline bg-elevated px-3.5 text-sm font-semibold shadow-none"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {SORTS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <ViewToggle
+            value={view}
+            onChange={(value) => pushParams({ view: value === "list" ? undefined : value })}
+            compact
+          />
+        </div>
+      </div>
+
+      <div className="hidden sm:flex sm:flex-col sm:gap-3 lg:flex-row lg:items-center">
+        <InputGroup className="h-11 flex-1 border-hairline bg-elevated shadow-none">
+          <InputGroupAddon>
+            <Search className="text-muted-foreground" aria-hidden="true" />
+          </InputGroupAddon>
+          <InputGroupInput
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search problems…"
+            aria-label="Search problems"
+            className="text-sm"
+          />
+        </InputGroup>
+        <div className="grid grid-cols-2 gap-2 lg:flex lg:shrink-0">
+          <ToolbarSelect
+            ariaLabel="Filter by category"
+            value={category}
+            onChange={(value) => pushParams({ category: value })}
+            className="lg:w-44"
+          >
             <SelectItem value={ALL}>All categories</SelectItem>
-            {categories.map((cat) => (
-              <SelectItem key={cat.id} value={cat.slug}>
-                {cat.name}
+            {categories.map((item) => (
+              <SelectItem key={item.id} value={item.slug}>
+                {item.name}
               </SelectItem>
             ))}
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={status}
-          onValueChange={(value) => pushParams({ status: value })}
-        >
-          <SelectTrigger
-            aria-label="Filter by status"
-            className="h-11! w-full border-hairline bg-elevated text-sm shadow-none sm:w-36"
+          </ToolbarSelect>
+          <ToolbarSelect
+            ariaLabel="Filter by status"
+            value={status}
+            onChange={(value) => pushParams({ status: value })}
+            className="lg:w-36"
           >
-            <SelectValue placeholder="All statuses" />
-          </SelectTrigger>
-          <SelectContent>
             <SelectItem value={ALL}>All statuses</SelectItem>
             {PROBLEM_STATUSES.map((value) => (
               <SelectItem key={value} value={value}>
                 {PROBLEM_STATUS_LABELS[value]}
               </SelectItem>
             ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={sort} onValueChange={(value) => pushParams({ sort: value })}>
-          <SelectTrigger
-            aria-label="Sort problems"
-            className="col-span-2 h-11! w-full border-hairline bg-elevated text-sm shadow-none sm:col-span-1 sm:w-44"
+          </ToolbarSelect>
+          <ToolbarSelect
+            ariaLabel="Sort problems"
+            value={sort}
+            onChange={(value) => pushParams({ sort: value })}
+            className="lg:w-44"
           >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
             {SORTS.map((option) => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}
               </SelectItem>
             ))}
-          </SelectContent>
-        </Select>
+          </ToolbarSelect>
+          <ViewToggle
+            value={view}
+            onChange={(value) => pushParams({ view: value === "list" ? undefined : value })}
+          />
+        </div>
       </div>
     </div>
+  );
+}
+
+function ViewToggle({
+  value,
+  onChange,
+  compact = false,
+}: {
+  value: "list" | "card";
+  onChange: (value: "list" | "card") => void;
+  compact?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "inline-flex h-11 items-center rounded-md border border-hairline bg-elevated p-1",
+        !compact && "lg:w-[5.75rem]",
+      )}
+      aria-label="Problem view"
+    >
+      <button
+        type="button"
+        onClick={() => onChange("list")}
+        aria-label="List view"
+        aria-pressed={value === "list"}
+        title="List view"
+        className={cn(
+          "tap flex h-full min-w-0 flex-1 items-center justify-center rounded-sm transition-colors",
+          value === "list"
+            ? "bg-brand-muted text-brand"
+            : "text-muted-foreground hover:text-foreground",
+        )}
+      >
+        <List className="size-4" aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        onClick={() => onChange("card")}
+        aria-label="Card view"
+        aria-pressed={value === "card"}
+        title="Card view"
+        className={cn(
+          "tap flex h-full min-w-0 flex-1 items-center justify-center rounded-sm transition-colors",
+          value === "card"
+            ? "bg-brand-muted text-brand"
+            : "text-muted-foreground hover:text-foreground",
+        )}
+      >
+        <Grid2X2 className="size-4" aria-hidden="true" />
+      </button>
+    </div>
+  );
+}
+
+function ToolbarSelect({
+  ariaLabel,
+  value,
+  onChange,
+  className,
+  children,
+}: {
+  ariaLabel: string;
+  value: string;
+  onChange: (value: string) => void;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger
+        aria-label={ariaLabel}
+        className={cn(
+          "h-11! w-full border-hairline bg-elevated text-sm shadow-none",
+          className,
+        )}
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>{children}</SelectContent>
+    </Select>
+  );
+}
+
+function FilterSection({
+  title,
+  className,
+  children,
+}: {
+  title: string;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className={className}>
+      <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+      <div className="mt-3 grid grid-cols-2 gap-2">{children}</div>
+    </section>
+  );
+}
+
+function FilterOption({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "tap h-10 rounded-md border px-3 text-left text-sm font-medium transition-colors",
+        active
+          ? "border-brand bg-brand-muted text-brand"
+          : "border-hairline bg-elevated text-foreground hover:bg-sunken",
+      )}
+    >
+      {children}
+    </button>
   );
 }

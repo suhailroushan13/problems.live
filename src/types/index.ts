@@ -2,8 +2,10 @@ import type {
   LocationScope,
   ModerationStatus,
   NotificationType,
+  ProblemPriority,
   ProblemStatus,
   ReportReason,
+  SocialLinks,
   SolutionStatus,
   TrustTier,
   UserRole,
@@ -62,11 +64,18 @@ export interface ProblemDTO {
   location: LocationRef;
   images: ImageRef[];
   status: ProblemStatus;
+  priority: ProblemPriority;
   moderationStatus: ModerationStatus;
   validationCount: number;
+  /** Public aggregate; individual bookmarkers are never exposed. */
+  bookmarkCount: number;
+  /** Total times a visitor opened this problem from a problem card. */
+  clickCount: number;
   commentCount: number;
   solutionCount: number;
   hasValidated: boolean;
+  /** Private to the currently signed-in viewer. */
+  hasBookmarked: boolean;
   featured: boolean;
   acceptedSolutionId: string | null;
   createdAt: string;
@@ -106,7 +115,9 @@ export interface CommentDTO {
   author: MaybeAuthor;
   isOwn: boolean;
   helpfulCount: number;
-  hasVoted: boolean;
+  voteDirection: "up" | "down" | null;
+  awardCount: number;
+  hasAwarded: boolean;
   replyCount: number;
   moderationStatus: ModerationStatus;
   isDeleted: boolean;
@@ -143,6 +154,7 @@ export interface ProfileDTO {
   username: string;
   avatar?: string;
   bio?: string;
+  socialLinks?: SocialLinks;
   role: UserRole;
   reputation: number;
   trust: TrustTier;
@@ -195,7 +207,12 @@ export interface Paginated<T> {
 /** Uniform Server Action result. Actions never throw across the boundary. */
 export type ActionResult<T = undefined> =
   | { ok: true; data: T; message?: string }
-  | { ok: false; error: string; fieldErrors?: Record<string, string[]>; code?: ActionErrorCode };
+  | {
+      ok: false;
+      error: string;
+      fieldErrors?: Record<string, string[]>;
+      code?: ActionErrorCode;
+    };
 
 export type ActionErrorCode =
   | "unauthenticated"

@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 export default async function NotificationsPage() {
   const user = await getCurrentUser();
-  if (!user) redirect("/api/auth/google?next=/notifications");
+  if (!user) redirect("/login?next=/notifications");
 
   const [notifications, unreadCount] = await Promise.all([
     listNotifications(60),
@@ -23,9 +23,9 @@ export default async function NotificationsPage() {
   ]);
 
   return (
-    <div className="page max-w-2xl py-12 sm:py-16">
+    <div className="page py-12 sm:py-16">
       <header className="mb-8">
-        <h1 className="text-[2rem] font-extrabold tracking-[-0.035em] text-foreground sm:text-[2.75rem]">
+        <h1 className="text-[2rem] font-bold tracking-[-0.035em] text-foreground sm:text-[2.75rem]">
           Notifications
         </h1>
       </header>

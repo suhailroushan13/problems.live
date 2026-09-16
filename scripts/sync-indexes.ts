@@ -11,10 +11,13 @@ import {
   CommentVote,
   Notification,
   Problem,
+  ProblemBookmark,
+  ProblemClick,
   ProblemValidation,
   RateLimit,
   Report,
   Setting,
+  SiteVisit,
   Solution,
   SolutionVote,
   User,
@@ -26,13 +29,28 @@ const MONGODB_URI = process.env.MONGODB_URI;
 const MONGODB_DB = process.env.MONGODB_DB || "problems_live";
 
 if (!MONGODB_URI) {
-  console.error("MONGODB_URI is not set. Copy .env.example to .env.local first.");
+  console.error(
+    "MONGODB_URI is not set. Copy .env.example to .env.local first.",
+  );
   process.exit(1);
 }
 
 const MODELS = [
-  User, Category, Problem, Solution, Comment, ProblemValidation,
-  SolutionVote, CommentVote, Report, Notification, Setting, RateLimit,
+  User,
+  Category,
+  Problem,
+  ProblemBookmark,
+  ProblemClick,
+  Solution,
+  Comment,
+  ProblemValidation,
+  SolutionVote,
+  CommentVote,
+  Report,
+  Notification,
+  Setting,
+  RateLimit,
+  SiteVisit,
 ];
 
 async function main() {

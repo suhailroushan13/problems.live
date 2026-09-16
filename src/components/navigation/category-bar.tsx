@@ -15,14 +15,17 @@ import type { CategoryDTO } from "@/types";
 export function CategoryBar({
   categories,
   activeSlug,
-  /** Enough to be useful, few enough that "Explore" stays on screen. */
-  limit = 6,
+  /** A compact, scrollable mobile rail keeps discovery one-handed. */
+  limit = 8,
   className,
+  /** Signed-in app view — matches the wider container the rest of the page uses. */
+  wide = false,
 }: {
   categories: CategoryDTO[];
   activeSlug?: string;
   limit?: number;
   className?: string;
+  wide?: boolean;
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -47,17 +50,17 @@ export function CategoryBar({
   }
 
   return (
-    <div className={cn("page", className)}>
-      <div className="pill relative flex items-center gap-1 overflow-x-auto bg-sunken px-2 py-2 no-scrollbar">
+    <div className={cn(wide ? "page-wide" : "page", className)}>
+      <div className="relative -mr-4 flex items-center gap-2 overflow-x-auto pr-4 no-scrollbar sm:mr-0 sm:gap-1 sm:rounded-full sm:bg-sunken sm:px-2 sm:py-2">
         <Link
           href={hrefFor(undefined)}
           scroll={false}
           aria-current={!active ? "page" : undefined}
           className={cn(
-            "tap pill inline-flex shrink-0 items-center gap-2 px-4 py-2 text-sm font-bold whitespace-nowrap transition-colors",
+            "tap inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border px-3 text-[0.8125rem] font-semibold whitespace-nowrap transition-colors sm:h-auto sm:rounded-full sm:border-0 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm sm:font-bold",
             !active
-              ? "bg-brand text-brand-foreground"
-              : "text-foreground/70 hover:bg-elevated hover:text-foreground"
+              ? "border-brand bg-brand text-brand-foreground"
+              : "border-hairline bg-elevated text-foreground/75 hover:bg-sunken hover:text-foreground sm:border-0 sm:bg-transparent sm:hover:bg-elevated"
           )}
         >
           <LayoutGrid className="size-4" aria-hidden="true" />
@@ -73,10 +76,10 @@ export function CategoryBar({
               scroll={false}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "tap pill inline-flex shrink-0 items-center gap-2 px-4 py-2 text-sm font-semibold whitespace-nowrap transition-colors",
+                "tap inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border px-3 text-[0.8125rem] font-semibold whitespace-nowrap transition-colors sm:h-auto sm:rounded-full sm:border-0 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm",
                 isActive
-                  ? "bg-brand text-brand-foreground"
-                  : "text-foreground/70 hover:bg-elevated hover:text-foreground"
+                  ? "border-brand bg-brand text-brand-foreground"
+                  : "border-hairline bg-elevated text-foreground/75 hover:bg-sunken hover:text-foreground sm:border-0 sm:bg-transparent sm:hover:bg-elevated"
               )}
             >
               <CategoryIcon
@@ -91,11 +94,11 @@ export function CategoryBar({
           );
         })}
 
-        <span className="mx-1 h-5 w-px shrink-0 bg-hairline" aria-hidden="true" />
+        <span className="mx-1 hidden h-5 w-px shrink-0 bg-hairline sm:block" aria-hidden="true" />
 
         <Link
           href="/categories"
-          className="tap pill inline-flex shrink-0 items-center gap-2 px-4 py-2 text-sm font-bold whitespace-nowrap text-brand transition-colors hover:bg-brand-muted"
+          className="tap hidden shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-bold whitespace-nowrap text-brand transition-colors hover:bg-brand-muted sm:inline-flex"
         >
           <Compass className="size-4" aria-hidden="true" />
           Explore

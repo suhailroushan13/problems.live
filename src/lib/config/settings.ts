@@ -35,8 +35,11 @@ export const SETTING_DEFAULTS = {
   rateLimitSolutionCreate: [10, 3600],
   rateLimitReportCreate: [10, 3600],
   rateLimitVote: [120, 600],
+  rateLimitBookmark: [120, 600],
+  rateLimitProblemClick: [300, 600],
   rateLimitSearch: [60, 60],
   rateLimitUpload: [30, 3600],
+  rateLimitUsernameCheck: [30, 60],
 } as const;
 
 export type SettingKey = keyof typeof SETTING_DEFAULTS;
@@ -54,7 +57,7 @@ globalForSettings.__settingsCache = cache;
 const TTL_MS = 60_000;
 
 export async function getSetting<K extends SettingKey>(
-  key: K
+  key: K,
 ): Promise<SettingValue<K>> {
   const cached = cache.get(key);
   if (cached && cached.expiresAt > Date.now()) {
@@ -74,9 +77,7 @@ export async function getSetting<K extends SettingKey>(
   return value as SettingValue<K>;
 }
 
-export async function getSettings(): Promise<
-  Record<SettingKey, unknown>
-> {
+export async function getSettings(): Promise<Record<SettingKey, unknown>> {
   await connectToDatabase();
   const docs = await Setting.find({}).lean().exec();
   const overrides = new Map(docs.map((d) => [d.key, d.value]));
@@ -91,13 +92,13 @@ export async function getSettings(): Promise<
 export async function setSetting(
   key: SettingKey,
   value: unknown,
-  updatedBy?: string
+  updatedBy?: string,
 ): Promise<void> {
   await connectToDatabase();
   await Setting.findOneAndUpdate(
     { key },
     { $set: { value, updatedBy: updatedBy ?? null } },
-    { upsert: true }
+    { upsert: true },
   ).exec();
   cache.delete(key);
 }

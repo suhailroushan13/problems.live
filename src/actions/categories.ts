@@ -67,7 +67,7 @@ export async function suggestCategory(
       return ok(
         { status: "exists" as const, name: existing.name },
         existing.status === "approved"
-          ? `"${existing.name}" already exists — use that one.`
+          ? `"${existing.name}" already exists, use that one.`
           : `"${existing.name}" has already been suggested and is awaiting review.`
       );
     }

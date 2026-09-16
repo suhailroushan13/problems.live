@@ -7,7 +7,7 @@ import { MAX_IMAGES_PER_POST } from "@/lib/constants";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-const ALLOWED_FOLDERS = new Set(["problems", "solutions"]);
+const ALLOWED_FOLDERS = new Set(["problems", "solutions", "avatars"]);
 
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();

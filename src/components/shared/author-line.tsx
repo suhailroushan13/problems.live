@@ -13,18 +13,21 @@ export function AuthorLine({
   createdAt,
   editedAt,
   showAvatar = true,
+  avatarSize = "sm",
   className,
 }: {
   author: MaybeAuthor;
   createdAt: string;
   editedAt?: string | null;
   showAvatar?: boolean;
+  avatarSize?: "sm" | "md";
   className?: string;
 }) {
   return (
     <div
       className={cn(
-        "flex min-w-0 items-center gap-2 text-[0.8125rem] text-muted-foreground",
+        "flex min-w-0 items-center gap-2 text-muted-foreground",
+        avatarSize === "md" ? "text-sm" : "text-xs",
         className
       )}
     >
@@ -34,17 +37,20 @@ export function AuthorLine({
             name={author.name}
             username={author.username}
             avatar={author.avatar}
-            size="sm"
+            size={avatarSize}
           />
         ) : (
-          <AnonymousAvatar size="sm" />
+          <AnonymousAvatar size={avatarSize} />
         )
       ) : null}
 
       {author ? (
         <Link
           href={`/u/${author.username}`}
-          className="truncate text-foreground/80 transition-colors hover:text-foreground"
+          className={cn(
+            "truncate text-foreground/80 transition-colors hover:text-foreground",
+            avatarSize === "md" && "font-medium text-foreground"
+          )}
         >
           {author.name}
         </Link>

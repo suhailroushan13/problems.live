@@ -34,7 +34,7 @@ export default async function EditProblemPage({
   const categories = await listCategories();
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6 sm:py-14">
+    <div className="page py-10 sm:py-14">
       <Link
         href={`/problems/${problem.slug}`}
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"

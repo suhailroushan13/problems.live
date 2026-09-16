@@ -80,14 +80,14 @@ export function ShareProblemForm({
             onChange={(event) => setTitle(event.target.value.slice(0, 140))}
             placeholder="What problem are you experiencing?"
             autoComplete="off"
-            className="pill h-12 w-full border-hairline bg-elevated pr-5 pl-13 text-sm font-medium shadow-none placeholder:font-normal placeholder:text-muted-foreground"
+            className="h-12 w-full border-border bg-elevated pr-5 pl-13 shadow-none placeholder:text-muted-foreground"
           />
         </div>
 
         <Select value={categoryId} onValueChange={setCategoryId}>
           <SelectTrigger
             aria-label="Category"
-            className="pill h-12! w-full border-hairline bg-elevated px-6 text-sm font-medium shadow-none sm:w-56"
+            className="h-12! w-full border-border bg-elevated px-4 shadow-none sm:w-56"
           >
             <SelectValue placeholder="Choose a category" />
           </SelectTrigger>
@@ -103,7 +103,7 @@ export function ShareProblemForm({
         <Button
           type="submit"
           size="lg"
-          className="pill h-12 w-full shrink-0 px-8 text-sm font-bold sm:w-auto"
+          className="w-full shrink-0 sm:w-auto"
         >
           Share problem
         </Button>
@@ -111,9 +111,9 @@ export function ShareProblemForm({
 
       {user ? (
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogContent className="flex max-h-[92dvh] flex-col overflow-hidden rounded-3xl sm:max-w-2xl">
+          <DialogContent className="flex max-h-[92dvh] flex-col overflow-hidden rounded-xl sm:max-w-2xl">
             <DialogHeader className="text-left">
-              <DialogTitle className="text-2xl font-extrabold tracking-[-0.025em]">
+              <DialogTitle className="text-h3">
                 Share a problem
               </DialogTitle>
               <DialogDescription>

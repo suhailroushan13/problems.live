@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { SettingRow } from "@/components/admin/settings-form";
 import { getCurrentUser } from "@/lib/auth/current-user";
-import { getSettings, SETTING_DEFAULTS, type SettingKey } from "@/lib/config/settings";
+import {
+  getSettings,
+  SETTING_DEFAULTS,
+  type SettingKey,
+} from "@/lib/config/settings";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -13,15 +17,18 @@ export const metadata: Metadata = { title: "Settings" };
 const COPY: Record<SettingKey, { label: string; description: string }> = {
   startingProblemCredits: {
     label: "Starting problem credits",
-    description: "How many problems a brand new account can post before earning more.",
+    description:
+      "How many problems a brand new account can post before earning more.",
   },
   creditsPerValidatedProblem: {
     label: "Credits per validated problem",
-    description: "Credits returned once a problem crosses the validation threshold.",
+    description:
+      "Credits returned once a problem crosses the validation threshold.",
   },
   validationsToEarnCredit: {
     label: "Validations to earn a credit",
-    description: "How many people must say “I have this problem” before the author earns a credit back.",
+    description:
+      "How many people must say “I have this problem” before the author earns a credit back.",
   },
   maxProblemCredits: {
     label: "Maximum credits",
@@ -33,23 +40,28 @@ const COPY: Record<SettingKey, { label: string; description: string }> = {
   },
   reputationToReport: {
     label: "Reputation to report",
-    description: "Minimum reputation before reports are accepted. 0 means anyone can report.",
+    description:
+      "Minimum reputation before reports are accepted. 0 means anyone can report.",
   },
   reportsToAutoHide: {
     label: "Reports before auto-hide",
-    description: "Distinct reports that hide content pending review. Never deletes anything.",
+    description:
+      "Distinct reports that hide content pending review. Never deletes anything.",
   },
   moderationHoldThreshold: {
     label: "Moderation hold threshold",
-    description: "Score (0–1) at which new content is held for a human to review.",
+    description:
+      "Score (0–1) at which new content is held for a human to review.",
   },
   moderationRejectThreshold: {
     label: "Moderation reject threshold",
-    description: "Score (0–1) at which content is refused outright at post time.",
+    description:
+      "Score (0–1) at which content is refused outright at post time.",
   },
   duplicateSimilarityThreshold: {
     label: "Duplicate similarity threshold",
-    description: "Similarity (0–1) above which we warn the author about a possible duplicate.",
+    description:
+      "Similarity (0–1) above which we warn the author about a possible duplicate.",
   },
   rateLimitProblemCreate: {
     label: "Rate limit · new problems",
@@ -71,13 +83,28 @@ const COPY: Record<SettingKey, { label: string; description: string }> = {
     label: "Rate limit · votes",
     description: "Format: max, window seconds.",
   },
+  rateLimitBookmark: {
+    label: "Rate limit · bookmarks",
+    description: "Format: max, window seconds.",
+  },
+  rateLimitProblemClick: {
+    label: "Rate limit · problem clicks",
+    description:
+      "Format: max, window seconds. Protects click tracking from automated traffic.",
+  },
   rateLimitSearch: {
     label: "Rate limit · search",
-    description: "Format: max, window seconds. Applies per user, or per IP when signed out.",
+    description:
+      "Format: max, window seconds. Applies per user, or per IP when signed out.",
   },
   rateLimitUpload: {
     label: "Rate limit · uploads",
     description: "Format: max, window seconds.",
+  },
+  rateLimitUsernameCheck: {
+    label: "Rate limit · username availability checks",
+    description:
+      "Format: max, window seconds. Guards the live check while typing a new username.",
   },
 };
 

@@ -9,9 +9,11 @@ import mongoose from "mongoose";
 import {
   Category,
   Comment,
+  CommentAward,
   CommentVote,
   Notification,
   Problem,
+  ProblemBookmark,
   ProblemValidation,
   RateLimit,
   Report,
@@ -44,6 +46,9 @@ if (!MONGODB_URI) {
 const daysAgo = (days: number) =>
   new Date(Date.now() - days * 86_400_000 - Math.random() * 3_600_000);
 
+const SEED_USER_COUNT = 10;
+const SEED_PROBLEM_COUNT = 15;
+
 /** Deterministic-ish pick so reruns produce comparable-looking data. */
 function sample<T>(items: T[], count: number): T[] {
   const pool = [...items];
@@ -63,8 +68,10 @@ async function main() {
     User.deleteMany({}),
     Category.deleteMany({}),
     Problem.deleteMany({}),
+    ProblemBookmark.deleteMany({}),
     Solution.deleteMany({}),
     Comment.deleteMany({}),
+    CommentAward.deleteMany({}),
     ProblemValidation.deleteMany({}),
     SolutionVote.deleteMany({}),
     CommentVote.deleteMany({}),
@@ -80,8 +87,10 @@ async function main() {
     User.syncIndexes(),
     Category.syncIndexes(),
     Problem.syncIndexes(),
+    ProblemBookmark.syncIndexes(),
     Solution.syncIndexes(),
     Comment.syncIndexes(),
+    CommentAward.syncIndexes(),
     ProblemValidation.syncIndexes(),
     SolutionVote.syncIndexes(),
     CommentVote.syncIndexes(),
@@ -104,8 +113,9 @@ async function main() {
 
   // One pending suggestion so the admin approval queue is not empty.
   console.log("→ Creating users…");
+  const seedUsers = SEED_USERS.slice(0, SEED_USER_COUNT);
   const userDocs = await User.insertMany(
-    SEED_USERS.map((user, index) => ({
+    seedUsers.map((user, index) => ({
       googleId: `seed-google-${index}`,
       email: user.email,
       emailVerified: true,
@@ -135,8 +145,12 @@ async function main() {
   console.log("→ Creating problems…");
   const takenSlugs = new Set<string>();
   const problemDocs = [];
+  const seededUsernames = new Set(seedUsers.map((user) => user.username));
+  const seedProblems = SEED_PROBLEMS.filter((problem) =>
+    seededUsernames.has(problem.author)
+  ).slice(0, SEED_PROBLEM_COUNT);
 
-  for (const seed of SEED_PROBLEMS) {
+  for (const seed of seedProblems) {
     const author = userByUsername.get(seed.author);
     const category = categoryBySlug.get(seed.category);
     if (!author || !category) continue;
@@ -218,7 +232,8 @@ async function main() {
       status: "visible",
       moderationStatus: "approved",
       moderation: { provider: "seed", score: 0, labels: [] },
-      helpfulCount: seed.helpful,
+      helpfulCount: 0,
+      awardCount: 0,
       replyCount: seed.replies?.length ?? 0,
       createdAt,
       updatedAt: createdAt,
@@ -241,7 +256,8 @@ async function main() {
         status: "visible",
         moderationStatus: "approved",
         moderation: { provider: "seed", score: 0, labels: [] },
-        helpfulCount: reply.helpful,
+        helpfulCount: 0,
+        awardCount: 0,
         createdAt: replyAt,
         updatedAt: replyAt,
       });
@@ -249,11 +265,76 @@ async function main() {
     }
   }
 
+  console.log("→ Creating comment votes and awards…");
+  const comments = await Comment.find({}).sort({ createdAt: 1 }).exec();
+  const votePlans = [
+    { up: 2, down: 0, awards: 1 },
+    { up: 1, down: 1, awards: 1 },
+    { up: 2, down: 0, awards: 0 },
+    { up: 1, down: 1, awards: 0 },
+    { up: 1, down: 0, awards: 1 },
+    { up: 1, down: 0, awards: 0 },
+  ];
+  const commentVotes: Array<{
+    commentId: mongoose.Types.ObjectId;
+    userId: mongoose.Types.ObjectId;
+    direction: "up" | "down";
+    createdAt: Date;
+  }> = [];
+  const commentAwards: Array<{
+    commentId: mongoose.Types.ObjectId;
+    userId: mongoose.Types.ObjectId;
+    createdAt: Date;
+  }> = [];
+  const commentCounters = new Map<string, { helpfulCount: number; awardCount: number }>();
+
+  for (const [index, comment] of comments.slice(0, votePlans.length).entries()) {
+    const plan = votePlans[index];
+    const eligibleUsers = userDocs.filter(
+      (user) => String(user._id) !== String(comment.authorId)
+    );
+    const voters = sample(eligibleUsers, plan.up + plan.down);
+    const awarders = sample(
+      eligibleUsers.filter((user) => !voters.some((voter) => voter._id.equals(user._id))),
+      plan.awards
+    );
+
+    voters.forEach((user, voterIndex) => {
+      commentVotes.push({
+        commentId: comment._id,
+        userId: user._id,
+        direction: voterIndex < plan.up ? "up" : "down",
+        createdAt: daysAgo(Math.max(1, index + 1)),
+      });
+    });
+    awarders.forEach((user) => {
+      commentAwards.push({
+        commentId: comment._id,
+        userId: user._id,
+        createdAt: daysAgo(Math.max(1, index + 1)),
+      });
+    });
+    commentCounters.set(String(comment._id), {
+      helpfulCount: plan.up - plan.down,
+      awardCount: plan.awards,
+    });
+  }
+
+  await Promise.all([
+    CommentVote.insertMany(commentVotes, { ordered: false }),
+    CommentAward.insertMany(commentAwards, { ordered: false }),
+    Comment.bulkWrite(
+      [...commentCounters.entries()].map(([id, counts]) => ({
+        updateOne: { filter: { _id: id }, update: { $set: counts } },
+      }))
+    ),
+  ]);
+
   // Validations are real documents so the unique index and the toggle flow
   // behave exactly as they will in production.
   console.log("→ Creating validations…");
   const validations = [];
-  for (const seed of SEED_PROBLEMS) {
+  for (const seed of seedProblems) {
     const problem = problemByTitle.get(seed.title);
     if (!problem) continue;
     for (const user of userDocs) {
@@ -340,7 +421,7 @@ async function main() {
       .filter((s) => String(s.authorId) === String(user._id))
       .reduce((sum, s) => sum + s.helpfulCount, 0);
 
-    const validationsReceived = SEED_PROBLEMS.filter(
+    const validationsReceived = seedProblems.filter(
       (p) => p.author === user.username
     ).reduce((sum, p) => sum + p.validations, 0);
 

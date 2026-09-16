@@ -9,9 +9,13 @@ export type RateLimitAction =
   | "solution:create"
   | "report:create"
   | "vote"
+  | "bookmark"
+  | "problem:click"
   | "search"
   | "upload"
-  | "category:suggest";
+  | "category:suggest"
+  | "username:check"
+  | "username:generate";
 
 const SETTING_BY_ACTION = {
   "problem:create": "rateLimitProblemCreate",
@@ -19,9 +23,13 @@ const SETTING_BY_ACTION = {
   "solution:create": "rateLimitSolutionCreate",
   "report:create": "rateLimitReportCreate",
   vote: "rateLimitVote",
+  bookmark: "rateLimitBookmark",
+  "problem:click": "rateLimitProblemClick",
   search: "rateLimitSearch",
   upload: "rateLimitUpload",
   "category:suggest": "rateLimitReportCreate",
+  "username:check": "rateLimitUsernameCheck",
+  "username:generate": "rateLimitUsernameCheck",
 } as const;
 
 export interface RateLimitResult {
@@ -36,8 +44,8 @@ export class RateLimitError extends Error {
   constructor(retryAfterSeconds: number) {
     super(
       `You're doing that a bit too fast. Try again in ${formatWait(
-        retryAfterSeconds
-      )}.`
+        retryAfterSeconds,
+      )}.`,
     );
     this.name = "RateLimitError";
     this.retryAfterSeconds = retryAfterSeconds;
@@ -59,11 +67,10 @@ function formatWait(seconds: number): string {
  */
 export async function checkRateLimit(
   action: RateLimitAction,
-  identifier: string
+  identifier: string,
 ): Promise<RateLimitResult> {
   const configured = (await getSetting(SETTING_BY_ACTION[action])) as
-    | readonly [number, number]
-    | number[];
+    readonly [number, number] | number[];
   const [limit, windowSeconds] = Array.isArray(configured)
     ? configured
     : [10, 3600];
@@ -78,7 +85,7 @@ export async function checkRateLimit(
   const doc = await RateLimit.findOneAndUpdate(
     { key },
     { $inc: { count: 1 }, $setOnInsert: { expiresAt } },
-    { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
+    { upsert: true, returnDocument: "after", setDefaultsOnInsert: true },
   )
     .lean()
     .exec();
@@ -86,7 +93,7 @@ export async function checkRateLimit(
   const count = doc?.count ?? 1;
   const retryAfterSeconds = Math.max(
     1,
-    Math.ceil((windowStart + windowMs - Date.now()) / 1000)
+    Math.ceil((windowStart + windowMs - Date.now()) / 1000),
   );
 
   return {
@@ -100,7 +107,7 @@ export async function checkRateLimit(
 /** Throwing variant for use inside Server Actions. */
 export async function enforceRateLimit(
   action: RateLimitAction,
-  identifier: string
+  identifier: string,
 ): Promise<void> {
   const result = await checkRateLimit(action, identifier);
   if (!result.ok) throw new RateLimitError(result.retryAfterSeconds);

@@ -1,21 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
+  ArrowLeft,
+  CheckCircle2,
+  MapPin,
+} from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AuthorLine } from "@/components/shared/author-line";
-import { SafeText } from "@/components/shared/safe-text";
+import { CategoryIcon } from "@/components/shared/category-icon";
+import { AnonymousAvatar, UserAvatar } from "@/components/shared/user-avatar";
+import { MarkdownContent } from "@/components/shared/markdown-content";
 import { PostImages } from "@/components/shared/post-images";
 import { ProblemMini } from "@/components/problems/problem-item";
-import { StatusDot } from "@/components/problems/status-dot";
 import { ValidationPanel } from "@/components/problems/validate-button";
 import { ProblemActions } from "@/components/problems/problem-actions";
 import { SolutionsSection } from "@/components/solutions/solutions-section";
@@ -28,9 +24,10 @@ import {
   listSolutionCommentsGrouped,
 } from "@/lib/data/comments";
 import { findSimilarProblems } from "@/lib/similarity";
-import { excerpt } from "@/lib/utils/text";
-import { formatDate } from "@/lib/utils/time";
+import { excerpt, stripMarkdown } from "@/lib/utils/text";
+import { formatDate, timeAgoLong } from "@/lib/utils/time";
 import { env, APP_NAME } from "@/lib/env";
+import { cn } from "@/lib/utils";
 import type { ProblemDTO } from "@/types";
 
 type PageProps = { params: Promise<{ slug: string }> };
@@ -45,7 +42,7 @@ export async function generateMetadata({
     return { title: "Problem not found", robots: { index: false } };
   }
 
-  const description = excerpt(problem.description, 155);
+  const description = excerpt(stripMarkdown(problem.description), 155);
   const url = `${env.appUrl}/problems/${problem.slug}`;
   const byline = problem.author ? `@${problem.author.username}` : "Anonymous";
 
@@ -147,43 +144,24 @@ export default async function ProblemPage({ params }: PageProps) {
         }}
       />
 
-      <article className="mx-auto max-w-[46rem] px-4 py-10 sm:px-6 sm:py-14">
-        <Breadcrumb className="mb-8">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link
-                  href="/problems"
-                  className="inline-flex items-center gap-1.5"
-                >
-                  <ArrowLeft className="size-3" />
-                  Problems
-                </Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            {problem.category ? (
-              <>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <Link href={`/categories/${problem.category.slug}`}>
-                      {problem.category.name}
-                    </Link>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-              </>
-            ) : null}
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage className="max-w-40 truncate sm:max-w-xs">
-                {problem.title}
-              </BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+      <article className="page py-5 pb-16 sm:py-10 lg:py-12">
+        <Link
+          href="/problems"
+          className="tap inline-flex h-10 items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" aria-hidden="true" />
+          Back to problems
+        </Link>
 
         {problem.moderationStatus !== "approved" ? (
-          <Alert className="mb-6 border-brand-border bg-brand-muted/40">
+          <Alert
+            className={cn(
+              "mb-6",
+              problem.moderationStatus === "pending"
+                ? "border-brand-border bg-brand-muted/40"
+                : "border-hairline bg-sunken"
+            )}
+          >
             <AlertTitle>
               {problem.moderationStatus === "pending"
                 ? "Awaiting review"
@@ -197,114 +175,123 @@ export default async function ProblemPage({ params }: PageProps) {
           </Alert>
         ) : null}
 
-        <header>
-          <div className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-[0.8125rem] text-muted-foreground">
-            {problem.category ? (
-              <Link
-                href={`/categories/${problem.category.slug}`}
-                className="transition-colors hover:text-foreground"
-              >
-                {problem.category.name}
-              </Link>
-            ) : null}
-            {problem.location.scope !== "global" ? (
-              <>
-                <span aria-hidden="true">·</span>
-                <span>{problem.location.label}</span>
-              </>
-            ) : null}
-            {problem.status !== "open" ? (
-              <>
-                <span aria-hidden="true">·</span>
-                <StatusDot status={problem.status} />
-              </>
-            ) : null}
-          </div>
-
+        <header className="mt-5">
           <div className="flex items-start justify-between gap-4">
-            <h1 className="text-[1.875rem] leading-[1.15] font-extrabold tracking-[-0.032em] text-balance text-foreground sm:text-[2.375rem]">
-              {problem.title}
-            </h1>
-
-            <div className="shrink-0 pt-1">
-              <ProblemActions
-                problemId={problem.id}
-                slug={problem.slug}
-                status={problem.status}
-                isOwn={problem.isOwn}
-                isModerator={Boolean(user?.isModerator)}
-                isAuthenticated={Boolean(user)}
-              />
+            <div className="flex min-w-0 items-center gap-3 text-sm text-muted-foreground">
+              {problem.author ? (
+                <UserAvatar
+                  name={problem.author.name}
+                  username={problem.author.username}
+                  avatar={problem.author.avatar}
+                  size="md"
+                />
+              ) : (
+                <AnonymousAvatar size="md" />
+              )}
+              <div className="min-w-0">
+                {problem.author ? (
+                  <Link href={`/u/${problem.author.username}`} className="block font-medium text-foreground transition-colors hover:text-brand">
+                    {problem.author.name}
+                  </Link>
+                ) : (
+                  <span className="block font-medium text-foreground">Anonymous</span>
+                )}
+                <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-muted-foreground">
+                  {problem.category ? (
+                    <Link
+                      href={`/categories/${problem.category.slug}`}
+                      className="inline-flex items-center gap-1 hover:text-foreground"
+                    >
+                      <CategoryIcon name={problem.category.icon} className="size-3" />
+                      {problem.category.name}
+                    </Link>
+                  ) : null}
+                  {problem.category ? <span aria-hidden="true">·</span> : null}
+                  <time dateTime={problem.createdAt}>{timeAgoLong(problem.createdAt)}</time>
+                  {problem.location.scope !== "global" ? (
+                    <><span aria-hidden="true">·</span><span className="inline-flex items-center gap-1"><MapPin className="size-3" aria-hidden="true" />{problem.location.label}</span></>
+                  ) : null}
+                </p>
+              </div>
             </div>
+            <div className="-mr-2 -mt-1 shrink-0"><ProblemActions problemId={problem.id} slug={problem.slug} status={problem.status} isOwn={problem.isOwn} isModerator={Boolean(user?.isModerator)} isAuthenticated={Boolean(user)} /></div>
           </div>
 
-          <div className="mt-5 flex flex-wrap items-center gap-3">
-            <AuthorLine
-              author={problem.author}
-              createdAt={problem.createdAt}
-              editedAt={problem.editedAt}
-            />
-          </div>
+          <h1 className="text-balance mt-6 max-w-4xl text-[2rem] leading-[1.12] font-bold tracking-[-0.03em] text-foreground sm:text-display">
+            {problem.title}
+          </h1>
         </header>
 
-        <SafeText className="mt-7 text-base leading-[1.75]">{problem.description}</SafeText>
-
-        {problem.images.length > 0 ? (
-          <PostImages images={problem.images} className="mt-6" />
-        ) : null}
-
-        {problem.status === "solved" && problem.solvedAt ? (
-          <p className="mt-7 flex items-start gap-2.5 text-[0.9375rem] text-status-solved">
-            <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-            <span>
-              Solved on {formatDate(problem.solvedAt)}.{" "}
-              <span className="text-muted-foreground">
-                {problem.acceptedSolutionId
-                  ? "One of the solutions below was accepted."
-                  : "The person who posted this says it is no longer a problem."}
-              </span>
-            </span>
-          </p>
-        ) : null}
+        <section aria-labelledby="problem-details" className="mt-6 max-w-[48rem] sm:mt-7">
+          <p id="problem-details" className="sr-only">Problem details</p>
+          <MarkdownContent className="text-[1.0625rem] leading-7 text-foreground/80 sm:text-lg sm:leading-8">
+                {problem.description}
+              </MarkdownContent>
+          {problem.category ? (
+            <Link href={`/categories/${problem.category.slug}`} className="mt-5 inline-flex rounded-full bg-sunken px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground">#{problem.category.slug}</Link>
+          ) : null}
+          {problem.images.length > 0 ? <PostImages images={problem.images} className="mt-6" /> : null}
+          {problem.status === "solved" && problem.solvedAt ? (
+                <div className="mt-7 flex items-start gap-3 rounded-lg border border-status-solved/20 bg-status-solved/8 px-4 py-3.5">
+                  <CheckCircle2
+                    className="mt-0.5 size-[1.125rem] shrink-0 text-status-solved"
+                    aria-hidden="true"
+                  />
+                  <p className="text-sm leading-relaxed">
+                    <span className="font-semibold text-status-solved">
+                      Solved on {formatDate(problem.solvedAt)}.
+                    </span>{" "}
+                    <span className="text-muted-foreground">
+                      {problem.acceptedSolutionId
+                        ? "One of the solutions below was accepted."
+                        : "The person who posted this says it is no longer a problem."}
+                    </span>
+                  </p>
+                </div>
+          ) : null}
+        </section>
 
         <ValidationPanel
           problemId={problem.id}
           initialCount={problem.validationCount}
           initialActive={problem.hasValidated}
           isAuthenticated={Boolean(user)}
+          commentCount={problem.commentCount}
+          bookmarkCount={problem.bookmarkCount}
+          hasBookmarked={problem.hasBookmarked}
         />
 
-        <div className="mt-12">
-          <SolutionsSection
-            problemId={problem.id}
-            problemTitle={problem.title}
-            solutions={solutions}
-            solutionComments={solutionComments}
-            user={user}
-            canAccept={problem.isOwn || Boolean(user?.isModerator)}
-          />
+        <div className="mt-10 border-t border-hairline pt-8 sm:mt-12 sm:pt-10">
+              <SolutionsSection
+                problemId={problem.id}
+                problemTitle={problem.title}
+                solutions={solutions}
+                solutionComments={solutionComments}
+                user={user}
+                canAccept={problem.isOwn || Boolean(user?.isModerator)}
+              />
         </div>
 
-        <div className="mt-14 border-t border-hairline pt-10">
-          <CommentThread
-            comments={comments}
-            problemId={problem.id}
-            user={user}
-            count={problem.commentCount}
-          />
+        <div className="mt-10 border-t border-hairline pt-8 sm:mt-12 sm:pt-10">
+              <CommentThread
+                comments={comments}
+                problemId={problem.id}
+                user={user}
+                count={problem.commentCount}
+              />
         </div>
 
         {relatedProblems.length > 0 ? (
-          <div className="mt-14 border-t border-hairline pt-10">
-            <h2 className="label mb-5 text-muted-foreground">
-              Related problems
-            </h2>
-            <ul className="space-y-1">
-              {relatedProblems.map((item) => (
-                <ProblemMini key={item.id} problem={item} />
-              ))}
-            </ul>
-          </div>
+              <div className="mt-10 border-t border-hairline pt-8 sm:mt-12 sm:pt-10">
+                <h2 className="label mb-5 text-muted-foreground">
+                  Related problems
+                </h2>
+                <ul className="space-y-1">
+                  {relatedProblems.map((item) => (
+                    <ProblemMini key={item.id} problem={item} />
+                  ))}
+                </ul>
+              </div>
         ) : null}
       </article>
     </>

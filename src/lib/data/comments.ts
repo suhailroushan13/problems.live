@@ -1,14 +1,32 @@
 import "server-only";
 import type { QueryFilter } from "mongoose";
 import { connectToDatabase } from "@/lib/db/mongoose";
-import { Comment, CommentVote, type IComment } from "@/models";
+import { Comment, CommentAward, CommentVote, type IComment } from "@/models";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { toObjectId } from "@/lib/utils/sanitize-query";
 import { COMMENT_PAGE_SIZE } from "@/lib/constants";
 import type { CommentDTO } from "@/types";
 import { AUTHOR_FIELDS, toCommentDTO } from "./serialize";
 
-async function votedIdsFor(
+async function voteDirectionsFor(
+  viewerId: string | null | undefined,
+  commentIds: string[]
+): Promise<Map<string, "up" | "down">> {
+  if (!viewerId || commentIds.length === 0) return new Map();
+  const userId = toObjectId(viewerId);
+  if (!userId) return new Map();
+
+  const rows = await CommentVote.find(
+    { userId, commentId: { $in: commentIds.map(toObjectId).filter(Boolean) } },
+    { commentId: 1, direction: 1 }
+  )
+    .lean()
+    .exec();
+
+  return new Map(rows.map((r) => [String(r.commentId), r.direction]));
+}
+
+async function awardedIdsFor(
   viewerId: string | null | undefined,
   commentIds: string[]
 ): Promise<Set<string>> {
@@ -16,7 +34,7 @@ async function votedIdsFor(
   const userId = toObjectId(viewerId);
   if (!userId) return new Set();
 
-  const rows = await CommentVote.find(
+  const rows = await CommentAward.find(
     { userId, commentId: { $in: commentIds.map(toObjectId).filter(Boolean) } },
     { commentId: 1 }
   )
@@ -79,12 +97,16 @@ export async function listCommentsForProblem(
     .lean<IComment[]>()
     .exec();
 
-  const votedIds = await votedIdsFor(viewer?.id, [
+  const allIds = [
     ...roots.map((r) => String(r._id)),
     ...replies.map((r) => String(r._id)),
+  ];
+  const [voteDirections, awardedIds] = await Promise.all([
+    voteDirectionsFor(viewer?.id, allIds),
+    awardedIdsFor(viewer?.id, allIds),
   ]);
 
-  const ctx = { viewerId: viewer?.id ?? null, votedIds };
+  const ctx = { viewerId: viewer?.id ?? null, voteDirections, awardedIds };
   const byParent = new Map<string, CommentDTO[]>();
   for (const reply of replies) {
     const key = String(reply.parentId);
@@ -207,11 +229,12 @@ export async function listSolutionCommentsGrouped(
 
   if (docs.length === 0) return {};
 
-  const votedIds = await votedIdsFor(
-    viewer?.id,
-    docs.map((d) => String(d._id))
-  );
-  const ctx = { viewerId: viewer?.id ?? null, votedIds };
+  const docIds = docs.map((d) => String(d._id));
+  const [voteDirections, awardedIds] = await Promise.all([
+    voteDirectionsFor(viewer?.id, docIds),
+    awardedIdsFor(viewer?.id, docIds),
+  ]);
+  const ctx = { viewerId: viewer?.id ?? null, voteDirections, awardedIds };
 
   const grouped: Record<string, CommentDTO[]> = {};
   const byId = new Map<string, CommentDTO>();

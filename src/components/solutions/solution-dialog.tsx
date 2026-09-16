@@ -98,7 +98,7 @@ export function SolutionDialog({
             Suggest a fix
           </DialogTitle>
           <DialogDescription className="line-clamp-2">
-            For “{problemTitle}”. Describe what would actually solve it — an
+            For “{problemTitle}”. Describe what would actually solve it, an
             idea, an existing tool, or something you are building.
           </DialogDescription>
         </DialogHeader>

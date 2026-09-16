@@ -11,10 +11,24 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import type { SearchHit, SearchResults } from "@/lib/data/search";
+
+/** No visible container — a comfortable hit area, not a decorative circle. */
+const TRIGGER_CLASS =
+  "inline-flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/25 [&_svg]:pointer-events-none [&_svg]:size-[1.125rem]";
+
+function isTypingTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  const tag = target.tagName;
+  return (
+    tag === "INPUT" ||
+    tag === "TEXTAREA" ||
+    tag === "SELECT" ||
+    target.isContentEditable
+  );
+}
 
 const EMPTY: SearchResults = {
   problems: [],
@@ -53,6 +67,19 @@ export function SearchCommand({ className }: { className?: string }) {
       if (event.key === "k" && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
         setOpen((value) => !value);
+        return;
+      }
+      // "/" opens search too, as long as it isn't going into a field the
+      // user is already typing in (a form's own "/" character, a comment…).
+      if (
+        event.key === "/" &&
+        !event.metaKey &&
+        !event.ctrlKey &&
+        !event.altKey &&
+        !isTypingTarget(event.target)
+      ) {
+        event.preventDefault();
+        setOpen(true);
       }
     }
     document.addEventListener("keydown", onKeyDown);
@@ -110,16 +137,16 @@ export function SearchCommand({ className }: { className?: string }) {
 
   return (
     <>
-      <Button
-        variant="ghost"
-        size="icon"
+      <button
+        type="button"
         onClick={() => setOpen(true)}
         aria-label="Search problems"
-        aria-keyshortcuts="Meta+K Control+K"
-        className={cn("size-10 rounded-full text-muted-foreground", className)}
+        title="Search (/)"
+        aria-keyshortcuts="Meta+K Control+K /"
+        className={cn(TRIGGER_CLASS, className)}
       >
-        <Search className="size-[1.125rem]" />
-      </Button>
+        <Search strokeWidth={1.8} aria-hidden="true" />
+      </button>
 
       <CommandDialog
         open={open}

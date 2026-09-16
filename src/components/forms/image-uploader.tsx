@@ -2,10 +2,11 @@
 
 import Image from "next/image";
 import { useRef, useState, useTransition } from "react";
-import { ImagePlus, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { ImageEditorDialog } from "@/components/forms/image-editor-dialog";
 import {
   ALLOWED_IMAGE_TYPES,
   MAX_IMAGES_PER_POST,
@@ -31,26 +32,26 @@ export function ImageUploader({
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [pending, startTransition] = useTransition();
-  const [dragging, setDragging] = useState(false);
+  const [queue, setQueue] = useState<File[]>([]);
+  const [editedFiles, setEditedFiles] = useState<File[]>([]);
+  const [editingIndex, setEditingIndex] = useState(0);
 
   const remaining = MAX_IMAGES_PER_POST - value.length;
 
-  function handleFiles(fileList: FileList | null) {
-    if (!fileList || fileList.length === 0) return;
-
-    const files = Array.from(fileList).slice(0, remaining);
+  function uploadFiles(files: File[]) {
+    if (files.length === 0) return;
     const rejected = files.find(
       (file) =>
         !ALLOWED_IMAGE_TYPES.includes(
-          file.type as (typeof ALLOWED_IMAGE_TYPES)[number]
-        ) || file.size > MAX_IMAGE_BYTES
+          file.type as (typeof ALLOWED_IMAGE_TYPES)[number],
+        ) || file.size > MAX_IMAGE_BYTES,
     );
 
     if (rejected) {
       toast.error(
         `"${rejected.name}" must be a JPG, PNG, WebP, GIF or AVIF under ${Math.round(
-          MAX_IMAGE_BYTES / 1024 / 1024
-        )}MB.`
+          MAX_IMAGE_BYTES / 1024 / 1024,
+        )}MB.`,
       );
       return;
     }
@@ -82,6 +83,44 @@ export function ImageUploader({
         if (inputRef.current) inputRef.current.value = "";
       }
     });
+  }
+
+  function handleFiles(fileList: FileList | null) {
+    if (!fileList || fileList.length === 0) return;
+    const files = Array.from(fileList).slice(0, remaining);
+    const rejected = files.find(
+      (file) =>
+        !ALLOWED_IMAGE_TYPES.includes(file.type as (typeof ALLOWED_IMAGE_TYPES)[number]) ||
+        file.size > MAX_IMAGE_BYTES,
+    );
+    if (rejected) {
+      toast.error(`"${rejected.name}" must be a JPG, PNG, WebP, GIF or AVIF under ${Math.round(MAX_IMAGE_BYTES / 1024 / 1024)}MB.`);
+      if (inputRef.current) inputRef.current.value = "";
+      return;
+    }
+    setQueue(files);
+    setEditedFiles([]);
+    setEditingIndex(0);
+  }
+
+  function finishEditing(file: File) {
+    const complete = [...editedFiles, file];
+    if (editingIndex + 1 < queue.length) {
+      setEditedFiles(complete);
+      setEditingIndex((index) => index + 1);
+      return;
+    }
+    setQueue([]);
+    setEditedFiles([]);
+    setEditingIndex(0);
+    uploadFiles(complete);
+  }
+
+  function cancelEditing() {
+    setQueue([]);
+    setEditedFiles([]);
+    setEditingIndex(0);
+    if (inputRef.current) inputRef.current.value = "";
   }
 
   return (
@@ -116,41 +155,25 @@ export function ImageUploader({
       ) : null}
 
       {remaining > 0 ? (
-        <div
-          onDragOver={(event) => {
-            event.preventDefault();
-            setDragging(true);
-          }}
-          onDragLeave={() => setDragging(false)}
-          onDrop={(event) => {
-            event.preventDefault();
-            setDragging(false);
-            handleFiles(event.dataTransfer.files);
-          }}
-          className={cn("flex items-center justify-between gap-3 rounded-lg border border-dashed px-3 py-2.5 transition-colors",
-            dragging
-              ? "border-brand-border bg-brand-muted/50"
-              : "border-hairline bg-sunken/50"
-          )}
-        >
-          <p className="text-xs text-muted-foreground">
-            {pending ? "Uploading…" : `Add up to ${remaining} more image${remaining === 1 ? "" : "s"} — optional.`}
-          </p>
-
+        <div className="flex items-center gap-2">
           <Button
             type="button"
-            variant="outline"
+            variant="ghost"
             size="sm"
-            disabled={pending}
+            disabled={pending || queue.length > 0}
             onClick={() => inputRef.current?.click()}
+            className="h-8 rounded-md px-2 text-muted-foreground hover:text-foreground"
           >
             {pending ? (
               <Spinner className="size-3.5" />
             ) : (
-              <ImagePlus className="size-3.5" />
+              <Plus className="size-3.5" />
             )}
-            Upload
+            {pending ? "Uploading…" : "Add images"}
           </Button>
+          <span className="text-xs text-muted-foreground">
+            Optional · up to {remaining} more
+          </span>
 
           <input
             ref={inputRef}
@@ -162,6 +185,16 @@ export function ImageUploader({
           />
         </div>
       ) : null}
+
+      <ImageEditorDialog
+        key={queue[editingIndex] ? `${queue[editingIndex].name}-${queue[editingIndex].lastModified}` : "empty"}
+        file={queue[editingIndex] ?? null}
+        open={queue.length > 0}
+        position={editingIndex}
+        total={queue.length}
+        onOpenChange={(open) => { if (!open) cancelEditing(); }}
+        onSave={finishEditing}
+      />
     </div>
   );
 }

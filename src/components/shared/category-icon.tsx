@@ -1,7 +1,7 @@
 import {
   Baby, Briefcase, Bus, Cpu, GraduationCap, HeartHandshake, Home, Landmark,
-  Leaf, MapPin, Plane, Shapes, ShoppingBag, Stethoscope, UtensilsCrossed,
-  Wallet, type LucideIcon,
+  Leaf, Shapes, ShoppingBag, Stethoscope, UtensilsCrossed, Users, Wallet,
+  type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
  */
 const ICONS: Record<string, LucideIcon> = {
   Baby, Briefcase, Bus, Cpu, GraduationCap, HeartHandshake, Home, Landmark,
-  Leaf, MapPin, Plane, Shapes, ShoppingBag, Stethoscope, UtensilsCrossed, Wallet,
+  Leaf, Shapes, ShoppingBag, Stethoscope, UtensilsCrossed, Users, Wallet,
 };
 
 export function CategoryIcon({

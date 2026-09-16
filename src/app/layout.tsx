@@ -1,33 +1,41 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Figtree, Inter } from "next/font/google";
+import Script from "next/script";
 import { Toaster } from "@/components/ui/sonner";
 import { SiteHeader } from "@/components/navigation/site-header";
 import { SiteFooter } from "@/components/navigation/site-footer";
+import { PageBackButton } from "@/components/navigation/page-back-button";
 import { AuthErrorToast } from "@/components/navigation/auth-error-toast";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { countUnreadNotifications } from "@/lib/data/notifications";
-import { getPlatformStats } from "@/lib/data/stats";
 import { env, APP_NAME, APP_TAGLINE } from "@/lib/env";
 import "./globals.css";
 
 /**
- * One geometric sans for the entire product. The weight range carries the
- * hierarchy that a second family would otherwise be needed for.
+ * One sans for the entire product. The weight range carries the hierarchy
+ * that a second family would otherwise be needed for. Inter is loaded only
+ * for tabular figures in numeric displays (see live-pill.tsx).
  */
-const jakarta = Plus_Jakarta_Sans({
-  variable: "--font-jakarta",
+const figtree = Figtree({
+  variable: "--font-figtree",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
+
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
   display: "swap",
 });
 
 export const metadata: Metadata = {
   metadataBase: new URL(env.appUrl),
   title: {
-    default: `${APP_NAME} — ${APP_TAGLINE}`,
+    default: `${APP_NAME}, ${APP_TAGLINE}`,
     template: `%s · ${APP_NAME}`,
   },
-  description:"Share a real problem. Find out how many other people have it. Then find — or build — the solution. problems.live is the internet's open list of problems worth solving.",
+  description:"Share a real problem. Find out how many other people have it. Then find, or build, the solution. problems.live is the internet's open list of problems worth solving.",
   applicationName: APP_NAME,
   keywords: ["problems","problem database","startup ideas","problem validation","solutions","community",
   ],
@@ -35,13 +43,13 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: APP_NAME,
-    title: `${APP_NAME} — ${APP_TAGLINE}`,
+    title: `${APP_NAME}, ${APP_TAGLINE}`,
     description:"Have a problem? Share it. Have the same problem? Vote for it. Have a solution? Build it.",
     url: env.appUrl,
   },
   twitter: {
     card: "summary_large_image",
-    title: `${APP_NAME} — ${APP_TAGLINE}`,
+    title: `${APP_NAME}, ${APP_TAGLINE}`,
     description:"Have a problem? Share it. Have the same problem? Vote for it. Have a solution? Build it.",
   },
   alternates: { canonical: "/" },
@@ -49,36 +57,66 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#fdfcfb",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#020617" },
+  ],
   width: "device-width",
   initialScale: 1,
 };
 
+/**
+ * Sets the "dark" class before first paint so there is no flash of the
+ * wrong theme. Runs before hydration (`beforeInteractive`), reading the
+ * same "theme" localStorage key AnimatedThemeToggler writes to.
+ */
+const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem("theme");var d=t?t==="dark":window.matchMedia("(prefers-color-scheme: dark)").matches;if(d)document.documentElement.classList.add("dark");}catch(e){}})();`;
+
+/** A browser can restore a previous scroll offset on refresh; reloads start at the top instead. */
+const SCROLL_RESET_ON_RELOAD_SCRIPT = `(function(){try{var n=performance.getEntriesByType("navigation")[0];var r=n&&n.type==="reload";if(!r&&performance.navigation)r=performance.navigation.type===1;if(r){if("scrollRestoration" in history)history.scrollRestoration="manual";window.scrollTo(0,0);requestAnimationFrame(function(){window.scrollTo(0,0);});}}catch(e){}})();`;
+
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  // Fetched once in the layout and passed down, so the header, mobile nav and
-  // command palette all share a single set of queries per request.
-  const [user, unreadCount, stats] = await Promise.all([
+  const [user, unreadCount] = await Promise.all([
     getCurrentUser(),
     countUnreadNotifications(),
-    // A database hiccup should soften the header, not break the page.
-    getPlatformStats().catch(() => ({
-      problems: 0,
-      validations: 0,
-      solutions: 0,
-      solved: 0,
-    })),
   ]);
 
   return (
-    <html lang="en" className={`${jakarta.variable} h-full`}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${figtree.variable} ${inter.variable} h-full`}
+    >
       <body className="flex min-h-full flex-col bg-background">
-        <SiteHeader user={user} unreadCount={unreadCount} stats={stats} />
-        <div className="flex-1">{children}</div>
-        <SiteFooter />
+        <Script
+          id="theme-init"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}
+        />
+        <Script
+          id="scroll-reset-on-reload"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: SCROLL_RESET_ON_RELOAD_SCRIPT }}
+        />
+        <SiteHeader user={user} unreadCount={unreadCount} />
+        <div className="flex-1">
+          <PageBackButton />
+          {children}
+        </div>
+        {/* Marketing chrome — signed-in users are in the app, not on the
+            landing page, so the footer's nav/legal links (already reachable
+            elsewhere) stop showing once there's a session. */}
+        {!user ? <SiteFooter /> : null}
         <Toaster position="top-center" />
         <AuthErrorToast />
+        <Script
+          strategy="afterInteractive"
+          data-website-id="dfid_6rsKInmebGFZpSFynBB68"
+          data-domain="problems.live"
+          src="https://datafa.st/js/script.js"
+        />
       </body>
     </html>
   );

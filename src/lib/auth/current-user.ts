@@ -4,7 +4,13 @@ import { connectToDatabase } from "@/lib/db/mongoose";
 import { User, type IUser } from "@/models";
 import { toObjectId } from "@/lib/utils/sanitize-query";
 import { readSessionUserId } from "./session";
-import { TRUST_TIERS, type TrustTier, type UserRole } from "@/lib/constants";
+import {
+  TRUST_TIERS,
+  type AccountGender,
+  type LocationScope,
+  type TrustTier,
+  type UserRole,
+} from "@/lib/constants";
 
 /**
  * The single source of truth for "who is asking". Role, reputation and
@@ -17,6 +23,15 @@ export interface SessionUser {
   username: string;
   email: string;
   avatar?: string;
+  /** Private preferences are available only to server-rendered account flows. */
+  phone?: string;
+  gender: AccountGender;
+  defaultLocation: {
+    scope: LocationScope;
+    country?: string;
+    region?: string;
+    city?: string;
+  };
   role: UserRole;
   reputation: number;
   problemCredits: number;
@@ -47,6 +62,9 @@ function toSessionUser(doc: IUser): SessionUser {
     username: doc.username,
     email: doc.email,
     avatar: doc.avatar,
+    phone: doc.phone,
+    gender: doc.gender ?? "not_specified",
+    defaultLocation: doc.defaultLocation ?? { scope: "global" },
     role: doc.role,
     reputation: doc.reputation,
     problemCredits: doc.problemCredits,

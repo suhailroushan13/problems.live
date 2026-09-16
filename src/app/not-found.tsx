@@ -3,7 +3,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 
 export default function NotFound() {
   return (
-    <div className="mx-auto max-w-2xl px-4 py-24 sm:px-6">
+    <div className="page py-24">
       <p className="label mb-6 text-center text-brand">404</p>
       <EmptyState
         title="This page doesn't exist."

@@ -16,6 +16,7 @@ export interface IComment {
   moderationStatus: ModerationStatus;
   moderation: ModerationMeta;
   helpfulCount: number;
+  awardCount: number;
   replyCount: number;
   reportCount: number;
   editedAt?: Date | null;
@@ -76,6 +77,7 @@ const CommentSchema = new Schema<IComment>(
     },
     moderation: { type: ModerationSchema, default: () => ({}) },
     helpfulCount: { type: Number, default: 0 },
+    awardCount: { type: Number, default: 0 },
     replyCount: { type: Number, default: 0 },
     reportCount: { type: Number, default: 0 },
     editedAt: { type: Date, default: null },

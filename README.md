@@ -28,6 +28,7 @@ have it**, and **what can I do about it**.
 9. [Architecture](#architecture)
 10. [How the core systems work](#how-the-core-systems-work)
 11. [Scripts](#scripts)
+12. [Contributing](#contributing)
 
 ---
 
@@ -53,7 +54,7 @@ because they are called from the client outside a form submission.
 ## Quick start
 
 ```bash
-git clone <your-repo> problems.live
+git clone https://github.com/suhailroushan13/problems.live.git
 cd problems.live
 
 npm install
@@ -64,6 +65,9 @@ npm run dev                     # http://localhost:3000
 ```
 
 Requires **Node 20.9+** (Node 22 recommended).
+
+Want to contribute a change back? See [CONTRIBUTING.md](CONTRIBUTING.md) —
+short version: fork, branch, PR.
 
 ---
 
@@ -401,6 +405,17 @@ content. Identity cannot leak through a forgotten prop.
 
 ---
 
+## Contributing
+
+This project is open source and takes pull requests. The short version:
+fork the repo, branch off `master`, make your change, and open a PR back
+against `master`.
+
+Full workflow, branch naming, and commit conventions live in
+[CONTRIBUTING.md](CONTRIBUTING.md).
+
+---
+
 ## Licence
 
-MIT.
+MIT — see [LICENSE](LICENSE).

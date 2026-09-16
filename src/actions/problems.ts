@@ -7,6 +7,7 @@ import {
   Category,
   Comment,
   Problem,
+  ProblemBookmark,
   ProblemValidation,
   Solution,
   User,
@@ -132,6 +133,7 @@ export async function createProblem(
         },
         images: input.images,
         isAnonymous: input.isAnonymous,
+        priority: input.priority,
         status: "open",
         moderationStatus: decision.moderationStatus,
         moderation: {
@@ -222,6 +224,7 @@ export async function updateProblem(
       city: input.location.city || undefined,
     };
     problem.isAnonymous = input.isAnonymous;
+    problem.priority = input.priority;
     problem.editedAt = new Date();
     // Re-moderate on edit, but an already-public post is not un-published by a
     // borderline score — it is only downgraded when it now needs review.
@@ -289,6 +292,7 @@ export async function deleteProblem(
       Comment.deleteMany({ problemId: problem._id }).exec(),
       Solution.deleteMany({ problemId: problem._id }).exec(),
       ProblemValidation.deleteMany({ problemId: problem._id }).exec(),
+      ProblemBookmark.deleteMany({ problemId: problem._id }).exec(),
     ]);
 
     if (wasApproved) {

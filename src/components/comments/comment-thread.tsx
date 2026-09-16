@@ -1,5 +1,5 @@
 import { CommentForm } from "./comment-form";
-import { CommentItem } from "./comment-item";
+import { CommentList } from "./comment-list";
 import { formatCount } from "@/lib/utils/format";
 import type { SessionUser } from "@/lib/auth/current-user";
 import type { CommentDTO } from "@/types";
@@ -22,7 +22,7 @@ export function CommentThread({
       <h2 className="text-xl font-bold tracking-[-0.02em] text-foreground">
         Discussion
       </h2>
-      <p className="num mt-1 mb-6 text-[0.8125rem] text-muted-foreground">
+      <p className="num mt-1 mb-5 text-[0.8125rem] text-muted-foreground">
         {formatCount(count)} {count === 1 ? "comment" : "comments"}
       </p>
 
@@ -36,21 +36,18 @@ export function CommentThread({
 
       {comments.length > 0 ? (
         <div className="mt-6">
-          {comments.map((comment) => (
-            <CommentItem
-              key={comment.id}
-              comment={comment}
-              user={user}
-              problemId={problemId}
-              solutionId={solutionId}
-            />
-          ))}
+          <CommentList
+            comments={comments}
+            problemId={problemId}
+            solutionId={solutionId}
+            user={user}
+          />
         </div>
       ) : (
-        <p className="mt-10 text-[0.9375rem] leading-relaxed text-muted-foreground">
-          No comments yet. If you have this problem, say what makes it hard for
-          you — that context is what helps someone solve it.
-        </p>
+        <div className="mt-5 text-[0.9375rem] leading-relaxed text-muted-foreground">
+          <p className="font-medium text-foreground">No comments yet.</p>
+          <p className="mt-1">If you have this problem, say what makes it hard for you. That context helps someone solve it.</p>
+        </div>
       )}
     </section>
   );

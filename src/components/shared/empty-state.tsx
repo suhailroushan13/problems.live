@@ -32,12 +32,12 @@ export function EmptyState({
       {action || secondaryAction ? (
         <div className="mt-7 flex flex-wrap items-center justify-center gap-2">
           {action ? (
-            <Button asChild size="lg" className="pill h-12 px-7 font-bold">
+            <Button asChild size="lg">
               <Link href={action.href}>{action.label}</Link>
             </Button>
           ) : null}
           {secondaryAction ? (
-            <Button asChild size="lg" variant="ghost" className="pill h-12 px-7 font-bold">
+            <Button asChild size="lg" variant="ghost">
               <Link href={secondaryAction.href}>{secondaryAction.label}</Link>
             </Button>
           ) : null}

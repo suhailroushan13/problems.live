@@ -2,7 +2,15 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { CornerDownRight, Flag, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import {
+  CornerDownRight,
+  Flag,
+  Minus,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,7 +33,8 @@ import {
 import { AuthorLine } from "@/components/shared/author-line";
 import { SafeText } from "@/components/shared/safe-text";
 import { ReportDialog } from "@/components/shared/report-dialog";
-import { HelpfulButton } from "@/components/solutions/helpful-button";
+import { CommentVote } from "./comment-vote";
+import { CommentAward } from "./comment-award";
 import { CommentForm } from "./comment-form";
 import { deleteComment, updateComment } from "@/actions/comments";
 import { cn } from "@/lib/utils";
@@ -51,7 +60,10 @@ export function CommentItem({
   const [draft, setDraft] = useState(comment.content);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const [pending, startTransition] = useTransition();
+
+  const replyCount = comment.replies.length;
 
   function saveEdit() {
     startTransition(async () => {
@@ -111,11 +123,33 @@ export function CommentItem({
       className={cn("py-4", depth === 0 && "border-t border-rule first:border-t-0")}
     >
       <div className="flex items-start justify-between gap-3">
-        <AuthorLine
-          author={comment.author}
-          createdAt={comment.createdAt}
-          editedAt={comment.editedAt}
-        />
+        <div className="flex min-w-0 items-start gap-1.5">
+          {replyCount > 0 ? (
+            <button
+              type="button"
+              onClick={() => setCollapsed((value) => !value)}
+              aria-label={collapsed ? "Expand thread" : "Collapse thread"}
+              aria-expanded={!collapsed}
+              className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border border-hairline text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
+            >
+              {collapsed ? (
+                <Plus className="size-2.5" aria-hidden="true" />
+              ) : (
+                <Minus className="size-2.5" aria-hidden="true" />
+              )}
+            </button>
+          ) : null}
+          <AuthorLine
+            author={comment.author}
+            createdAt={comment.createdAt}
+            editedAt={comment.editedAt}
+          />
+          {collapsed ? (
+            <span className="num mt-0.5 text-xs text-muted-foreground">
+              {replyCount} {replyCount === 1 ? "reply" : "replies"} hidden
+            </span>
+          ) : null}
+        </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -155,96 +189,105 @@ export function CommentItem({
         </DropdownMenu>
       </div>
 
-      {editing ? (
-        <div className="mt-2 space-y-2">
-          <Textarea
-            value={draft}
-            onChange={(event) => setDraft(event.target.value.slice(0, 4000))}
-            rows={3}
-            className="resize-none"
-            autoFocus
-          />
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              onClick={saveEdit}
-              disabled={pending || draft.trim().length < 2}
-            >
-              {pending ? "Saving…" : "Save"}
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setEditing(false)}
-              disabled={pending}
-            >
-              Cancel
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <SafeText className="mt-1.5">{comment.content}</SafeText>
-      )}
+      {/* Hidden via CSS rather than unmounted, so vote/award/reply state
+          inside survives a collapse → expand round trip. */}
+      <div className={cn(collapsed && "hidden")}>
+          {editing ? (
+            <div className="mt-2 space-y-2">
+              <Textarea
+                value={draft}
+                onChange={(event) => setDraft(event.target.value.slice(0, 4000))}
+                rows={3}
+                className="resize-none"
+                autoFocus
+              />
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  onClick={saveEdit}
+                  disabled={pending || draft.trim().length < 2}
+                >
+                  {pending ? "Saving…" : "Save"}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setEditing(false)}
+                  disabled={pending}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <SafeText className="mt-1.5">{comment.content}</SafeText>
+          )}
 
-      {comment.moderationStatus === "pending" ? (
-        <p className="mt-1.5 text-xs text-muted-foreground">
-          Awaiting review — only you can see this.
-        </p>
-      ) : null}
+          {comment.moderationStatus === "pending" ? (
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              Awaiting review, only you can see this.
+            </p>
+          ) : null}
 
-      {!editing ? (
-        <div className="mt-2 -ml-1.5 flex items-center gap-1">
-          <HelpfulButton
-            targetId={comment.id}
-            kind="comment"
-            variant="comment"
-            initialCount={comment.helpfulCount}
-            initialActive={comment.hasVoted}
-            isAuthenticated={Boolean(user)}
-          />
+          {!editing ? (
+            <div className="mt-2 -ml-1.5 flex items-center gap-1">
+              <CommentVote
+                commentId={comment.id}
+                initialScore={comment.helpfulCount}
+                initialDirection={comment.voteDirection}
+                isAuthenticated={Boolean(user)}
+              />
 
-          <button
-            type="button"
-            onClick={() => setReplying((value) => !value)}
-            className="inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <CornerDownRight className="size-3.5" />
-            Reply
-          </button>
-        </div>
-      ) : null}
+              <button
+                type="button"
+                onClick={() => setReplying((value) => !value)}
+                className="inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <CornerDownRight className="size-3.5" />
+                Reply
+              </button>
 
-      {replying ? (
-        <CommentForm
-          problemId={problemId}
-          solutionId={solutionId}
-          parentId={comment.id}
-          user={user}
-          compact
-          autoFocus
-          placeholder={
-            comment.author ? `Reply to @${comment.author.username}…` : "Reply…"
-          }
-          onPosted={() => setReplying(false)}
-          onCancel={() => setReplying(false)}
-          className="mt-3"
-        />
-      ) : null}
+              <CommentAward
+                commentId={comment.id}
+                initialCount={comment.awardCount}
+                initialActive={comment.hasAwarded}
+                isAuthenticated={Boolean(user)}
+              />
+            </div>
+          ) : null}
 
-      {comment.replies.length > 0 ? (
-        <div className="mt-2 space-y-0 border-l border-hairline pl-4 sm:pl-5">
-          {comment.replies.map((reply) => (
-            <CommentItem
-              key={reply.id}
-              comment={reply}
-              user={user}
+          {replying ? (
+            <CommentForm
               problemId={problemId}
               solutionId={solutionId}
-              depth={depth + 1}
+              parentId={comment.id}
+              user={user}
+              compact
+              autoFocus
+              placeholder={
+                comment.author ? `Reply to @${comment.author.username}…` : "Reply…"
+              }
+              onPosted={() => setReplying(false)}
+              onCancel={() => setReplying(false)}
+              className="mt-3"
             />
-          ))}
-        </div>
-      ) : null}
+          ) : null}
+
+          {comment.replies.length > 0 ? (
+            <div className="mt-2 space-y-0 border-l border-hairline pl-4 sm:pl-5">
+              {comment.replies.map((reply) => (
+                <CommentItem
+                  key={reply.id}
+                  comment={reply}
+                  user={user}
+                  problemId={problemId}
+                  solutionId={solutionId}
+                  depth={depth + 1}
+                />
+              ))}
+            </div>
+          ) : null}
+      </div>
 
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>

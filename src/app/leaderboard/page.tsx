@@ -23,7 +23,7 @@ export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "Leaderboard",
-  description:"The people doing the most useful work on problems.live — the ones whose solutions and comments others actually found helpful.",
+  description:"The people doing the most useful work on problems.live, the ones whose solutions and comments others actually found helpful.",
   alternates: { canonical: "/leaderboard" },
 };
 
@@ -42,14 +42,14 @@ export default async function LeaderboardPage({
   const entries = await getLeaderboard(board, 25);
 
   return (
-    <div className="page max-w-3xl py-12 sm:py-16">
+    <div className="page py-12 sm:py-16">
       <header className="max-w-2xl">
-        <h1 className="text-[2rem] font-extrabold tracking-[-0.035em] text-foreground sm:text-[2.75rem]">
+        <h1 className="text-[2rem] font-bold tracking-[-0.035em] text-foreground sm:text-[2.75rem]">
           Leaderboard
         </h1>
         <p className="mt-3 text-[0.9375rem] leading-relaxed text-muted-foreground">
           Ranked by usefulness, not popularity. Nobody gets here by posting a
-          lot — only by posting things other people found genuinely helpful.
+          lot, only by posting things other people found genuinely helpful.
         </p>
       </header>
 

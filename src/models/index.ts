@@ -19,9 +19,12 @@ export {
   ProblemValidation,
   SolutionVote,
   CommentVote,
+  CommentAward,
   type IProblemValidation,
   type ISolutionVote,
   type ICommentVote,
+  type ICommentAward,
+  type VoteDirection,
 } from "./Vote";
 export {
   Report,
@@ -33,3 +36,7 @@ export { Notification, type INotification } from "./Notification";
 export { Setting, type ISetting } from "./Setting";
 export { RateLimit, type IRateLimit } from "./RateLimit";
 export { AuditLog, type IAuditLog } from "./AuditLog";
+export { SiteVisit, type ISiteVisit } from "./SiteVisit";
+export { ProblemClick, type IProblemClick } from "./ProblemClick";
+export { ProblemBookmark, type IProblemBookmark } from "./ProblemBookmark";
+export { Passkey, type IPasskey } from "./Passkey";

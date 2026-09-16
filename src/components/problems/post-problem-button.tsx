@@ -53,7 +53,7 @@ export function PostProblemButton({
         className={cn("gap-1.5 whitespace-nowrap", className)}
       >
         <a
-          href={`/api/auth/google?next=${encodeURIComponent(
+          href={`/login?next=${encodeURIComponent(
             pathname === "/" ? "/problems/new" : pathname
           )}`}
         >
@@ -80,7 +80,7 @@ export function PostProblemButton({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="flex max-h-[92dvh] flex-col overflow-hidden sm:max-w-2xl">
           <DialogHeader className="text-left">
-            <DialogTitle className="display text-2xl">
+            <DialogTitle className="text-h3">
               Share a problem
             </DialogTitle>
             <DialogDescription>

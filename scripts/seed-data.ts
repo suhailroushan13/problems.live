@@ -1,5 +1,5 @@
 /**
- * Realistic development fixtures. These are problems people actually have —
+ * Realistic development fixtures. These are problems people actually have,
  * lorem ipsum makes it impossible to judge whether the product reads well.
  */
 
@@ -47,7 +47,7 @@ export const SEED_PROBLEMS: SeedProblem[] = [
     validations: 2431,
     daysAgo: 4,
     description:
-      "Finding a roommate online means meeting a stranger from a Facebook group, handing over a deposit, and hoping. There is no way to verify that the person is who they say they are, that they actually live at the address, or that the last three people who lived with them left on good terms.\n\nThe listing sites optimise for volume, not safety. Scams are common: fake listings, deposits taken for apartments that do not exist, and \"landlords\" who are travelling abroad and will post the keys. Nobody is checking anything.\n\nWhat is missing is a lightweight way to establish that two people are real, are who they claim to be, and are roughly compatible — before money changes hands.",
+      "Finding a roommate online means meeting a stranger from a Facebook group, handing over a deposit, and hoping. There is no way to verify that the person is who they say they are, that they actually live at the address, or that the last three people who lived with them left on good terms.\n\nThe listing sites optimise for volume, not safety. Scams are common: fake listings, deposits taken for apartments that do not exist, and \"landlords\" who are travelling abroad and will post the keys. Nobody is checking anything.\n\nWhat is missing is a lightweight way to establish that two people are real, are who they claim to be, and are roughly compatible, before money changes hands.",
   },
   {
     title: "Rental deposits disappear and there is no practical way to fight it",
@@ -65,7 +65,7 @@ export const SEED_PROBLEMS: SeedProblem[] = [
     validations: 1522,
     daysAgo: 7,
     description:
-      "Every course page shows a 4.7 rating and \"50,000 students enrolled\". None of them tell you the completion rate, how many people who finished got the outcome they wanted, or how out of date the material is.\n\nReviews are written in the first week, when everyone is still enthusiastic. The people who quit in week three do not leave reviews at all — which is exactly the signal a buyer needs.",
+      "Every course page shows a 4.7 rating and \"50,000 students enrolled\". None of them tell you the completion rate, how many people who finished got the outcome they wanted, or how out of date the material is.\n\nReviews are written in the first week, when everyone is still enthusiastic. The people who quit in week three do not leave reviews at all, which is exactly the signal a buyer needs.",
   },
   {
     title: "Getting a same-week appointment with a GP is nearly impossible",
@@ -88,12 +88,12 @@ export const SEED_PROBLEMS: SeedProblem[] = [
   },
   {
     title: "Gig workers cannot get a loan because their income looks unstable",
-    category: "finance",
+    category: "money",
     author: "priya",
     validations: 2078,
     daysAgo: 13,
     description:
-      "Drivers, delivery riders and freelancers earn consistently but irregularly. Every lender's model expects a salary slip, so a rider who reliably clears the same amount every month is treated as higher risk than a salaried employee earning less.\n\nThe data exists — platform earnings history is far richer than a payslip — but there is no accepted way to present it to a lender.",
+      "Drivers, delivery riders and freelancers earn consistently but irregularly. Every lender's model expects a salary slip, so a rider who reliably clears the same amount every month is treated as higher risk than a salaried employee earning less.\n\nThe data exists, platform earnings history is far richer than a payslip, but there is no accepted way to present it to a lender.",
   },
   {
     title: "Public transport apps do not tell you when a bus is actually full",
@@ -112,16 +112,16 @@ export const SEED_PROBLEMS: SeedProblem[] = [
     validations: 1105,
     daysAgo: 3,
     description:
-      "Prices shift weekly, promotions are per-store, and unit pricing is inconsistent — one shop lists per 100g, another per item. Working out where a basket is actually cheapest takes longer than the saving is worth.\n\nFor people on a tight budget this is not a convenience issue. It is tens of pounds a month.",
+      "Prices shift weekly, promotions are per-store, and unit pricing is inconsistent, one shop lists per 100g, another per item. Working out where a basket is actually cheapest takes longer than the saving is worth.\n\nFor people on a tight budget this is not a convenience issue. It is tens of pounds a month.",
   },
   {
     title: "Elderly relatives get locked out of services that went app-only",
-    category: "society",
+    category: "government",
     author: "mei",
     validations: 1963,
     daysAgo: 22,
     description:
-      "Banking, prescriptions, council services, parking — all moved to apps that assume a smartphone, an email address, a password manager and two-factor authentication. My mother has none of those, and the phone line she used to call was closed because \"most customers prefer digital\".\n\nThe result is a growing population that cannot independently do things they did unaided five years ago.",
+      "Banking, prescriptions, council services, parking, all moved to apps that assume a smartphone, an email address, a password manager and two-factor authentication. My mother has none of those, and the phone line she used to call was closed because \"most customers prefer digital\".\n\nThe result is a growing population that cannot independently do things they did unaided five years ago.",
   },
   {
     title: "Recycling rules differ by street and nobody knows the right answer",
@@ -130,7 +130,7 @@ export const SEED_PROBLEMS: SeedProblem[] = [
     validations: 743,
     daysAgo: 15,
     description:
-      "One council takes soft plastics, the next does not. Move house and the rules change entirely. The symbols on packaging are designed for the manufacturer, not for the person standing over three bins.\n\nSo people guess, and contaminated loads get landfilled anyway — which means careful sorting achieves nothing.",
+      "One council takes soft plastics, the next does not. Move house and the rules change entirely. The symbols on packaging are designed for the manufacturer, not for the person standing over three bins.\n\nSo people guess, and contaminated loads get landfilled anyway, which means careful sorting achieves nothing.",
   },
   {
     title: "Returning an online order costs more than the item is worth",
@@ -148,16 +148,16 @@ export const SEED_PROBLEMS: SeedProblem[] = [
     validations: 1388,
     daysAgo: 17,
     description:
-      "Nurseries do not publish availability. You call twenty places, join twelve waitlists, pay deposits on three, and hope. Meanwhile you cannot tell an employer when you can return to work.\n\nThe information is simply not shared anywhere — every family independently rediscovers the same local landscape.",
+      "Nurseries do not publish availability. You call twenty places, join twelve waitlists, pay deposits on three, and hope. Meanwhile you cannot tell an employer when you can return to work.\n\nThe information is simply not shared anywhere, every family independently rediscovers the same local landscape.",
   },
   {
     title: "Visa requirements are written to be technically correct, not understandable",
-    category: "travel",
+    category: "government",
     author: "nathan",
     validations: 1174,
     daysAgo: 26,
     description:
-      "Official pages describe categories, not situations. Nowhere does a page say \"you are a Nigerian citizen, employed, travelling to Germany for a nine-day conference — here is the exact list\". So people pay agents hundreds to read the same public page for them, and still get rejected on a detail.",
+      "Official pages describe categories, not situations. Nowhere does a page say \"you are a Nigerian citizen, employed, travelling to Germany for a nine-day conference, here is the exact list\". So people pay agents hundreds to read the same public page for them, and still get rejected on a detail.",
   },
   {
     title: "Small restaurants pay for five systems that do not talk to each other",
@@ -170,7 +170,7 @@ export const SEED_PROBLEMS: SeedProblem[] = [
   },
   {
     title: "There is no way to know if a charity actually spends money well",
-    category: "society",
+    category: "community",
     author: "fatima",
     validations: 927,
     daysAgo: 30,
@@ -225,7 +225,7 @@ export const SEED_PROBLEMS: SeedProblem[] = [
   },
   {
     title: "Bank fraud alerts block real purchases and miss real fraud",
-    category: "finance",
+    category: "money",
     author: "priya",
     validations: 1057,
     daysAgo: 14,
@@ -240,11 +240,11 @@ export const SEED_PROBLEMS: SeedProblem[] = [
     daysAgo: 28,
     isAnonymous: true,
     description:
-      "Forty pages of legal text to use a messaging app. Everyone clicks accept. Buried in there are data sharing terms, arbitration clauses and licence grants nobody would agree to if asked plainly.\n\nConsent that everybody gives without reading is not consent — it is a formality.",
+      "Forty pages of legal text to use a messaging app. Everyone clicks accept. Buried in there are data sharing terms, arbitration clauses and licence grants nobody would agree to if asked plainly.\n\nConsent that everybody gives without reading is not consent, it is a formality.",
   },
   {
     title: "Local tradespeople are impossible to evaluate before hiring",
-    category: "local-problems",
+    category: "community",
     author: "liam",
     validations: 689,
     daysAgo: 16,
@@ -283,7 +283,7 @@ export const SEED_SOLUTIONS: SeedSolution[] = [
     daysAgo: 3,
     status: "building",
     description:
-      "Verify people through an address that an institution already checked — a university, a hospital, a large employer. That gets you a real identity without asking anyone to upload a passport to a startup.\n\nLayer on lightweight compatibility signals (sleep schedule, guests, cleanliness) and a mutual reference system where previous flatmates confirm the tenancy ended normally. No public star ratings — just verified facts.",
+      "Verify people through an address that an institution already checked, a university, a hospital, a large employer. That gets you a real identity without asking anyone to upload a passport to a startup.\n\nLayer on lightweight compatibility signals (sleep schedule, guests, cleanliness) and a mutual reference system where previous flatmates confirm the tenancy ended normally. No public star ratings, just verified facts.",
   },
   {
     problemTitle: "Finding trustworthy roommates is genuinely risky",
@@ -330,7 +330,7 @@ export const SEED_SOLUTIONS: SeedSolution[] = [
     helpful: 268,
     daysAgo: 4,
     description:
-      "The emotional cost is what stops people chasing. Automate the sequence — day 1 polite, day 14 firmer with the contract terms quoted, day 30 formal notice with statutory late-payment interest calculated.\n\nIt stops being a personal ask and becomes a process, which is exactly how the client's finance team already treats it.",
+      "The emotional cost is what stops people chasing. Automate the sequence, day 1 polite, day 14 firmer with the contract terms quoted, day 30 formal notice with statutory late-payment interest calculated.\n\nIt stops being a personal ask and becomes a process, which is exactly how the client's finance team already treats it.",
   },
   {
     problemTitle: "Gig workers cannot get a loan because their income looks unstable",
@@ -359,7 +359,7 @@ export const SEED_SOLUTIONS: SeedSolution[] = [
     daysAgo: 18,
     status: "building",
     description:
-      "Invert the model: the record belongs to the patient, and providers write into it rather than keeping their own copy. Interoperability standards for this already exist and are widely implemented — what is missing is the requirement to actually use them.",
+      "Invert the model: the record belongs to the patient, and providers write into it rather than keeping their own copy. Interoperability standards for this already exist and are widely implemented, what is missing is the requirement to actually use them.",
   },
   {
     problemTitle: "Elderly relatives get locked out of services that went app-only",
@@ -368,7 +368,7 @@ export const SEED_SOLUTIONS: SeedSolution[] = [
     helpful: 522,
     daysAgo: 20,
     description:
-      "For anything classed as essential — banking, health, utilities, government — require a maintained non-digital route. Not a bad one kept alive to tick a box: a staffed phone line with comparable wait times.\n\nThis is an accessibility requirement, and it should be enforced the same way physical access is.",
+      "For anything classed as essential, banking, health, utilities, government, require a maintained non-digital route. Not a bad one kept alive to tick a box: a staffed phone line with comparable wait times.\n\nThis is an accessibility requirement, and it should be enforced the same way physical access is.",
   },
   {
     problemTitle: "Elderly relatives get locked out of services that went app-only",
@@ -377,7 +377,7 @@ export const SEED_SOLUTIONS: SeedSolution[] = [
     helpful: 289,
     daysAgo: 15,
     description:
-      "Right now helping a parent means knowing their password, which is both unsafe and legally murky. A proper delegation model — named helper, scoped permissions, full audit trail, revocable — solves it without anyone impersonating anyone.",
+      "Right now helping a parent means knowing their password, which is both unsafe and legally murky. A proper delegation model, named helper, scoped permissions, full audit trail, revocable, solves it without anyone impersonating anyone.",
   },
   {
     problemTitle: "Nobody can tell which online course is actually worth the money",
@@ -386,7 +386,7 @@ export const SEED_SOLUTIONS: SeedSolution[] = [
     helpful: 356,
     daysAgo: 5,
     description:
-      "Two numbers would change the market: what fraction of enrolled students finished, and what fraction reported the outcome they signed up for six months later.\n\nBoth are already tracked internally. Neither is published, for obvious reasons — which is exactly why it should be a condition of listing on a marketplace.",
+      "Two numbers would change the market: what fraction of enrolled students finished, and what fraction reported the outcome they signed up for six months later.\n\nBoth are already tracked internally. Neither is published, for obvious reasons, which is exactly why it should be a condition of listing on a marketplace.",
   },
   {
     problemTitle: "Grocery prices change so often that comparing shops is pointless",
@@ -405,7 +405,7 @@ export const SEED_SOLUTIONS: SeedSolution[] = [
     daysAgo: 13,
     status: "shipped",
     description:
-      "Packaging barcodes already identify the exact material composition. Combine that with the local authority's accepted materials list and the answer is deterministic — no symbols to interpret, no guessing.",
+      "Packaging barcodes already identify the exact material composition. Combine that with the local authority's accepted materials list and the answer is deterministic, no symbols to interpret, no guessing.",
   },
   {
     problemTitle: "Public transport apps do not tell you when a bus is actually full",
@@ -432,7 +432,7 @@ export const SEED_SOLUTIONS: SeedSolution[] = [
     helpful: 267,
     daysAgo: 22,
     description:
-      "Ten questions — citizenship, destination, purpose, duration, employment — and one output: the exact documents, the exact fee, the exact appointment type. No categories, no \"see also\", no cross-references.",
+      "Ten questions, citizenship, destination, purpose, duration, employment, and one output: the exact documents, the exact fee, the exact appointment type. No categories, no \"see also\", no cross-references.",
   },
   {
     problemTitle: "Second-hand marketplaces are full of scams and no-shows",
@@ -450,7 +450,7 @@ export const SEED_SOLUTIONS: SeedSolution[] = [
     helpful: 134,
     daysAgo: 6,
     description:
-      "Full consolidation is unrealistic — nobody is replacing their POS. But a single stock service that every other system reads and writes removes the most expensive daily error.",
+      "Full consolidation is unrealistic, nobody is replacing their POS. But a single stock service that every other system reads and writes removes the most expensive daily error.",
   },
   {
     problemTitle: "Learning a language stalls at the point conversation starts",
@@ -459,7 +459,7 @@ export const SEED_SOLUTIONS: SeedSolution[] = [
     helpful: 301,
     daysAgo: 17,
     description:
-      "Tutoring is expensive because it is one-directional. Pair two learners whose target and native languages are swapped, give them a structured prompt for the session, and split the time.\n\nThe structure is what makes it work — unstructured exchanges collapse within three sessions.",
+      "Tutoring is expensive because it is one-directional. Pair two learners whose target and native languages are swapped, give them a structured prompt for the session, and split the time.\n\nThe structure is what makes it work, unstructured exchanges collapse within three sessions.",
   },
   {
     problemTitle: "Bank fraud alerts block real purchases and miss real fraud",
@@ -478,7 +478,7 @@ export const SEED_SOLUTIONS: SeedSolution[] = [
     daysAgo: 19,
     status: "shipped",
     description:
-      "Everyone agrees the rules up front — even split, or by nights stayed — and authorises settlement at the end. The awkward conversation happens once, before anyone has spent anything, when it is easy.",
+      "Everyone agrees the rules up front, even split, or by nights stayed, and authorises settlement at the end. The awkward conversation happens once, before anyone has spent anything, when it is easy.",
   },
   {
     problemTitle: "There is no way to know if a charity actually spends money well",
@@ -487,7 +487,7 @@ export const SEED_SOLUTIONS: SeedSolution[] = [
     helpful: 142,
     daysAgo: 25,
     description:
-      "Full independent evaluation costs more than most local charities receive. A lightweight standard — three outcome measures, reported annually, audited by sample — would cover the long tail that no evaluator looks at today.",
+      "Full independent evaluation costs more than most local charities receive. A lightweight standard, three outcome measures, reported annually, audited by sample, would cover the long tail that no evaluator looks at today.",
   },
   {
     problemTitle: "Childcare availability is invisible until you are already on a waitlist",
@@ -548,7 +548,7 @@ export const SEED_COMMENTS: SeedComment[] = [
         helpful: 21,
         daysAgo: 2,
         content:
-          "This is the exact case escrow solves. Nothing about identity verification would have stopped it — the money moving before anyone saw a key is the whole vulnerability.",
+          "This is the exact case escrow solves. Nothing about identity verification would have stopped it, the money moving before anyone saw a key is the whole vulnerability.",
       },
     ],
   },
@@ -558,7 +558,7 @@ export const SEED_COMMENTS: SeedComment[] = [
     helpful: 148,
     daysAgo: 2,
     content:
-      "Eleven hours across four rounds, including a take-home. The offer was 40% under. When I said so, the recruiter told me the band had \"always been on the internal req\" — so they knew from the first call.",
+      "Eleven hours across four rounds, including a take-home. The offer was 40% under. When I said so, the recruiter told me the band had \"always been on the internal req\", so they knew from the first call.",
     replies: [
       {
         author: "mei",
@@ -590,7 +590,7 @@ export const SEED_COMMENTS: SeedComment[] = [
         helpful: 45,
         daysAgo: 17,
         content:
-          "This is measurable, by the way — there is real research linking forced digital transitions to reduced service uptake in over-75s. It is not a niche complaint.",
+          "This is measurable, by the way, there is real research linking forced digital transitions to reduced service uptake in over-75s. It is not a niche complaint.",
       },
     ],
   },

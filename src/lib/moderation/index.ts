@@ -88,8 +88,8 @@ export async function moderateContent(
 export function moderationMessage(decision: ModerationDecision): string {
   if (decision.moderationStatus === "rejected") {
     return decision.reason
-      ? `This can't be posted — our filters flagged it for ${decision.reason}. Please rewrite it and try again.`
+      ? `This can't be posted, our filters flagged it for ${decision.reason}. Please rewrite it and try again.`
       : "This can't be posted because it breaks the community guidelines.";
   }
-  return "Posted — a moderator is reviewing it before it goes public. This usually takes a few minutes.";
+  return "Posted, a moderator is reviewing it before it goes public. This usually takes a few minutes.";
 }

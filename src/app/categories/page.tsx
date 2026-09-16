@@ -8,7 +8,7 @@ export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "Categories",
-  description:"Every problem on problems.live lives in a category — technology, housing, health, work, transport and more.",
+  description:"Every problem on problems.live lives in a category, technology, housing, health, work, transport and more.",
   alternates: { canonical: "/categories" },
 };
 
@@ -17,14 +17,14 @@ export default async function CategoriesPage() {
   const total = categories.reduce((sum, c) => sum + c.problemCount, 0);
 
   return (
-    <div className="page max-w-4xl py-12 sm:py-16">
+    <div className="page py-12 sm:py-16">
       <header className="max-w-2xl">
-        <h1 className="text-[2rem] font-extrabold tracking-[-0.035em] text-foreground sm:text-[2.75rem]">
+        <h1 className="text-[2rem] font-bold tracking-[-0.035em] text-foreground sm:text-[2.75rem]">
           Categories
         </h1>
         <p className="mt-3 text-[0.9375rem] leading-relaxed text-muted-foreground">
           {formatCount(total)} problems across {categories.length} categories.
-          Start where you have first-hand experience — that is where your vote
+          Start where you have first-hand experience, that is where your vote
           means the most.
         </p>
       </header>

@@ -67,6 +67,8 @@ export async function GET(request: NextRequest) {
     const destination =
       next.startsWith("/") && !next.startsWith("//") ? next : "/";
 
+    // Profile details are editable in Settings. Never trap a returning user
+    // in onboarding because an older account lacks an optional field.
     const response = NextResponse.redirect(`${env.appUrl}${destination}`);
     response.cookies.set(SESSION_COOKIE, token, {
       httpOnly: true,

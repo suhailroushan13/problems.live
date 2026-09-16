@@ -1,86 +1,89 @@
+"use client";
+
 import Link from "next/link";
 import { Bell, Plus } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Logo } from "./logo";
-import { NavLinks } from "./nav-links";
-import { SearchCommand } from "./search-command";
 import { UserMenu } from "./user-menu";
-import { MobileMenu } from "./mobile-menu";
-import { LivePill } from "./live-pill";
-import { SignInButton } from "@/components/shared/sign-in-button";
 import type { SessionUser } from "@/lib/auth/current-user";
-import type { PlatformStats } from "@/lib/data/stats";
+
+/** No visible container — a comfortable hit area, not a decorative circle. */
+const ICON_BUTTON_CLASS =
+  "relative inline-flex size-10 shrink-0 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/25 [&_svg]:size-[1.125rem]";
 
 export function SiteHeader({
   user,
   unreadCount,
-  stats,
 }: {
   user: SessionUser | null;
   unreadCount: number;
-  stats: PlatformStats;
 }) {
-  return (
-    <header className="sticky top-0 z-50 bg-background/90 backdrop-blur-md">
-      <div className="page flex h-16 items-center gap-3 sm:h-18 sm:gap-4">
-        <Logo className="tap" />
+  const pathname = usePathname();
+  const isPosting = pathname === "/problems/new";
 
-        <LivePill stats={stats} className="hidden xl:inline-flex" />
-
-        <div className="ml-auto flex items-center gap-1">
-          <NavLinks className="hidden lg:flex" />
-
-          <SearchCommand />
-
-          <Button
-            asChild
-            size="lg"
-            className="tap pill ml-1 h-10 gap-1.5 px-4 text-sm font-bold"
+  if (isPosting) {
+    return (
+      <header className="sticky top-0 z-50 border-b border-hairline bg-background/95 backdrop-blur-md">
+        <div className="flex h-15 items-center gap-4 px-4 sm:h-16 sm:px-6 lg:px-8">
+          <Logo />
+          <Link
+            href="/problems"
+            className="ml-auto text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
-            <Link href="/problems/new">
+            ← Back to problems
+          </Link>
+        </div>
+      </header>
+    );
+  }
+
+  return (
+    <header className="sticky top-0 z-50 border-b border-border bg-background">
+      <div className="flex h-16 items-center px-4 sm:px-6 lg:px-8">
+        <Logo className="tap shrink-0" />
+
+        <div className="ml-auto flex items-center gap-1 sm:gap-6">
+          <Button asChild className="hidden shrink-0 gap-1.5 sm:inline-flex">
+            <Link href="/problems/new" title="Post a problem">
               <Plus className="size-4" aria-hidden="true" />
-              <span className="hidden sm:inline">Share problem</span>
-              <span className="sm:hidden">Share</span>
+              <span className="hidden sm:inline">Post a problem</span>
+              <span className="sr-only sm:not-sr-only sm:hidden">
+                Post a problem
+              </span>
             </Link>
           </Button>
 
           {user ? (
-            <>
-              <Button
-                asChild
-                variant="ghost"
-                size="icon"
+            <div className="flex items-center gap-1">
+              <Link
+                href="/notifications"
                 aria-label={
                   unreadCount > 0
                     ? `Notifications, ${unreadCount} unread`
                     : "Notifications"
                 }
-                className="relative hidden size-10 rounded-full text-muted-foreground lg:inline-flex"
+                className={ICON_BUTTON_CLASS}
               >
-                <Link href="/notifications">
-                  <Bell className="size-[1.125rem]" />
-                  {unreadCount > 0 ? (
-                    <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-brand ring-2 ring-background" />
-                  ) : null}
-                </Link>
-              </Button>
+                <Bell strokeWidth={1.8} aria-hidden="true" />
+                {unreadCount > 0 ? (
+                  <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-brand ring-2 ring-background" />
+                ) : null}
+              </Link>
 
-              <div className="hidden lg:block">
-                <UserMenu user={user} unreadCount={unreadCount} />
-              </div>
-            </>
-          ) : (
-            <SignInButton
-              variant="ghost"
-              size="lg"
-              showIcon={false}
-              className="tap pill hidden h-10 px-3 text-sm font-semibold lg:inline-flex"
-            >
-              Sign in
-            </SignInButton>
-          )}
+              <UserMenu user={user} unreadCount={unreadCount} />
+            </div>
+          ) : <Button asChild variant="outline" size="sm" className="hidden sm:inline-flex"><Link href={`/login?next=${encodeURIComponent(pathname ?? "/")}`}>Sign in</Link></Button>}
 
-          <MobileMenu user={user} />
+          <Button
+            asChild
+            size="icon"
+            className="size-9 shrink-0 rounded-md sm:hidden"
+          >
+            <Link href="/problems/new" aria-label="Post a problem">
+              <Plus className="size-[1.125rem]" aria-hidden="true" />
+            </Link>
+          </Button>
         </div>
       </div>
     </header>

@@ -1,8 +1,22 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { connectToDatabase } from "@/lib/db/mongoose";
-import { AuditLog, Category, Problem, Report, User } from "@/models";
+import {
+  AuditLog,
+  Category,
+  Comment,
+  Problem,
+  ProblemBookmark,
+  Report,
+  Solution,
+  SolutionVote,
+  CommentVote,
+  ProblemValidation,
+  Notification,
+  User,
+} from "@/models";
 import {
   findContentDocument,
   isContentTarget,
@@ -19,6 +33,7 @@ import { setSetting, invalidateSettingsCache, SETTING_DEFAULTS, type SettingKey 
 import {
   DomainError,
   NotFoundError,
+  ok,
   okVoid,
   toActionError,
 } from "@/lib/action-helpers";
@@ -382,6 +397,350 @@ export async function setUserRole(
   }
 }
 
+/**
+ * Builds `$inc` bulk-write ops from a map of id -> delta, skipping zero
+ * deltas. The field name is dynamic, which Mongoose's generic `bulkWrite`
+ * types can't express, so the array is deliberately untyped here and cast
+ * at each call site.
+ */
+function incOps(
+  deltas: Map<string, number>,
+  field: string
+): Record<string, unknown>[] {
+  return Array.from(deltas.entries())
+    .filter(([, delta]) => delta !== 0)
+    .map(([id, delta]) => ({
+      updateOne: {
+        filter: { _id: objectId(id) },
+        update: { $inc: { [field]: delta } },
+      },
+    }));
+}
+
+function addDelta(map: Map<string, number>, key: string, amount = 1): void {
+  map.set(key, (map.get(key) ?? 0) + amount);
+}
+
+/**
+ * Deletes user accounts and everything they authored. Admins and the acting
+ * admin's own account are always excluded, even if passed in — this is the
+ * one action in the app with no undo, so it never trusts the caller alone.
+ *
+ * Cascade depth matches the single-item delete actions elsewhere
+ * (deleteProblem/deleteSolution/deleteComment): posts and their own replies
+ * are hard-deleted, comments left on content that survives are soft-deleted
+ * (status "deleted") so reply threads keep their shape, and votes cast by
+ * the removed users are reversed exactly like an unvote — decrementing the
+ * receiving author's counter and reputation — so the numbers on surviving
+ * content stay honest.
+ */
+export async function bulkDeleteUsers(
+  rawUserIds: string[]
+): Promise<ActionResult<{ deletedCount: number }>> {
+  try {
+    const admin = await requireAdmin();
+    const ids = z.array(objectIdSchema).min(1).max(500).parse(rawUserIds);
+    await connectToDatabase();
+
+    const objectIds = Array.from(new Set(ids)).map((id) => objectId(id));
+
+    const targets = await User.find(
+      { _id: { $in: objectIds, $ne: objectId(admin.id) }, role: { $ne: "admin" } },
+      { _id: 1, username: 1 }
+    )
+      .lean()
+      .exec();
+
+    if (targets.length === 0) {
+      throw new DomainError(
+        "Nothing to delete, your own account and other admins are always protected."
+      );
+    }
+
+    const targetIds = targets.map((u) => u._id);
+
+    // --- Problems these users authored: same cascade as deleteProblem(). ---
+    const ownProblems = await Problem.find(
+      { authorId: { $in: targetIds } },
+      { _id: 1, categoryId: 1, moderationStatus: 1 }
+    )
+      .lean()
+      .exec();
+    const ownProblemIds = ownProblems.map((p) => p._id);
+
+    const categoryDeltas = new Map<string, number>();
+    for (const p of ownProblems) {
+      if (p.moderationStatus === "approved") {
+        addDelta(categoryDeltas, String(p.categoryId), -1);
+      }
+    }
+
+    await Promise.all([
+      Problem.deleteMany({ _id: { $in: ownProblemIds } }).exec(),
+      Comment.deleteMany({ problemId: { $in: ownProblemIds } }).exec(),
+      Solution.deleteMany({ problemId: { $in: ownProblemIds } }).exec(),
+      ProblemValidation.deleteMany({ problemId: { $in: ownProblemIds } }).exec(),
+      ProblemBookmark.deleteMany({ problemId: { $in: ownProblemIds } }).exec(),
+    ]);
+    if (categoryDeltas.size > 0) {
+      await Category.bulkWrite(incOps(categoryDeltas, "problemCount") as never[]);
+    }
+
+    // --- Their solutions on problems that still exist: same cascade as
+    // deleteSolution(). ---
+    const ownSolutions = await Solution.find(
+      { authorId: { $in: targetIds }, problemId: { $nin: ownProblemIds } },
+      { _id: 1, problemId: 1, moderationStatus: 1 }
+    )
+      .lean()
+      .exec();
+    const ownSolutionIds = ownSolutions.map((s) => s._id);
+
+    const solutionCountDeltas = new Map<string, number>();
+    for (const s of ownSolutions) {
+      if (s.moderationStatus === "approved") {
+        addDelta(solutionCountDeltas, String(s.problemId), -1);
+      }
+    }
+
+    await Promise.all([
+      Solution.deleteMany({ _id: { $in: ownSolutionIds } }).exec(),
+      SolutionVote.deleteMany({ solutionId: { $in: ownSolutionIds } }).exec(),
+      Comment.deleteMany({ solutionId: { $in: ownSolutionIds } }).exec(),
+      Problem.updateMany(
+        { acceptedSolutionId: { $in: ownSolutionIds } },
+        { $set: { acceptedSolutionId: null } }
+      ).exec(),
+    ]);
+    if (solutionCountDeltas.size > 0) {
+      await Problem.bulkWrite(incOps(solutionCountDeltas, "solutionCount") as never[]);
+    }
+
+    // --- Their comments on content that still exists: soft delete, same as
+    // deleteComment(), so surviving reply threads keep their shape. ---
+    const ownComments = await Comment.find(
+      {
+        authorId: { $in: targetIds },
+        problemId: { $nin: ownProblemIds },
+        status: "visible",
+      },
+      { _id: 1, problemId: 1, solutionId: 1, parentId: 1, moderationStatus: 1 }
+    )
+      .lean()
+      .exec();
+
+    const problemCommentDeltas = new Map<string, number>();
+    const solutionCommentDeltas = new Map<string, number>();
+    const replyDeltas = new Map<string, number>();
+    for (const c of ownComments) {
+      if (c.moderationStatus !== "approved") continue;
+      addDelta(problemCommentDeltas, String(c.problemId), -1);
+      if (c.solutionId) addDelta(solutionCommentDeltas, String(c.solutionId), -1);
+      if (c.parentId) addDelta(replyDeltas, String(c.parentId), -1);
+    }
+
+    if (ownComments.length > 0) {
+      const ownCommentIds = ownComments.map((c) => c._id);
+      await Promise.all([
+        Comment.updateMany(
+          { _id: { $in: ownCommentIds } },
+          { $set: { status: "deleted", content: "" } }
+        ).exec(),
+        CommentVote.deleteMany({ commentId: { $in: ownCommentIds } }).exec(),
+      ]);
+    }
+    await Promise.all([
+      problemCommentDeltas.size > 0
+        ? Problem.bulkWrite(incOps(problemCommentDeltas, "commentCount") as never[])
+        : null,
+      solutionCommentDeltas.size > 0
+        ? Solution.bulkWrite(incOps(solutionCommentDeltas, "commentCount") as never[])
+        : null,
+      replyDeltas.size > 0
+        ? Comment.bulkWrite(incOps(replyDeltas, "replyCount") as never[])
+        : null,
+    ]);
+
+    // --- Validations, solution votes, and comment votes THESE users cast on
+    // content that still exists: reverse them exactly like an unvote would
+    // (see toggleProblemValidation/toggleSolutionHelpful/toggleCommentHelpful
+    // in actions/votes.ts), so the receiving author's stats stay accurate.
+    const castValidations = await ProblemValidation.find(
+      { userId: { $in: targetIds } },
+      { _id: 1, problemId: 1 }
+    )
+      .lean()
+      .exec();
+    if (castValidations.length > 0) {
+      await ProblemValidation.deleteMany({
+        _id: { $in: castValidations.map((v) => v._id) },
+      }).exec();
+
+      const survivingProblems = await Problem.find(
+        { _id: { $in: castValidations.map((v) => v.problemId) } },
+        { _id: 1, authorId: 1 }
+      )
+        .lean()
+        .exec();
+      const authorByProblem = new Map(
+        survivingProblems.map((p) => [String(p._id), String(p.authorId)])
+      );
+
+      const validationDeltas = new Map<string, number>();
+      for (const v of castValidations) {
+        const key = String(v.problemId);
+        if (authorByProblem.has(key)) addDelta(validationDeltas, key, -1);
+      }
+      if (validationDeltas.size > 0) {
+        await Problem.bulkWrite(incOps(validationDeltas, "validationCount") as never[]);
+      }
+      await Promise.all(
+        Array.from(validationDeltas.entries()).map(([problemId, delta]) =>
+          awardReputation(authorByProblem.get(problemId), delta * REPUTATION.PROBLEM_VALIDATED, {
+            key: "validationsReceived",
+            delta,
+          })
+        )
+      );
+    }
+
+    const castSolutionVotes = await SolutionVote.find(
+      { userId: { $in: targetIds } },
+      { _id: 1, solutionId: 1 }
+    )
+      .lean()
+      .exec();
+    if (castSolutionVotes.length > 0) {
+      await SolutionVote.deleteMany({
+        _id: { $in: castSolutionVotes.map((v) => v._id) },
+      }).exec();
+
+      const survivingSolutions = await Solution.find(
+        { _id: { $in: castSolutionVotes.map((v) => v.solutionId) } },
+        { _id: 1, authorId: 1 }
+      )
+        .lean()
+        .exec();
+      const authorBySolution = new Map(
+        survivingSolutions.map((s) => [String(s._id), String(s.authorId)])
+      );
+
+      const helpfulDeltas = new Map<string, number>();
+      for (const v of castSolutionVotes) {
+        const key = String(v.solutionId);
+        if (authorBySolution.has(key)) addDelta(helpfulDeltas, key, -1);
+      }
+      if (helpfulDeltas.size > 0) {
+        await Solution.bulkWrite(incOps(helpfulDeltas, "helpfulCount") as never[]);
+      }
+      await Promise.all(
+        Array.from(helpfulDeltas.entries()).map(([solutionId, delta]) =>
+          awardReputation(authorBySolution.get(solutionId), delta * REPUTATION.SOLUTION_HELPFUL, {
+            key: "helpfulVotes",
+            delta,
+          })
+        )
+      );
+    }
+
+    const castCommentVotes = await CommentVote.find(
+      { userId: { $in: targetIds } },
+      { _id: 1, commentId: 1 }
+    )
+      .lean()
+      .exec();
+    if (castCommentVotes.length > 0) {
+      await CommentVote.deleteMany({
+        _id: { $in: castCommentVotes.map((v) => v._id) },
+      }).exec();
+
+      const survivingComments = await Comment.find(
+        { _id: { $in: castCommentVotes.map((v) => v.commentId) } },
+        { _id: 1, authorId: 1 }
+      )
+        .lean()
+        .exec();
+      const authorByComment = new Map(
+        survivingComments.map((c) => [String(c._id), String(c.authorId)])
+      );
+
+      const helpfulDeltas = new Map<string, number>();
+      for (const v of castCommentVotes) {
+        const key = String(v.commentId);
+        if (authorByComment.has(key)) addDelta(helpfulDeltas, key, -1);
+      }
+      if (helpfulDeltas.size > 0) {
+        await Comment.bulkWrite(incOps(helpfulDeltas, "helpfulCount") as never[]);
+      }
+      await Promise.all(
+        Array.from(helpfulDeltas.entries()).map(([commentId, delta]) =>
+          awardReputation(authorByComment.get(commentId), delta * REPUTATION.COMMENT_HELPFUL, {
+            key: "helpfulVotes",
+            delta,
+          })
+        )
+      );
+    }
+
+    // --- Private bookmarks from deleted accounts: remove the relationships
+    // and reverse their public aggregate counters on problems that survive. ---
+    const castBookmarks = await ProblemBookmark.find(
+      { userId: { $in: targetIds } },
+      { _id: 1, problemId: 1 },
+    )
+      .lean()
+      .exec();
+    if (castBookmarks.length > 0) {
+      const bookmarkDeltas = new Map<string, number>();
+      for (const bookmark of castBookmarks) {
+        addDelta(bookmarkDeltas, String(bookmark.problemId), -1);
+      }
+      await Promise.all([
+        ProblemBookmark.deleteMany({
+          _id: { $in: castBookmarks.map((bookmark) => bookmark._id) },
+        }).exec(),
+        bookmarkDeltas.size > 0
+          ? Problem.bulkWrite(incOps(bookmarkDeltas, "bookmarkCount") as never[])
+          : null,
+      ]);
+    }
+
+    // --- Records that belong directly to the deleted accounts. ---
+    await Promise.all([
+      Notification.deleteMany({ userId: { $in: targetIds } }).exec(),
+      Report.deleteMany({
+        $or: [
+          { reporterId: { $in: targetIds } },
+          { targetType: "user", targetId: { $in: targetIds } },
+        ],
+      }).exec(),
+    ]);
+
+    await User.deleteMany({ _id: { $in: targetIds } }).exec();
+
+    await audit({
+      actorId: admin.id,
+      action: "user.bulk_delete",
+      targetType: "user",
+      meta: {
+        count: targetIds.length,
+        usernames: targets.slice(0, 50).map((u) => u.username),
+      },
+    });
+
+    revalidatePath("/admin/users");
+    revalidatePath("/");
+    revalidatePath("/problems");
+
+    return ok(
+      { deletedCount: targetIds.length },
+      `Deleted ${targetIds.length} ${targetIds.length === 1 ? "user" : "users"} and everything they posted.`
+    );
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
 export async function approveCategory(
   categoryId: string
 ): Promise<ActionResult<undefined>> {
@@ -504,6 +863,50 @@ export async function mergeCategories(
     return okVoid(
       `Moved ${moved.modifiedCount} problems into "${target.name}".`
     );
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+/**
+ * Categories with problems must be merged, not deleted — otherwise every
+ * problem in them would be left pointing at a categoryId that no longer
+ * exists. An empty category (rejected, or approved but never used) can go
+ * straight away.
+ */
+export async function deleteCategory(
+  categoryId: string
+): Promise<ActionResult<undefined>> {
+  try {
+    const admin = await requireAdmin();
+    objectIdSchema.parse(categoryId);
+    await connectToDatabase();
+
+    const category = await Category.findById(objectId(categoryId)).exec();
+    if (!category) throw new NotFoundError();
+
+    const problemCount = await Problem.countDocuments({
+      categoryId: category._id,
+    }).exec();
+    if (problemCount > 0) {
+      throw new DomainError(
+        `"${category.name}" still has ${problemCount} ${problemCount === 1 ? "problem" : "problems"}. Merge it into another category first.`
+      );
+    }
+
+    await category.deleteOne();
+
+    await audit({
+      actorId: admin.id,
+      action: "category.delete",
+      targetType: "category",
+      targetId: categoryId,
+      meta: { name: category.name },
+    });
+
+    revalidatePath("/admin/categories");
+    revalidatePath("/categories");
+    return okVoid(`"${category.name}" deleted.`);
   } catch (error) {
     return toActionError(error);
   }

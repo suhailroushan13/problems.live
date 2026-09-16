@@ -53,8 +53,8 @@ export function CommentForm({
           Sign in to join the discussion.
         </p>
         <Button asChild size="sm">
-          <a href={`/api/auth/google?next=${encodeURIComponent(pathname)}`}>
-            Sign in with Google
+          <a href={`/login?next=${encodeURIComponent(pathname)}`}>
+            Sign in
           </a>
         </Button>
       </div>
@@ -98,7 +98,7 @@ export function CommentForm({
           username={user.username}
           avatar={user.avatar}
           size="md"
-          className="mt-0.5 hidden sm:flex"
+          className="mt-0.5"
         />
       ) : null}
 

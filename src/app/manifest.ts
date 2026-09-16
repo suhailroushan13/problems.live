@@ -3,7 +3,7 @@ import { APP_NAME, APP_TAGLINE } from "@/lib/env";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: `${APP_NAME} — ${APP_TAGLINE}`,
+    name: `${APP_NAME}, ${APP_TAGLINE}`,
     short_name: APP_NAME,
     description:
       "Have a problem? Share it. Have the same problem? Vote for it. Have a solution? Build it.",
