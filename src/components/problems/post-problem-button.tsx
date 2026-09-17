@@ -27,14 +27,13 @@ export function PostProblemButton({
         size="sm"
         className={cn("gap-1.5 whitespace-nowrap", className)}
       >
-        <a href="/wait-list">
-          <Plus className="size-3.5" />
-          <span className="hidden sm:inline">{label}</span>
-          <span className="sm:hidden">Post</span>
+        <a href="/api/auth/google?next=%2Fproblems%2Fnew">
+          <span className="hidden sm:inline">Sign in with Google</span>
+          <span className="sm:hidden">Sign in</span>
         </a>
       </Button>
     );
   }
 
-  return <Button asChild size="sm" className={cn("gap-1.5 whitespace-nowrap", className)}><Link href="/wait-list"><Plus className="size-3.5" /><span className="hidden sm:inline">{label}</span><span className="sm:hidden">Post</span></Link></Button>;
+  return <Button asChild size="sm" className={cn("gap-1.5 whitespace-nowrap", className)}><Link href="/problems/new"><Plus className="size-3.5" /><span className="hidden sm:inline">{label}</span><span className="sm:hidden">Post</span></Link></Button>;
 }

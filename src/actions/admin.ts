@@ -18,6 +18,7 @@ import {
   ProblemValidation,
   Notification,
   User,
+  Invite,
   WaitlistEntry,
 } from "@/models";
 import {
@@ -29,11 +30,17 @@ import {
 import { requireAdmin, requireModerator } from "@/lib/auth/current-user";
 import { objectId } from "@/lib/utils/sanitize-query";
 import { objectIdSchema, usernameSchema, waitlistSchema } from "@/lib/validation/schemas";
-import { slugify } from "@/lib/utils/slug";
+import { slugify, usernameFromEmail } from "@/lib/utils/slug";
 import { stripUnsafe } from "@/lib/utils/text";
 import { notify } from "@/lib/services/notify";
 import { awardReputation, refundProblemCredit } from "@/lib/services/reputation";
-import { setSetting, invalidateSettingsCache, SETTING_DEFAULTS, type SettingKey } from "@/lib/config/settings";
+import {
+  getSetting,
+  setSetting,
+  invalidateSettingsCache,
+  SETTING_DEFAULTS,
+  type SettingKey,
+} from "@/lib/config/settings";
 import {
   DomainError,
   NotFoundError,
@@ -68,6 +75,16 @@ async function audit(params: {
 const updateWaitlistEntrySchema = waitlistSchema.extend({
   id: objectIdSchema,
 });
+
+async function reserveUsernameForWaitlist(email: string): Promise<string> {
+  const base = usernameFromEmail(email);
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const candidate = attempt === 0 ? base : `${base}${attempt + 1}`;
+    if (isReservedUsername(candidate)) continue;
+    if (!(await User.exists({ username: candidate }))) return candidate;
+  }
+  return `${base.slice(0, 22)}${Math.random().toString(36).slice(2, 8)}`;
+}
 
 const updateAdminUserSchema = z.object({
   name: z
@@ -129,6 +146,103 @@ export async function deleteWaitlistEntry(id: string): Promise<ActionResult<unde
     });
     revalidatePath("/admin/waitlist");
     return okVoid("Waitlist request deleted.");
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+/** Approving a waitlist request provisions a local account for that email. */
+export async function approveWaitlistEntry(id: string): Promise<ActionResult<undefined>> {
+  try {
+    const admin = await requireAdmin();
+    objectIdSchema.parse(id);
+    await connectToDatabase();
+
+    const entry = await WaitlistEntry.findById(objectId(id)).exec();
+    if (!entry) throw new NotFoundError("That waitlist request no longer exists.");
+    if (entry.status === "approved") return okVoid("This request is already approved.");
+    // Access is now granted by the approved waitlist record, not invitations.
+    // Remove any legacy pending invite so it cannot become a parallel path.
+    const previousInvites = await Invite.deleteMany({
+      email: entry.email,
+      status: "pending",
+    }).exec();
+
+    const existingUser = await User.exists({ email: entry.email });
+    let createdUser = false;
+    if (!existingUser) {
+      const [username, startingCredits] = await Promise.all([
+        reserveUsernameForWaitlist(entry.email),
+        getSetting("startingProblemCredits"),
+      ]);
+      await User.create({
+        // This placeholder is replaced by the verified Google subject at the
+        // user's first sign-in. Until then, it cannot be used to authenticate.
+        googleId: `waitlist:${entry._id}`,
+        email: entry.email,
+        emailVerified: false,
+        name: entry.name,
+        username,
+        role: "user",
+        reputation: 0,
+        problemCredits: startingCredits,
+        inviteCredits: 0,
+        lastSeenAt: new Date(),
+      });
+      createdUser = true;
+    }
+
+    entry.status = "approved";
+    entry.reviewedAt = new Date();
+    await entry.save();
+
+    await audit({
+      actorId: admin.id,
+      action: "waitlist.approve",
+      targetType: "waitlist_entry",
+      targetId: id,
+      meta: {
+        createdUser,
+        revokedPendingInvites: previousInvites.deletedCount,
+      },
+    });
+    revalidatePath("/admin/waitlist");
+    revalidatePath("/admin/users");
+    revalidatePath("/admin/invites");
+    return okVoid(
+      createdUser
+        ? "Waitlist request approved and user created. They can now sign in with Google."
+        : "Waitlist request approved. This email already has a user account.",
+    );
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+export async function rejectWaitlistEntry(id: string): Promise<ActionResult<undefined>> {
+  try {
+    const admin = await requireAdmin();
+    objectIdSchema.parse(id);
+    await connectToDatabase();
+
+    const entry = await WaitlistEntry.findById(objectId(id)).exec();
+    if (!entry) throw new NotFoundError("That waitlist request no longer exists.");
+    if (entry.status === "approved") {
+      throw new DomainError("Approved requests cannot be rejected.");
+    }
+
+    entry.status = "rejected";
+    entry.reviewedAt = new Date();
+    await entry.save();
+
+    await audit({
+      actorId: admin.id,
+      action: "waitlist.reject",
+      targetType: "waitlist_entry",
+      targetId: id,
+    });
+    revalidatePath("/admin/waitlist");
+    return okVoid("Waitlist request rejected.");
   } catch (error) {
     return toActionError(error);
   }

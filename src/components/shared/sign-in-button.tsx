@@ -42,10 +42,10 @@ export function SignInButton({
   showIcon?: boolean;
   next?: string;
 } & ComponentProps<typeof Button>) {
-  void next;
+  const destination = next?.startsWith("/") && !next.startsWith("//") ? next : "/";
   return (
     <Button asChild className={className} {...props}>
-      <a href="/wait-list">
+      <a href={`/api/auth/google?next=${encodeURIComponent(destination)}`}>
         {showIcon ? <GoogleMark /> : null}
         {children}
       </a>

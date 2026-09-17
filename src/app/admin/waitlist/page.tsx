@@ -14,6 +14,12 @@ import { connectToDatabase } from "@/lib/db/mongoose";
 import { formatDate } from "@/lib/utils/time";
 import { WaitlistEntry } from "@/models";
 
+const WAITLIST_STATUS_LABELS = {
+  pending: "Pending review",
+  approved: "Approved",
+  rejected: "Rejected",
+} as const;
+
 export default async function AdminWaitlistPage() {
   const user = await getCurrentUser();
   if (!user?.isAdmin) redirect("/admin");
@@ -21,7 +27,7 @@ export default async function AdminWaitlistPage() {
   await connectToDatabase();
   const entries = await WaitlistEntry.find(
     {},
-    { name: 1, email: 1, confirmationSentAt: 1, createdAt: 1 },
+    { name: 1, email: 1, status: 1, confirmationSentAt: 1, createdAt: 1 },
   )
     .sort({ createdAt: -1 })
     .limit(200)
@@ -53,6 +59,7 @@ export default async function AdminWaitlistPage() {
                 <TableHead>Email</TableHead>
                 <TableHead>Requested</TableHead>
                 <TableHead>Confirmation</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -71,11 +78,15 @@ export default async function AdminWaitlistPage() {
                   <TableCell className="text-xs text-muted-foreground">
                     {entry.confirmationSentAt ? "Sent" : "Pending"}
                   </TableCell>
+                  <TableCell className="text-xs font-medium text-muted-foreground">
+                    {WAITLIST_STATUS_LABELS[entry.status ?? "pending"]}
+                  </TableCell>
                   <TableCell>
                     <WaitlistEntryActions
                       id={String(entry._id)}
                       name={entry.name}
                       email={entry.email}
+                      status={entry.status ?? "pending"}
                     />
                   </TableCell>
                 </TableRow>

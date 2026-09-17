@@ -4,7 +4,12 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { deleteWaitlistEntry, updateWaitlistEntry } from "@/actions/admin";
+import {
+  approveWaitlistEntry,
+  deleteWaitlistEntry,
+  rejectWaitlistEntry,
+  updateWaitlistEntry,
+} from "@/actions/admin";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,15 +36,18 @@ export function WaitlistEntryActions({
   id,
   name: initialName,
   email: initialEmail,
+  status,
 }: {
   id: string;
   name: string;
   email: string;
+  status: "pending" | "approved" | "rejected";
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [rejectOpen, setRejectOpen] = useState(false);
   const [name, setName] = useState(initialName);
   const [email, setEmail] = useState(initialEmail);
 
@@ -69,9 +77,54 @@ export function WaitlistEntryActions({
     });
   }
 
+  function approve() {
+    startTransition(async () => {
+      const result = await approveWaitlistEntry(id);
+      if (!result.ok) {
+        toast.error(result.error ?? "Couldn’t approve the waitlist request.");
+        return;
+      }
+      toast.success(result.message ?? "Waitlist request approved.");
+      router.refresh();
+    });
+  }
+
+  function reject() {
+    startTransition(async () => {
+      const result = await rejectWaitlistEntry(id);
+      if (!result.ok) {
+        toast.error(result.error ?? "Couldn’t reject the waitlist request.");
+        return;
+      }
+      toast.success(result.message ?? "Waitlist request rejected.");
+      setRejectOpen(false);
+      router.refresh();
+    });
+  }
+
   return (
     <>
       <div className="flex justify-end gap-1">
+        {status === "pending" ? (
+          <>
+            <Button
+              size="sm"
+              onClick={approve}
+              className="bg-success text-success-foreground hover:bg-[#15803d]"
+              disabled={pending}
+            >
+              Approve
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setRejectOpen(true)}
+              disabled={pending}
+            >
+              Reject
+            </Button>
+          </>
+        ) : null}
         <Button
           variant="ghost"
           size="icon-sm"
@@ -149,6 +202,30 @@ export function WaitlistEntryActions({
               }}
             >
               {pending ? "Deleting…" : "Delete request"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={rejectOpen} onOpenChange={setRejectOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reject {initialName}&apos;s request?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This marks the request as rejected. No invitation will be sent.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={pending}
+              onClick={(event) => {
+                event.preventDefault();
+                reject();
+              }}
+            >
+              {pending ? "Rejecting…" : "Reject request"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -29,7 +29,9 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ next?: string }>;
 }) {
-  redirect("/wait-list");
+  const { next } = await searchParams;
+  const destination = next?.startsWith("/") && !next.startsWith("//") ? next : "/";
+  redirect(`/api/auth/google?next=${encodeURIComponent(destination)}`);
   /* Invite-only pause: retain the sign-in experience for later.
   if (await getCurrentUser()) redirect("/");
   const { next } = await searchParams;

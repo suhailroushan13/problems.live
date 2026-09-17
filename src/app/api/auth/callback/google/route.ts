@@ -5,7 +5,7 @@ import { provisionUserFromGoogle } from "@/lib/auth/provision";
 import { createSessionToken, SESSION_COOKIE } from "@/lib/auth/session";
 import { env } from "@/lib/env";
 import { connectToDatabase } from "@/lib/db/mongoose";
-import { User } from "@/models";
+import { User, WaitlistEntry } from "@/models";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +31,10 @@ function adminFailure(reason: string): NextResponse {
   return NextResponse.redirect(
     `${env.appUrl}/suhail/login?error=${encodeURIComponent(reason)}`,
   );
+}
+
+function waitlistFailure(): NextResponse {
+  return NextResponse.redirect(`${env.appUrl}/wait-list?access=pending`);
 }
 
 function clearOAuthCookies(response: NextResponse): NextResponse {
@@ -70,8 +74,11 @@ export async function GET(request: NextRequest) {
 
     const next = request.cookies.get(NEXT_COOKIE)?.value ?? "/";
     const isSecretAdminLogin = next === "/suhail/complete";
+    await connectToDatabase();
+    const existingUser = await User.exists({
+      $or: [{ googleId: profile.googleId }, { email: profile.email }],
+    });
     if (isSecretAdminLogin) {
-      await connectToDatabase();
       const existingAdmin = await User.exists({
         email: profile.email,
         role: "admin",
@@ -79,6 +86,16 @@ export async function GET(request: NextRequest) {
       if (!existingAdmin && !env.adminEmails.includes(profile.email)) {
         return clearOAuthCookies(adminFailure("not_authorized"));
       }
+    }
+
+    // Existing accounts keep access. First-time sign-ins require an explicit
+    // waitlist approval for the same verified Google email.
+    if (!existingUser && !env.adminEmails.includes(profile.email)) {
+      const approval = await WaitlistEntry.exists({
+        email: profile.email.toLowerCase(),
+        status: "approved",
+      });
+      if (!approval) return clearOAuthCookies(waitlistFailure());
     }
 
     const user = await provisionUserFromGoogle(profile);
