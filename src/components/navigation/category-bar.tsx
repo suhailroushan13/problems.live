@@ -16,7 +16,7 @@ export function CategoryBar({
   categories,
   activeSlug,
   /** A compact, scrollable mobile rail keeps discovery one-handed. */
-  limit = 8,
+  limit = Number.MAX_SAFE_INTEGER,
   className,
   /** Signed-in app view — matches the wider container the rest of the page uses. */
   wide = false,
@@ -51,7 +51,8 @@ export function CategoryBar({
 
   return (
     <div className={cn(wide ? "page-wide" : "page", className)}>
-      <div className="relative -mr-4 flex items-center gap-2 overflow-x-auto pr-4 no-scrollbar sm:mr-0 sm:gap-1 sm:rounded-full sm:bg-sunken sm:px-2 sm:py-2">
+      <div className="relative">
+      <div className="flex -mr-4 items-center gap-2 overflow-x-auto pr-8 no-scrollbar sm:mr-0 sm:gap-1 sm:rounded-full sm:bg-sunken sm:px-2 sm:py-2 sm:pr-8">
         <Link
           href={hrefFor(undefined)}
           scroll={false}
@@ -103,6 +104,8 @@ export function CategoryBar({
           <Compass className="size-4" aria-hidden="true" />
           Explore
         </Link>
+      </div>
+      <span className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-background via-background/90 to-transparent sm:rounded-r-full sm:from-sunken sm:via-sunken/90" aria-hidden="true" />
       </div>
     </div>
   );

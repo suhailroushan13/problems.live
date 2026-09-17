@@ -122,7 +122,7 @@ export async function globalSearch(
       title: `@${u.username}`,
       subtitle: u.name,
       href: `/u/${u.username}`,
-      meta: `${u.reputation ?? 0} rep`,
+      meta: `Score ${u.reputation ?? 0}`,
     })),
     total: 0,
   };

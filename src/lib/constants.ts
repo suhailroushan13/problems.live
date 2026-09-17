@@ -7,6 +7,7 @@ export const GITHUB_REPO_URL =
 
 export const PROBLEM_STATUSES = [
   "open",
+  "needs_collaborators",
   "being_solved",
   "solved",
   "not_relevant",
@@ -15,6 +16,7 @@ export type ProblemStatus = (typeof PROBLEM_STATUSES)[number];
 
 export const PROBLEM_STATUS_LABELS: Record<ProblemStatus, string> = {
   open: "Open",
+  needs_collaborators: "Needs collaborators",
   being_solved: "Being solved",
   solved: "Solved",
   not_relevant: "No longer relevant",
@@ -193,12 +195,14 @@ export function notificationCopy(type: NotificationType): string {
 }
 
 export const PROBLEM_SORTS = [
-  "validated",
-  "clicks",
   "trending",
-  "newest",
-  "oldest",
+  "validated",
   "discussed",
+  "newest",
+  "updated",
+  "unsolved",
+  "oldest",
+  "clicks",
   "solutions",
 ] as const;
 export type ProblemSort = (typeof PROBLEM_SORTS)[number];
@@ -208,6 +212,8 @@ export const PROBLEM_SORT_LABELS: Record<ProblemSort, string> = {
   clicks: "Most clicked",
   trending: "Trending",
   newest: "Newest",
+  updated: "Recently updated",
+  unsolved: "Unsolved",
   oldest: "Oldest",
   discussed: "Most discussed",
   solutions: "Most solutions",
@@ -236,9 +242,9 @@ export const REPUTATION = {
 /** Trust tiers unlock capability rather than gating basic participation. */
 export const TRUST_TIERS = [
   { key: "new", label: "New", minReputation: 0 },
-  { key: "member", label: "Member", minReputation: 25 },
+  { key: "regular", label: "Regular", minReputation: 25 },
   { key: "trusted", label: "Trusted", minReputation: 150 },
-  { key: "veteran", label: "Veteran", minReputation: 600 },
+  { key: "expert", label: "Expert", minReputation: 500 },
 ] as const;
 export type TrustTier = (typeof TRUST_TIERS)[number]["key"];
 

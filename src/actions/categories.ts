@@ -38,7 +38,7 @@ export async function suggestCategory(
     const minReputation = await getSetting("reputationToSuggestCategory");
     if (user.reputation < minReputation && !user.isModerator) {
       throw new DomainError(
-        `Suggesting new categories unlocks at ${minReputation} reputation. Pick the closest existing one for now.`,
+        `Suggesting new categories unlocks at Score ${minReputation}. Pick the closest existing one for now.`,
         "forbidden"
       );
     }

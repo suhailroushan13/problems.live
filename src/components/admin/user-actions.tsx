@@ -2,7 +2,14 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Ban, MoreHorizontal, ShieldCheck, UserCheck } from "lucide-react";
+import {
+  Ban,
+  MoreHorizontal,
+  Pencil,
+  ShieldCheck,
+  Trash2,
+  UserCheck,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +31,22 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { setUserRole, suspendUser, unsuspendUser } from "@/actions/admin";
+import {
+  bulkDeleteUsers,
+  setUserRole,
+  suspendUser,
+  unsuspendUser,
+  updateAdminUser,
+} from "@/actions/admin";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import type { AdminUser } from "@/lib/data/admin";
 
 export function UserActions({
@@ -37,8 +59,12 @@ export function UserActions({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [confirmSuspend, setConfirmSuspend] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [days, setDays] = useState("7");
   const [reason, setReason] = useState("");
+  const [name, setName] = useState(user.name);
+  const [username, setUsername] = useState(user.username);
 
   function run(action: () => Promise<{ ok: boolean; error?: string; message?: string }>) {
     startTransition(async () => {
@@ -49,6 +75,8 @@ export function UserActions({
       }
       toast.success(result.message ?? "Done.");
       setConfirmSuspend(false);
+      setEditOpen(false);
+      setDeleteOpen(false);
       router.refresh();
     });
   }
@@ -74,10 +102,17 @@ export function UserActions({
         </DropdownMenuTrigger>
 
         <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuItem onSelect={() => setEditOpen(true)}>
+            <Pencil className="size-4" />
+            Edit profile
+          </DropdownMenuItem>
+
+          <DropdownMenuSeparator />
+
           <DropdownMenuLabel className="text-xs text-muted-foreground">
             Role
           </DropdownMenuLabel>
-          {(["user", "moderator", "admin"] as const)
+          {(["user", "admin"] as const)
             .filter((role) => role !== user.role)
             .map((role) => (
               <DropdownMenuItem
@@ -107,8 +142,68 @@ export function UserActions({
               Suspend
             </DropdownMenuItem>
           )}
+
+          <DropdownMenuSeparator />
+
+          <DropdownMenuItem
+            variant="destructive"
+            onSelect={() => setDeleteOpen(true)}
+          >
+            <Trash2 className="size-4" />
+            Delete from database
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit @{user.username}</DialogTitle>
+            <DialogDescription>
+              Update the public profile details. Their sign-in email is managed by Google.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor={`user-name-${user.id}`}>Name</Label>
+              <Input
+                id={`user-name-${user.id}`}
+                value={name}
+                maxLength={80}
+                onChange={(event) => setName(event.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor={`user-username-${user.id}`}>Username</Label>
+              <Input
+                id={`user-username-${user.id}`}
+                value={username}
+                maxLength={30}
+                onChange={(event) => setUsername(event.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor={`user-email-${user.id}`}>Email</Label>
+              <Input id={`user-email-${user.id}`} value={user.email} disabled />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setEditOpen(false)}
+              disabled={pending}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => run(() => updateAdminUser(user.id, { name, username }))}
+              disabled={pending}
+            >
+              {pending ? "Saving…" : "Save changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={confirmSuspend} onOpenChange={setConfirmSuspend}>
         <AlertDialogContent>
@@ -146,6 +241,31 @@ export function UserActions({
               }}
             >
               {pending ? "Suspending…" : "Suspend"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete @{user.username} from the database?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently deletes their account, profile, problems, solutions, comments,
+              votes, bookmarks and related records. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={pending}
+              onClick={(event) => {
+                event.preventDefault();
+                run(() => bulkDeleteUsers([user.id]));
+              }}
+            >
+              {pending ? "Deleting…" : "Delete permanently"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

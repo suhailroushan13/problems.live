@@ -82,7 +82,7 @@ export default async function LeaderboardPage({
                 <TableHead className="w-12">Rank</TableHead>
                 <TableHead>User</TableHead>
                 <TableHead className="hidden text-right sm:table-cell">
-                  Reputation
+                  Score
                 </TableHead>
                 <TableHead className="text-right">
                   {meta.unit[0]!.toUpperCase() + meta.unit.slice(1)}

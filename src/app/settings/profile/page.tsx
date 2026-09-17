@@ -34,7 +34,7 @@ export default async function EditProfilePage() {
   }).lean().exec();
 
   return (
-    <main className="page flex min-h-[calc(100dvh-4rem)] max-w-3xl flex-col justify-center py-6">
+    <main className="page flex min-h-[calc(100dvh-4rem)] flex-col justify-center py-6">
       <div>
         <Button asChild variant="ghost" size="sm" className="-ml-3 mb-3 gap-1.5">
           <Link href="/settings"><ArrowLeft /> Account settings</Link>

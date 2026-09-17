@@ -16,9 +16,9 @@ export const metadata: Metadata = { title: "Settings" };
  */
 const COPY: Record<SettingKey, { label: string; description: string }> = {
   startingProblemCredits: {
-    label: "Starting problem credits",
+    label: "Starting Credits (default: 10)",
     description:
-      "How many problems a brand new account can post before earning more.",
+      "Posting currency granted to a brand new account. Each new problem costs one Credit.",
   },
   creditsPerValidatedProblem: {
     label: "Credits per validated problem",
@@ -35,13 +35,13 @@ const COPY: Record<SettingKey, { label: string; description: string }> = {
     description: "The ceiling on banked credits, so they cannot be stockpiled.",
   },
   reputationToSuggestCategory: {
-    label: "Reputation to suggest a category",
+    label: "Score required to suggest a category",
     description: "Guards the taxonomy without blocking normal participation.",
   },
   reputationToReport: {
-    label: "Reputation to report",
+    label: "Score required to report",
     description:
-      "Minimum reputation before reports are accepted. 0 means anyone can report.",
+      "Minimum community Score (reputation) before reports are accepted. 0 means anyone can report.",
   },
   reportsToAutoHide: {
     label: "Reports before auto-hide",

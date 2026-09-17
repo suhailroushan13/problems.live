@@ -19,7 +19,7 @@ export function GET() {
 - [Problems directory](${base}/problems): Every open problem, filterable by category, status, and location.
 - [Categories](${base}/categories): The topic taxonomy problems are organised under.
 - [Solutions](${base}/solutions): Proposed and shipped solutions across all problems.
-- [Leaderboard](${base}/leaderboard): Top contributors by reputation.
+- [Leaderboard](${base}/leaderboard): Top contributors by Score (reputation).
 
 ## How it works
 

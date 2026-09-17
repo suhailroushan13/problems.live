@@ -58,10 +58,12 @@ function FooterAccordion({
 export function MobileSiteFooter({
   exploreLinks,
   legalLinks,
+  askLinks,
   version,
 }: {
   exploreLinks: FooterLink[];
   legalLinks: FooterLink[];
+  askLinks: FooterLink[];
   version: string;
 }) {
   return (
@@ -77,6 +79,17 @@ export function MobileSiteFooter({
         <FooterAccordion heading="Explore" links={exploreLinks} />
         <FooterAccordion heading="Legal" links={legalLinks} />
       </div>
+
+      <nav aria-label="Ask an AI" className="flex flex-wrap gap-x-2 gap-y-1 border-b border-hairline py-5 text-[0.8125rem] text-muted-foreground">
+        {askLinks.map((link, index) => (
+          <span key={link.href} className="inline-flex items-center gap-2">
+            {index > 0 ? <span aria-hidden="true">·</span> : null}
+            <a href={link.href} target="_blank" rel="noreferrer" className="tap min-h-8 inline-flex items-center transition-colors hover:text-foreground">
+              {link.label}
+            </a>
+          </span>
+        ))}
+      </nav>
 
       <div className="flex items-center justify-between pt-5 text-[0.8125rem] text-muted-foreground">
         <span className="num" title={`Version ${version}`}>v{version}</span>

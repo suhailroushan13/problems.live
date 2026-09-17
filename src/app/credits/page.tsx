@@ -7,9 +7,9 @@ import { getSetting } from "@/lib/config/settings";
 import { formatCount } from "@/lib/utils/format";
 
 export const metadata: Metadata = {
-  title: "Problem credits",
+  title: "Credits",
   description:
-    "How problem credits work on problems.live, how to earn more, and why posting a problem costs one.",
+    "How Credits, the posting currency on problems.live, work and how to earn more.",
   alternates: { canonical: "/credits" },
 };
 
@@ -26,20 +26,21 @@ export default async function CreditsPage() {
   return (
     <div className="page py-12 sm:py-16">
       <header className="mb-10">
-        <p className="label text-brand">Problem credits</p>
+        <p className="label text-brand">Credits · posting currency</p>
         <h1 className="mt-2 text-[2rem] font-bold tracking-[-0.035em] text-foreground sm:text-[2.75rem]">
-          The cost of posting is one credit
+          One Credit lets you post one problem
         </h1>
         <p className="mt-4 text-[0.9375rem] leading-relaxed text-muted-foreground">
-          Voting, commenting, and proposing solutions are all free. Posting a
-          new problem spends one credit, a small cost that keeps the front
+          Credits are the site&apos;s posting currency, not real money. Voting,
+          commenting, and proposing solutions are all free. Posting a new
+          problem spends one Credit, a small cost that keeps the front
           page free of drive-by noise, without ever charging you real money.
         </p>
       </header>
 
       {user ? (
         <section className="mb-10 rounded-xl border border-brand-border bg-linear-to-b from-brand-muted to-background p-5 sm:p-6">
-          <p className="label text-brand">Your credits</p>
+          <p className="label text-brand">Your Credits</p>
           <p className="mt-2 text-[1.75rem] leading-tight font-bold tracking-[-0.025em] text-foreground">
             <span className="num">{formatCount(user.problemCredits)}</span>{" "}
             <span className="font-semibold text-foreground/75">
@@ -58,9 +59,9 @@ export default async function CreditsPage() {
           How it works
         </h2>
         <p className="mt-2 text-[0.9375rem] leading-relaxed text-muted-foreground">
-          Credits are spent on the attempt, not the outcome, that&apos;s what
+          Credits are spent on the attempt, not the outcome. That&apos;s what
           makes them a real cost against spam rather than a paywall. One
-          credit is deducted the moment you publish a problem, whether or not
+          Credit is deducted the moment you publish a problem, whether or not
           it ends up going anywhere. Run out, and you can still vote, comment
           and propose solutions on everything already posted, you just
           can&apos;t start a new problem until you earn one back.
@@ -78,7 +79,7 @@ export default async function CreditsPage() {
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-foreground">
-                New accounts start with {formatCount(starting)}
+                New accounts start with {formatCount(starting)} Credits
               </p>
               <p className="mt-0.5 text-[0.8125rem] leading-relaxed text-muted-foreground">
                 Enough to try the site without earning anything first.
@@ -98,7 +99,7 @@ export default async function CreditsPage() {
               <p className="mt-0.5 text-[0.8125rem] leading-relaxed text-muted-foreground">
                 Proof it was worth posting earns{" "}
                 {formatCount(creditsPerValidated)}{" "}
-                {creditsPerValidated === 1 ? "credit" : "credits"} back,
+                {creditsPerValidated === 1 ? "Credit" : "Credits"} back,
                 automatically, the moment it crosses the threshold.
               </p>
             </div>
@@ -113,7 +114,7 @@ export default async function CreditsPage() {
                 A moderator removes one of your problems
               </p>
               <p className="mt-0.5 text-[0.8125rem] leading-relaxed text-muted-foreground">
-                The credit is refunded, a post that never survived review
+                The Credit is refunded, a post that never survived review
                 shouldn&apos;t permanently cost you the attempt.
               </p>
             </div>
@@ -133,7 +134,7 @@ export default async function CreditsPage() {
           <li className="flex items-start gap-2.5">
             <Ticket className="mt-0.5 size-4 shrink-0 text-brand" aria-hidden="true" />
             Only posting a <span className="font-medium text-foreground">new problem</span>{" "}
-            spends a credit. Solutions, comments and validations are free,
+            spends a Credit. Solutions, comments and validations are free,
             always.
           </li>
           <li className="flex items-start gap-2.5">
@@ -149,7 +150,7 @@ export default async function CreditsPage() {
           <Link href="/problems/new">Share a problem</Link>
         </Button>
         <Button asChild size="lg" variant="outline">
-          <Link href="/reputation">How reputation works</Link>
+          <Link href="/score">How Score works</Link>
         </Button>
       </div>
     </div>

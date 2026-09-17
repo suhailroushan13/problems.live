@@ -4,6 +4,7 @@ import { OnboardingForm } from "@/components/forms/onboarding-form";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { connectToDatabase } from "@/lib/db/mongoose";
 import { User } from "@/models";
+import { getSetting } from "@/lib/config/settings";
 import { toObjectId } from "@/lib/utils/sanitize-query";
 
 export const metadata: Metadata = {
@@ -28,11 +29,10 @@ export default async function OnboardPage({
   if (!user) redirect(`/api/auth/google?next=${encodeURIComponent(`/onboard?next=${destination}`)}`);
 
   await connectToDatabase();
-  const account = await User.findById(toObjectId(user.id), {
-    dateOfBirth: 1,
-  })
-    .lean()
-    .exec();
+  const [account, startingCredits] = await Promise.all([
+    User.findById(toObjectId(user.id), { dateOfBirth: 1 }).lean().exec(),
+    getSetting("startingProblemCredits"),
+  ]);
 
   if (account?.dateOfBirth) redirect(destination);
 
@@ -45,6 +45,9 @@ export default async function OnboardPage({
         </h1>
         <p className="mt-4 max-w-lg text-[0.9375rem] leading-relaxed text-muted-foreground">
           Use a name that feels separate from your Google account. A generated option is a good starting point if you would rather stay anonymous.
+        </p>
+        <p className="mt-3 text-sm font-medium text-brand">
+          You have {startingCredits} Credits to post your first problems. Credits are posting currency, not real money.
         </p>
         <div className="mt-9">
           <OnboardingForm initialUsername={user.username} next={destination} />

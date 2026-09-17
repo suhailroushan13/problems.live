@@ -193,7 +193,7 @@ export const suggestCategorySchema = z.object({
 });
 
 export const problemFiltersSchema = z.object({
-  sort: z.enum(PROBLEM_SORTS).catch("validated"),
+  sort: z.enum(PROBLEM_SORTS).catch("trending"),
   category: z.string().trim().max(60).optional(),
   status: z.enum(PROBLEM_STATUSES).optional().catch(undefined),
   country: z.string().trim().max(60).optional(),
@@ -289,6 +289,16 @@ export const onboardingSchema = z.object({
 
 export const checkUsernameSchema = z.object({
   username: usernameSchema,
+});
+
+export const waitlistSchema = z.object({
+  name: trimmed(2, 80, "Name"),
+  email: z.string().trim().toLowerCase().email("Enter a valid email address.").max(254),
+});
+
+export const inviteSchema = z.object({
+  name: trimmed(2, 80, "Name"),
+  email: z.string().trim().toLowerCase().email("Enter a valid email address.").max(254),
 });
 
 export const adminSettingSchema = z.object({

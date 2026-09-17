@@ -9,13 +9,16 @@ import {
   Comment,
   Problem,
   ProblemBookmark,
+  ProblemClick,
   Report,
   Solution,
   SolutionVote,
   CommentVote,
+  CommentAward,
   ProblemValidation,
   Notification,
   User,
+  WaitlistEntry,
 } from "@/models";
 import {
   findContentDocument,
@@ -25,8 +28,9 @@ import {
 } from "@/lib/db/content";
 import { requireAdmin, requireModerator } from "@/lib/auth/current-user";
 import { objectId } from "@/lib/utils/sanitize-query";
-import { objectIdSchema } from "@/lib/validation/schemas";
+import { objectIdSchema, usernameSchema, waitlistSchema } from "@/lib/validation/schemas";
 import { slugify } from "@/lib/utils/slug";
+import { stripUnsafe } from "@/lib/utils/text";
 import { notify } from "@/lib/services/notify";
 import { awardReputation, refundProblemCredit } from "@/lib/services/reputation";
 import { setSetting, invalidateSettingsCache, SETTING_DEFAULTS, type SettingKey } from "@/lib/config/settings";
@@ -35,9 +39,10 @@ import {
   NotFoundError,
   ok,
   okVoid,
+  isDuplicateKeyError,
   toActionError,
 } from "@/lib/action-helpers";
-import { REPUTATION } from "@/lib/constants";
+import { isReservedUsername, REPUTATION } from "@/lib/constants";
 import type { ActionResult } from "@/types";
 
 async function audit(params: {
@@ -57,6 +62,141 @@ async function audit(params: {
     });
   } catch (error) {
     console.error("[audit] failed", error);
+  }
+}
+
+const updateWaitlistEntrySchema = waitlistSchema.extend({
+  id: objectIdSchema,
+});
+
+const updateAdminUserSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(2, "Name must be at least 2 characters.")
+    .max(80, "Name must be 80 characters or fewer."),
+  username: usernameSchema,
+});
+
+export async function updateWaitlistEntry(raw: unknown): Promise<ActionResult<undefined>> {
+  try {
+    const admin = await requireAdmin();
+    const input = updateWaitlistEntrySchema.parse(raw);
+    await connectToDatabase();
+
+    let entry;
+    try {
+      entry = await WaitlistEntry.findByIdAndUpdate(
+        objectId(input.id),
+        { $set: { name: input.name, email: input.email } },
+        { returnDocument: "after" },
+      ).exec();
+    } catch (error) {
+      if (isDuplicateKeyError(error)) {
+        throw new DomainError("That email address is already on the waitlist.");
+      }
+      throw error;
+    }
+    if (!entry) throw new NotFoundError("That waitlist request no longer exists.");
+
+    await audit({
+      actorId: admin.id,
+      action: "waitlist.update",
+      targetType: "waitlist_entry",
+      targetId: input.id,
+    });
+    revalidatePath("/admin/waitlist");
+    return okVoid("Waitlist request updated.");
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+export async function deleteWaitlistEntry(id: string): Promise<ActionResult<undefined>> {
+  try {
+    const admin = await requireAdmin();
+    objectIdSchema.parse(id);
+    await connectToDatabase();
+
+    const entry = await WaitlistEntry.findByIdAndDelete(objectId(id)).exec();
+    if (!entry) throw new NotFoundError("That waitlist request no longer exists.");
+
+    await audit({
+      actorId: admin.id,
+      action: "waitlist.delete",
+      targetType: "waitlist_entry",
+      targetId: id,
+    });
+    revalidatePath("/admin/waitlist");
+    return okVoid("Waitlist request deleted.");
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+/** Permanently removes every problem and its dependent community records. */
+export async function deleteAllProblems(): Promise<ActionResult<{ deletedCount: number }>> {
+  try {
+    const admin = await requireAdmin();
+    await connectToDatabase();
+
+    const [problems, solutions, comments] = await Promise.all([
+      Problem.find({}, { _id: 1 }).lean().exec(),
+      Solution.find({}, { _id: 1 }).lean().exec(),
+      Comment.find({}, { _id: 1 }).lean().exec(),
+    ]);
+    if (problems.length === 0) return ok({ deletedCount: 0 }, "There are no problems to delete.");
+
+    const problemIds = problems.map((problem) => problem._id);
+    const solutionIds = solutions.map((solution) => solution._id);
+    const commentIds = comments.map((comment) => comment._id);
+
+    await Promise.all([
+      Problem.deleteMany({}).exec(),
+      Solution.deleteMany({}).exec(),
+      Comment.deleteMany({}).exec(),
+      ProblemValidation.deleteMany({}).exec(),
+      ProblemBookmark.deleteMany({}).exec(),
+      ProblemClick.deleteMany({}).exec(),
+      SolutionVote.deleteMany({}).exec(),
+      CommentVote.deleteMany({}).exec(),
+      CommentAward.deleteMany({}).exec(),
+      Report.deleteMany({ targetType: { $in: ["problem", "solution", "comment"] } }).exec(),
+      Notification.deleteMany({
+        $or: [
+          { problemId: { $in: problemIds } },
+          { solutionId: { $in: solutionIds } },
+          { commentId: { $in: commentIds } },
+        ],
+      }).exec(),
+      AuditLog.deleteMany({ targetType: { $in: ["problem", "solution", "comment"] } }).exec(),
+      Category.updateMany({}, { $set: { problemCount: 0 } }).exec(),
+      User.updateMany({}, {
+        $set: {
+          "stats.problems": 0,
+          "stats.solutions": 0,
+          "stats.comments": 0,
+          "stats.solvedProblems": 0,
+          "stats.helpfulVotes": 0,
+          "stats.validationsReceived": 0,
+        },
+      }).exec(),
+    ]);
+
+    await audit({
+      actorId: admin.id,
+      action: "problem.bulk_delete",
+      targetType: "problem",
+      meta: { count: problemIds.length },
+    });
+    revalidatePath("/", "layout");
+    revalidatePath("/problems");
+    revalidatePath("/admin");
+    revalidatePath("/admin/problems");
+    revalidatePath("/admin/users");
+    return ok({ deletedCount: problemIds.length }, `Deleted all ${problemIds.length} problems and their related content.`);
+  } catch (error) {
+    return toActionError(error);
   }
 }
 
@@ -362,7 +502,7 @@ export async function unsuspendUser(
 
 export async function setUserRole(
   userId: string,
-  role: "user" | "moderator" | "admin"
+  role: "user" | "admin"
 ): Promise<ActionResult<undefined>> {
   try {
     const admin = await requireAdmin();
@@ -392,6 +532,55 @@ export async function setUserRole(
 
     revalidatePath("/admin/users");
     return okVoid(`@${target.username} is now ${role}.`);
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+/** Updates the public profile fields an administrator is allowed to manage. */
+export async function updateAdminUser(
+  userId: string,
+  raw: unknown
+): Promise<ActionResult<undefined>> {
+  try {
+    const admin = await requireAdmin();
+    objectIdSchema.parse(userId);
+    const input = updateAdminUserSchema.parse(raw);
+    await connectToDatabase();
+
+    if (isReservedUsername(input.username)) {
+      throw new DomainError("That username is reserved. Pick another.");
+    }
+
+    const existing = await User.findById(objectId(userId), { username: 1 })
+      .lean()
+      .exec();
+    if (!existing) throw new NotFoundError();
+
+    try {
+      await User.updateOne(
+        { _id: objectId(userId) },
+        { $set: { name: stripUnsafe(input.name), username: input.username } }
+      ).exec();
+    } catch (error) {
+      if (isDuplicateKeyError(error)) {
+        throw new DomainError("That username is already taken.", "duplicate");
+      }
+      throw error;
+    }
+
+    await audit({
+      actorId: admin.id,
+      action: "user.update",
+      targetType: "user",
+      targetId: userId,
+      meta: { username: input.username },
+    });
+
+    revalidatePath("/admin/users");
+    revalidatePath(`/u/${existing.username}`);
+    revalidatePath(`/u/${input.username}`);
+    return okVoid(`@${input.username} updated.`);
   } catch (error) {
     return toActionError(error);
   }
@@ -944,7 +1133,7 @@ export async function toggleFeatured(
 
 export async function adminSetProblemStatus(
   problemId: string,
-  status: "open" | "being_solved" | "solved" | "not_relevant"
+  status: "open" | "needs_collaborators" | "being_solved" | "solved" | "not_relevant"
 ): Promise<ActionResult<undefined>> {
   try {
     const moderator = await requireModerator();

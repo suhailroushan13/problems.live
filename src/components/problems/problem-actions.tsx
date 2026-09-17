@@ -43,6 +43,7 @@ const STATUS_ACTIONS: Array<{
   icon: typeof CheckCircle2;
 }> = [
   { value: "open", label: "Mark as open", icon: MinusCircle },
+  { value: "needs_collaborators", label: "Needs collaborators", icon: Hammer },
   { value: "being_solved", label: "Someone is solving this", icon: Hammer },
   { value: "solved", label: "Mark as solved", icon: CheckCircle2 },
   { value: "not_relevant", label: "No longer relevant", icon: MinusCircle },

@@ -30,11 +30,12 @@ import type { CategoryDTO } from "@/types";
 
 const ALL = "__all__";
 const SORTS = [
+  { value: "trending", label: "Trending" },
   { value: "validated", label: "Most upvoted" },
-  { value: "clicks", label: "Most clicked" },
-  { value: "solutions", label: "Most solutions" },
+  { value: "discussed", label: "Most discussed" },
   { value: "newest", label: "Newest" },
-  { value: "oldest", label: "Oldest" },
+  { value: "updated", label: "Recently updated" },
+  { value: "unsolved", label: "Unsolved" },
 ] as const;
 
 /** Mobile keeps discovery to search + two controls; detailed filters live in a sheet. */
@@ -51,7 +52,7 @@ export function ProblemsToolbar({
   const urlQuery = searchParams.get("q") ?? "";
   const category = searchParams.get("category") ?? ALL;
   const status = searchParams.get("status") ?? ALL;
-  const sort = searchParams.get("sort") ?? "validated";
+  const sort = searchParams.get("sort") ?? "trending";
   const view = searchParams.get("view") === "card" ? "card" : "list";
   const [query, setQuery] = useState(urlQuery);
   const [syncedQuery, setSyncedQuery] = useState(urlQuery);

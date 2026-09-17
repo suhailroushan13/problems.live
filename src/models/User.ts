@@ -55,6 +55,8 @@ export interface IUser {
   role: UserRole;
   reputation: number;
   problemCredits: number;
+  inviteCredits: number;
+  invitedBy?: Types.ObjectId | null;
   stats: UserStats;
   status: "active" | "suspended";
   suspendedUntil?: Date | null;
@@ -114,7 +116,9 @@ const UserSchema = new Schema<IUser>(
     },
     role: { type: String, enum: USER_ROLES, default: "user", index: true },
     reputation: { type: Number, default: 0, index: true },
-    problemCredits: { type: Number, default: 3 },
+    problemCredits: { type: Number, default: 10 },
+    inviteCredits: { type: Number, default: 0, min: 0 },
+    invitedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
     stats: {
       problems: { type: Number, default: 0 },
       solutions: { type: Number, default: 0 },

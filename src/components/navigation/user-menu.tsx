@@ -13,7 +13,6 @@ import {
   UserPlus,
   UserRound,
 } from "lucide-react";
-import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,38 +36,11 @@ export function UserMenu({
 }: {
   user: Pick<
     SessionUser,
-    "name" | "username" | "avatar" | "reputation" | "isAdmin" | "problemCredits"
+    "name" | "username" | "avatar" | "reputation" | "isAdmin" | "problemCredits" | "inviteCredits"
   >;
   unreadCount: number;
 }) {
   const [pending, startTransition] = useTransition();
-
-  async function handleInvite() {
-    const url = window.location.origin;
-    const shareData = {
-      title: "problems.live",
-      text: "A public directory of problems people face, share, and want solved, come add yours.",
-      url,
-    };
-
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-      } catch (error) {
-        if ((error as Error)?.name !== "AbortError") {
-          toast.error("Couldn't open the share sheet.");
-        }
-      }
-      return;
-    }
-
-    try {
-      await navigator.clipboard.writeText(url);
-      toast.success("Invite link copied.");
-    } catch {
-      toast.error("Couldn't copy the link.");
-    }
-  }
 
   return (
     <DropdownMenu>
@@ -124,11 +96,11 @@ export function UserMenu({
 
         <div className="my-1.5 grid grid-cols-2 gap-1.5 px-2">
           <Link
-            href="/reputation"
+            href="/score"
             className="flex flex-col gap-0.5 rounded-lg bg-sunken px-2.5 py-2 transition-colors hover:bg-muted"
           >
             <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-              <Sparkles className="size-3" /> Reputation
+              <Sparkles className="size-3" /> Score
             </span>
             <span className="num text-sm font-semibold text-foreground">
               {formatCount(user.reputation)}
@@ -175,13 +147,8 @@ export function UserMenu({
               <Settings className="size-4" /> Settings
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem
-            className="px-2 py-2"
-            onSelect={() => {
-              void handleInvite();
-            }}
-          >
-            <UserPlus className="size-4" /> Invite a friend
+          <DropdownMenuItem asChild className="px-2 py-2">
+            <Link href="/invites"><UserPlus className="size-4" /> Invites <span className="ml-auto text-xs text-muted-foreground">{user.inviteCredits}</span></Link>
           </DropdownMenuItem>
 
           <div className="flex items-center justify-between rounded-md px-2 py-2 text-sm">

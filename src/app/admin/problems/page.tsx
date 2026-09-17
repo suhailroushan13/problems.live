@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ProblemAdminActions } from "@/components/admin/problem-admin-actions";
+import { DeleteAllProblemsButton } from "@/components/admin/delete-all-problems-button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { listAdminProblems } from "@/lib/data/admin";
@@ -26,17 +27,13 @@ export default async function AdminProblemsPage() {
     listAdminProblems(60),
   ]);
 
-  if (problems.length === 0) {
-    return (
-      <EmptyState
+  return (
+    <div>
+      {user?.isAdmin ? <div className="mb-5 flex justify-end"><DeleteAllProblemsButton /></div> : null}
+      {problems.length === 0 ? <EmptyState
         title="No problems yet."
         description="Once people start posting, every problem shows up here."
-      />
-    );
-  }
-
-  return (
-    <div className="overflow-x-auto rounded-xl border border-hairline">
+      /> : <div className="overflow-x-auto rounded-xl border border-hairline">
       <Table>
         <TableHeader>
           <TableRow>
@@ -106,6 +103,7 @@ export default async function AdminProblemsPage() {
           ))}
         </TableBody>
       </Table>
+      </div>}
     </div>
   );
 }

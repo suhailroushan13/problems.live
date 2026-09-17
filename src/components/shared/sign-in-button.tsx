@@ -1,6 +1,5 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { ComponentProps, ReactNode } from "react";
@@ -43,12 +42,10 @@ export function SignInButton({
   showIcon?: boolean;
   next?: string;
 } & ComponentProps<typeof Button>) {
-  const pathname = usePathname();
-  const target = next ?? pathname ?? "/";
-
+  void next;
   return (
     <Button asChild className={className} {...props}>
-      <a href={`/api/auth/google?next=${encodeURIComponent(target)}`}>
+      <a href="/wait-list">
         {showIcon ? <GoogleMark /> : null}
         {children}
       </a>

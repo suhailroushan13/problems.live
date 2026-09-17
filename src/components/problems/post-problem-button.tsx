@@ -27,7 +27,7 @@ export function PostProblemButton({
         size="sm"
         className={cn("gap-1.5 whitespace-nowrap", className)}
       >
-        <a href="/login?next=%2F">
+        <a href="/wait-list">
           <Plus className="size-3.5" />
           <span className="hidden sm:inline">{label}</span>
           <span className="sm:hidden">Post</span>
@@ -36,5 +36,5 @@ export function PostProblemButton({
     );
   }
 
-  return <Button asChild size="sm" className={cn("gap-1.5 whitespace-nowrap", className)}><Link href="/problems/new"><Plus className="size-3.5" /><span className="hidden sm:inline">{label}</span><span className="sm:hidden">Post</span></Link></Button>;
+  return <Button asChild size="sm" className={cn("gap-1.5 whitespace-nowrap", className)}><Link href="/wait-list"><Plus className="size-3.5" /><span className="hidden sm:inline">{label}</span><span className="sm:hidden">Post</span></Link></Button>;
 }

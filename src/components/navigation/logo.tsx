@@ -24,9 +24,9 @@ export function Logo({
       )}
       aria-label="problems.live, home"
     >
-      <span className="relative flex size-2.5" aria-hidden="true">
-        <span className="absolute inline-flex size-full animate-ping rounded-full bg-brand opacity-50 [animation-duration:3s]" />
-        <span className="relative inline-flex size-2.5 rounded-full bg-brand" />
+      <span className="relative flex size-1.5" aria-hidden="true">
+        <span className="absolute inline-flex size-full animate-ping rounded-full bg-success opacity-50 [animation-duration:3s]" />
+        <span className="relative inline-flex size-1.5 rounded-full bg-success ring-1 ring-success-subtle" />
       </span>
       <span>
         problems<span className="text-brand">.live</span>

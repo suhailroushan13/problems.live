@@ -9,6 +9,7 @@ function hasLocalBackPath(pathname: string): boolean {
     pathname === "/login" ||
     pathname === "/problems/new" ||
     pathname.startsWith("/admin") ||
+    /^\/u\/[^/]+$/.test(pathname) ||
     (/^\/categories\/[^/]+$/.test(pathname)) ||
     (/^\/problems\/[^/]+(?:\/edit)?$/.test(pathname))
   );

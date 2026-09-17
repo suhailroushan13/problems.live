@@ -110,7 +110,7 @@ export async function createProblem(
     const spent = await consumeProblemCredit(user.id);
     if (!spent) {
       return fail(
-        "You're out of problem credits. Credits come back as your problems get validated by other people.",
+        "You're out of Credits. Credits are the posting currency and come back as your problems get validated by other people.",
         "no_credits"
       );
     }

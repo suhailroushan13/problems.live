@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -28,6 +29,8 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ next?: string }>;
 }) {
+  redirect("/wait-list");
+  /* Invite-only pause: retain the sign-in experience for later.
   if (await getCurrentUser()) redirect("/");
   const { next } = await searchParams;
   const destination = next?.startsWith("/") && !next.startsWith("//") ? next : "/";
@@ -102,4 +105,5 @@ export default async function LoginPage({
       </section>
     </main>
   );
+  */
 }

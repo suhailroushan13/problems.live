@@ -25,6 +25,8 @@ const SORT_LABELS: Record<ProblemSort, string> = {
   clicks: "Most clicked",
   trending: "Trending now",
   newest: "Newest",
+  updated: "Recently updated",
+  unsolved: "Unsolved",
   oldest: "Oldest",
   discussed: "Most discussed",
   solutions: "Most solutions",
@@ -33,6 +35,7 @@ const SORT_LABELS: Record<ProblemSort, string> = {
 const STATUS_LABELS: Record<string, string> = {
   __all__: "Any status",
   open: "Still open",
+  needs_collaborators: "Needs collaborators",
   being_solved: "Being solved",
   solved: "Solved",
   not_relevant: "No longer relevant",

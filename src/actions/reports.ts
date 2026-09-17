@@ -43,7 +43,7 @@ export async function reportContent(
     const minReputation = await getSetting("reputationToReport");
     if (user.reputation < minReputation) {
       throw new DomainError(
-        "You need a little more reputation before you can report content.",
+        "You need a little more Score before you can report content.",
         "forbidden"
       );
     }

@@ -40,3 +40,6 @@ export { SiteVisit, type ISiteVisit } from "./SiteVisit";
 export { ProblemClick, type IProblemClick } from "./ProblemClick";
 export { ProblemBookmark, type IProblemBookmark } from "./ProblemBookmark";
 export { Passkey, type IPasskey } from "./Passkey";
+export { WaitlistEntry, type IWaitlistEntry } from "./WaitlistEntry";
+export { EmailLog, type IEmailLog } from "./EmailLog";
+export { Invite, type IInvite } from "./Invite";

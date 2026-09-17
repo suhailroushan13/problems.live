@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { ProblemForm } from "@/components/problems/problem-form";
@@ -13,6 +14,8 @@ export const metadata: Metadata = {
 };
 
 export default async function NewProblemPage() {
+  redirect("/wait-list");
+  /* Invite-only pause: retain the composer for the public launch.
   const user = await getCurrentUser();
 
   // The composer is meaningless without an identity to attribute the post to.
@@ -41,4 +44,5 @@ export default async function NewProblemPage() {
       />
     </div>
   );
+  */
 }

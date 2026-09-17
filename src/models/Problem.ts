@@ -184,6 +184,7 @@ ProblemSchema.index({
 });
 ProblemSchema.index({ moderationStatus: 1, viewCount: -1, createdAt: -1 });
 ProblemSchema.index({ moderationStatus: 1, createdAt: -1 });
+ProblemSchema.index({ moderationStatus: 1, updatedAt: -1 });
 ProblemSchema.index({ moderationStatus: 1, commentCount: -1, createdAt: -1 });
 ProblemSchema.index({ moderationStatus: 1, solutionCount: -1, createdAt: -1 });
 ProblemSchema.index({ categoryId: 1, moderationStatus: 1, hotScore: -1 });

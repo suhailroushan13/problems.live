@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import {
   ChevronRight,
+  ExternalLink,
   KeyRound,
   Mail,
   MapPin,
@@ -40,19 +41,39 @@ function SettingRow({
   destructive?: boolean;
 }) {
   return (
-    <div className="flex items-start gap-3 border-b border-hairline py-4 last:border-b-0">
-      <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-md bg-sunken text-muted-foreground">
-        <Icon className="size-4" aria-hidden="true" />
+    <div className="flex min-w-0 items-center gap-3 border-b border-hairline py-3 last:border-b-0">
+      <span className={destructive ? "flex size-8 shrink-0 items-center justify-center rounded-lg bg-destructive/10 text-destructive" : "flex size-8 shrink-0 items-center justify-center rounded-lg bg-sunken text-muted-foreground"}>
+        <Icon className="size-3.5" aria-hidden="true" />
       </span>
       <div className="min-w-0 flex-1">
         <p className={destructive ? "text-sm font-semibold text-destructive" : "text-sm font-semibold text-foreground"}>
           {label}
         </p>
-        <p className="mt-0.5 truncate text-sm text-muted-foreground">{value}</p>
-        {description ? <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{description}</p> : null}
+        <p className="truncate text-xs text-muted-foreground">{value}</p>
+        {description ? <p className="mt-0.5 text-xs leading-snug text-muted-foreground">{description}</p> : null}
       </div>
       {action ? <div className="shrink-0">{action}</div> : null}
     </div>
+  );
+}
+
+function SettingsCard({
+  title,
+  eyebrow,
+  children,
+}: {
+  title: string;
+  eyebrow: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-2xl border border-hairline bg-elevated px-4 py-3 shadow-[0_1px_0_rgb(0_0_0_/_0.02)] sm:px-5">
+      <div className="mb-1 flex items-baseline justify-between gap-3">
+        <h2 className="text-sm font-bold tracking-[-0.015em] text-foreground">{title}</h2>
+        <span className="label text-[10px] text-muted-foreground">{eyebrow}</span>
+      </div>
+      <div>{children}</div>
+    </section>
   );
 }
 
@@ -74,27 +95,28 @@ export default async function SettingsPage() {
   const hasPasskey = Boolean(await Passkey.exists({ userId: user.id }));
 
   return (
-    <main className="page max-w-3xl py-8 sm:py-14">
-      <header className="mb-8 sm:mb-10">
-        <p className="label text-muted-foreground">Account</p>
-        <h1 className="mt-2 text-[2rem] font-bold tracking-[-0.035em] text-foreground sm:text-[2.75rem]">
-          Settings
-        </h1>
-        <p className="mt-2 max-w-xl text-[0.9375rem] leading-relaxed text-muted-foreground">
-          Manage your account, security, and how problems.live works for you.
+    <main className="page max-w-5xl py-5 sm:py-7 lg:py-8">
+      <header className="mb-5 flex flex-col gap-3 border-b border-hairline pb-5 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="label text-brand">Account center</p>
+          <h1 className="mt-1 text-3xl font-bold tracking-[-0.035em] text-foreground sm:text-4xl">
+            Settings
+          </h1>
+        </div>
+        <p className="max-w-sm text-sm leading-relaxed text-muted-foreground sm:text-right">
+          Your profile, private defaults, and sign-in security in one place.
         </p>
       </header>
 
-      <section aria-labelledby="general-settings">
-        <h2 id="general-settings" className="label mb-2 text-muted-foreground">General</h2>
-        <div className="rounded-xl border border-hairline bg-elevated px-4 sm:px-5">
+      <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+        <SettingsCard title="Profile" eyebrow="PUBLIC">
           <SettingRow
             icon={UserRound}
             label="Profile"
             value={`u/${user.username}`}
-            description="Your public name, bio, social links, and profile photo."
+            description="Name, bio, links, and profile photo."
             action={
-              <Button asChild variant="ghost" size="sm" aria-label="Edit profile">
+              <Button asChild variant="ghost" size="sm" className="cursor-pointer" aria-label="Edit profile">
                 <Link href="/settings/profile"><ChevronRight /></Link>
               </Button>
             }
@@ -103,66 +125,66 @@ export default async function SettingsPage() {
             icon={Mail}
             label="Email address"
             value={user.email}
-            description="Verified and managed by your Google account."
+            description="Verified and managed by Google."
             action={<ShieldCheck className="mt-2 size-4 text-brand" aria-label="Verified" />}
           />
+        </SettingsCard>
+
+        <SettingsCard title="Private defaults" eyebrow="ONLY YOU">
+          <div className="flex items-center justify-between gap-3 border-b border-hairline py-3">
+            <p className="text-xs leading-snug text-muted-foreground">
+              Used to tailor your experience. None of these details are public.
+            </p>
+            <AccountPreferencesButton defaults={{ phone: user.phone, gender: user.gender, defaultLocation: user.defaultLocation }} />
+          </div>
           <SettingRow
             icon={Smartphone}
             label="Phone number"
             value={user.phone || "Not connected"}
-            description="Optional and private. It is not used for sign-in or verification."
-            action={<AccountPreferencesButton defaults={{ phone: user.phone, gender: user.gender, defaultLocation: user.defaultLocation }} />}
+            description="Optional; never used for sign-in."
           />
           <SettingRow
             icon={UserRound}
             label="Gender"
             value={ACCOUNT_GENDER_LABELS[user.gender]}
-            description="Optional and private. It is never shown on your public profile."
-            action={<AccountPreferencesButton defaults={{ phone: user.phone, gender: user.gender, defaultLocation: user.defaultLocation }} />}
+            description="Optional and never shown publicly."
           />
           <SettingRow
             icon={MapPin}
-            label="Location customization"
+            label="Default location"
             value={locationLabel(user.defaultLocation)}
-            description="Prefills new problems only. You can always choose a different location per post."
-            action={<AccountPreferencesButton defaults={{ phone: user.phone, gender: user.gender, defaultLocation: user.defaultLocation }} />}
+            description="Prefills posts; you can change it each time."
           />
-        </div>
-      </section>
+        </SettingsCard>
 
-      <section aria-labelledby="security-settings" className="mt-10">
-        <h2 id="security-settings" className="label mb-2 text-muted-foreground">Security</h2>
-        <div className="rounded-xl border border-hairline bg-elevated px-4 sm:px-5">
+        <SettingsCard title="Sign-in security" eyebrow="PROTECTED">
           <SettingRow
             icon={KeyRound}
-            label="Password"
+            label="Google account"
             value="Sign in with Google"
-            description="Your password is managed by Google, so there is no separate problems.live password."
-            action={<Button asChild variant="ghost" size="sm"><a href="https://myaccount.google.com/security" target="_blank" rel="noreferrer">Manage</a></Button>}
+            description="Your password and recovery are managed by Google."
+            action={<Button asChild variant="ghost" size="sm" className="cursor-pointer"><a href="https://myaccount.google.com/security" target="_blank" rel="noreferrer">Manage <ExternalLink /></a></Button>}
           />
           <SettingRow
             icon={KeyRound}
             label="Passkey"
             value={hasPasskey ? "Passkey set up" : "Not set up"}
-            description={hasPasskey ? "Use your device lock, fingerprint, or security key to sign in. Google remains available as a recovery sign-in method." : "Add a passkey with your device lock, fingerprint, or security key. Google remains available as a recovery sign-in method."}
+            description={hasPasskey ? "Your device lock or security key can sign you in." : "Use a device lock, fingerprint, or security key."}
             action={<PasskeySetupButton />}
           />
-        </div>
-      </section>
+        </SettingsCard>
 
-      <section aria-labelledby="advanced-settings" className="mt-10">
-        <h2 id="advanced-settings" className="label mb-2 text-muted-foreground">Advanced</h2>
-        <div className="rounded-xl border border-hairline bg-elevated px-4 sm:px-5">
+        <SettingsCard title="Account removal" eyebrow="IRREVERSIBLE">
           <SettingRow
             icon={Trash2}
             label="Delete account"
             value="Permanently delete this account"
-            description="Your public contributions can remain anonymously so community discussions stay intact."
+            description="Public contributions remain anonymous to preserve discussions."
             action={<DeleteAccountButton username={user.username} />}
             destructive
           />
-        </div>
-      </section>
+        </SettingsCard>
+      </div>
     </main>
   );
 }

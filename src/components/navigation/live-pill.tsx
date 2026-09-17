@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { formatCount } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
@@ -57,17 +56,14 @@ export function LivePill({ className }: { className?: string }) {
         className
       )}
     >
-      <span className="home-landing__stats-dot relative flex size-1.5" aria-hidden="true">
-        <span className="absolute -inset-0.5 inline-flex animate-ping rounded-full bg-success/40 [animation-duration:2.4s]" />
-        <span className="relative inline-flex size-1.5 rounded-full bg-success ring-1 ring-success-subtle" />
+      <span className="home-landing__stats-dot relative flex size-1" aria-hidden="true">
+        <span className="absolute -inset-px inline-flex animate-ping rounded-full bg-success/40 [animation-duration:2.4s]" />
+        <span className="relative inline-flex size-1 rounded-full bg-success" />
       </span>
-      <span className="num font-[family-name:var(--font-inter)]">{formatCount(livePeople)}</span>
+      <span className="num font-[family-name:var(--font-inter)]">{formatCount(livePeople)} live</span>
       <span className="home-landing__stats-divider text-muted-foreground" aria-hidden="true">|</span>
-      <span className="home-landing__stats-total inline-flex items-center gap-1 text-muted-foreground">
-        <Users className="size-3 shrink-0" strokeWidth={1.75} aria-hidden="true" />
-        <span className="num font-[family-name:var(--font-inter)] text-foreground">
-          {formatCount(stats?.totalVisits ?? 0)}
-        </span>
+      <span className="home-landing__stats-total num font-[family-name:var(--font-inter)] text-muted-foreground">
+        {formatCount(stats?.totalVisits ?? 0)} total visits
       </span>
     </Link>
   );

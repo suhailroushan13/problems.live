@@ -122,7 +122,7 @@ export function AdminUsersTable({
               </TableHead>
               <TableHead>User</TableHead>
               <TableHead>Role</TableHead>
-              <TableHead className="text-right">Rep</TableHead>
+              <TableHead className="text-right">Score</TableHead>
               <TableHead className="text-right">Problems</TableHead>
               <TableHead className="text-right">Solutions</TableHead>
               <TableHead>Joined</TableHead>

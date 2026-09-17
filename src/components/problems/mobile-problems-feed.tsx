@@ -89,7 +89,7 @@ export function MobileProblemsFeed({
 
   return (
     <div className="sm:hidden">
-      <div className="space-y-0">
+      <div className="space-y-3">
         {visibleItems.map((problem) => (
           <ProblemCard key={problem.id} problem={problem} isAuthenticated={isAuthenticated} isModerator={isModerator} />
         ))}

@@ -634,7 +634,7 @@ function CreditNote({
     <span />
   ) : (
     <p className="num text-xs text-muted-foreground">
-      {credits} {credits === 1 ? "credit" : "credits"} left
+      {credits} {credits === 1 ? "Credit" : "Credits"} left to post
     </p>
   );
 }

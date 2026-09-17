@@ -46,7 +46,7 @@ export function MobileMenu({ user }: { user: SessionUser | null }) {
         </Link>
 
         <Link
-          href="/problems/new"
+          href="/wait-list"
           className="tap flex h-12 items-center justify-center gap-1.5 rounded-md bg-primary px-3 text-xs font-semibold text-primary-foreground transition-colors hover:bg-brand-hover active:bg-brand-active"
         >
           <Plus className="size-4" aria-hidden="true" />
@@ -96,7 +96,7 @@ export function MobileMenu({ user }: { user: SessionUser | null }) {
                       {user.name}
                     </p>
                     <p className="num truncate text-[0.8125rem] text-muted-foreground">
-                      {formatCount(user.reputation)} reputation
+                      Score {formatCount(user.reputation)}
                     </p>
                   </div>
                 </div>

@@ -1,12 +1,11 @@
 /**
- * Client-safe helper for handing off to the sign-in chooser.
+ * Client-safe helper for the temporary invite-only handoff.
  *
- * This intentionally sends every protected interaction through `/login`, so
- * people can choose a passkey or Google rather than being forced into OAuth.
+ * Authentication is paused while the site is invite-only.
  */
-export function goToSignIn(next: string): void {
-  const target = next.startsWith("/") && !next.startsWith("//") ? next : "/";
-  const url = `/login?next=${encodeURIComponent(target)}`;
+export function goToSignIn(_next: string): void {
+  void _next;
+  const url = "/wait-list";
   // eslint-disable-next-line @next/next/no-location-assign-relative-destination
   window.location.assign(url);
 }

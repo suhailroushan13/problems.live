@@ -12,6 +12,7 @@ const EXPLORE_LINKS = [
   { href: "/categories", label: "Categories" },
   { href: "/solutions", label: "Solutions" },
   { href: "/leaderboard", label: "Leaderboard" },
+  { href: "/how-it-works", label: "Score & Credits" },
   { href: "/contribute", label: "Contribute" },
 ];
 
@@ -19,6 +20,17 @@ const LEGAL_LINKS = [
   { href: "/guidelines", label: "Community guidelines" },
   { href: "/terms", label: "Terms & conditions" },
   { href: "/privacy", label: "Privacy policy" },
+];
+
+const ASK_INTENT =
+  "I want help understanding and solving a real-world problem. Guide me through clarifying the problem, identifying who has it, and exploring practical solutions.";
+const ASK_QUERY = encodeURIComponent(ASK_INTENT);
+
+const ASK_LINKS = [
+  { href: `https://chatgpt.com/?q=${ASK_QUERY}`, label: "Ask GPT" },
+  { href: `https://claude.ai/new?q=${ASK_QUERY}`, label: "Ask Claude" },
+  { href: `https://grok.com/?q=${ASK_QUERY}`, label: "Ask Grok" },
+  { href: `https://www.perplexity.ai/?q=${ASK_QUERY}`, label: "Ask Perplexity" },
 ];
 
 export function SiteFooter() {
@@ -31,6 +43,7 @@ export function SiteFooter() {
         <MobileSiteFooter
           exploreLinks={EXPLORE_LINKS}
           legalLinks={LEGAL_LINKS}
+          askLinks={ASK_LINKS}
           version={APP_VERSION}
         />
       </div>
@@ -56,6 +69,17 @@ export function SiteFooter() {
         >
           <FooterWordmark />
         </Link>
+
+        <nav aria-label="Ask an AI" className="page flex flex-wrap justify-center gap-x-2 gap-y-1 border-t border-hairline py-4 text-xs text-muted-foreground">
+          {ASK_LINKS.map((link, index) => (
+            <span key={link.href} className="inline-flex items-center gap-2">
+              {index > 0 ? <span aria-hidden="true">·</span> : null}
+              <a href={link.href} target="_blank" rel="noreferrer" className="tap transition-colors hover:text-foreground">
+                {link.label}
+              </a>
+            </span>
+          ))}
+        </nav>
 
         <div className="page flex flex-col items-center gap-2 border-t border-hairline py-6 text-xs text-muted-foreground sm:flex-row sm:justify-between">
           <p>

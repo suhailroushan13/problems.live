@@ -62,6 +62,7 @@ export async function provisionUserFromGoogle(
       }
     }
     if (shouldBeAdmin && existing.role !== "admin") existing.role = "admin";
+    if (shouldBeAdmin && existing.inviteCredits == null) existing.inviteCredits = 100;
     existing.lastSeenAt = new Date();
     await existing.save();
     return existing.toObject() as IUser;
@@ -85,6 +86,7 @@ export async function provisionUserFromGoogle(
     role: shouldBeAdmin ? "admin" : "user",
     reputation: 0,
     problemCredits: startingCredits,
+    inviteCredits: shouldBeAdmin ? 100 : 0,
     lastSeenAt: new Date(),
   });
 

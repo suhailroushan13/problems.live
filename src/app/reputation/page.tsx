@@ -16,10 +16,10 @@ import { formatCount } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Reputation",
+  title: "Score",
   description:
-    "How reputation works on problems.live, how to earn it, what the trust tiers unlock, and where it shows up.",
-  alternates: { canonical: "/reputation" },
+    "How Score (reputation) works on problems.live, how to earn it, what trust tiers unlock, and where it shows up.",
+  alternates: { canonical: "/score" },
 };
 
 const EARN_ACTIONS = [
@@ -44,7 +44,7 @@ const EARN_ACTIONS = [
   {
     icon: CheckCircle2,
     title: "Your problem gets marked solved",
-    body: "You closed the loop on something real. This is the single biggest reputation event on the site.",
+    body: "You closed the loop on something real. This is the single biggest Score event on the site.",
     points: REPUTATION.PROBLEM_SOLVED,
   },
   {
@@ -56,7 +56,7 @@ const EARN_ACTIONS = [
   {
     icon: ShieldAlert,
     title: "Content you posted is removed",
-    body: "Moderators removing a post for breaking the guidelines costs reputation. It never drops your total below zero.",
+    body: "Moderators removing a post for breaking the guidelines costs Score. It never drops your total below zero.",
     points: REPUTATION.CONTENT_REMOVED,
   },
 ];
@@ -91,12 +91,12 @@ export default async function ReputationPage() {
   return (
     <div className="page py-12 sm:py-16">
       <header className="mb-10">
-        <p className="label text-brand">Reputation</p>
+        <p className="label text-brand">Score</p>
         <h1 className="mt-2 text-[2rem] font-bold tracking-[-0.035em] text-foreground sm:text-[2.75rem]">
-          A running score of who&apos;s worth trusting
+          Your reputation, made clear
         </h1>
         <p className="mt-4 text-[0.9375rem] leading-relaxed text-muted-foreground">
-          Reputation only moves when other people respond to what you posted,
+          Score is your reputation. It only moves when other people respond to what you posted,
           never for your own actions on your own content. It&apos;s the quiet signal
           that tells everyone else whether to take what you say seriously.
         </p>
@@ -104,7 +104,7 @@ export default async function ReputationPage() {
 
       {user ? (
         <section className="mb-10 rounded-xl border border-brand-border bg-linear-to-b from-brand-muted to-background p-5 sm:p-6">
-          <p className="label text-brand">Your reputation</p>
+          <p className="label text-brand">Your Score</p>
           <p className="mt-2 text-[1.75rem] leading-tight font-bold tracking-[-0.025em] text-foreground">
             <span className="num">{formatCount(user.reputation)}</span>{" "}
             <span className="font-semibold text-foreground/75">
@@ -142,7 +142,7 @@ export default async function ReputationPage() {
         <p className="mt-2 text-[0.9375rem] leading-relaxed text-muted-foreground">
           Every problem, solution and comment starts at zero influence. When
           someone else validates your problem, marks your solution or comment
-          helpful, or your problem gets solved, your reputation goes up. When
+          helpful, or your problem gets solved, your Score goes up. When
           something you posted gets removed for breaking the guidelines, it
           goes down, but it never drops below zero, so one bad post doesn&apos;t
           follow you forever.
@@ -210,7 +210,7 @@ export default async function ReputationPage() {
                     </span>
                   ) : null}
                 </p>
-                {tier.key === "member" ? (
+                {tier.key === "regular" ? (
                   <p className="mt-0.5 text-xs text-muted-foreground">
                     Unlocks suggesting new categories.
                   </p>
@@ -241,7 +241,7 @@ export default async function ReputationPage() {
             , so anyone can see how much of the community stands behind you.
           </li>
           <li>
-            At {formatCount(reputationToSuggestCategory)} reputation you can
+            At Score {formatCount(reputationToSuggestCategory)} you can
             suggest new categories for the site.
           </li>
           <li>

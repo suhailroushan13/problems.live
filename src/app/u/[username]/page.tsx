@@ -2,17 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
-  CheckCircle2,
+  ArrowLeft,
   Camera,
   FileText,
-  Lightbulb,
+  MoreHorizontal,
   Pencil,
-  ThumbsUp,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { BioText } from "@/components/shared/bio-text";
@@ -32,6 +30,7 @@ import { formatMonthYear, timeAgo } from "@/lib/utils/time";
 import { excerpt } from "@/lib/utils/text";
 import { TRUST_TIERS } from "@/lib/constants";
 import { env, APP_NAME } from "@/lib/env";
+import type { ProfileDTO } from "@/types";
 
 type PageProps = {
   params: Promise<{ username: string }>;
@@ -118,106 +117,78 @@ export default async function ProfilePage({ params, searchParams }: PageProps) {
   const tier = TRUST_TIERS.find((t) => t.key === profile.trust);
 
   const stats = [
-    { label: "Problems", value: profile.stats.problems, icon: FileText },
-    { label: "Solutions", value: profile.stats.solutions, icon: Lightbulb },
-    { label: "Solved", value: profile.stats.solvedProblems, icon: CheckCircle2 },
-    { label: "Helpful votes", value: profile.stats.helpfulVotes, icon: ThumbsUp },
+    { label: "Problems", value: profile.stats.problems },
+    { label: "Solutions", value: profile.stats.solutions },
+    { label: "Solved", value: profile.stats.solvedProblems },
+    { label: "Helpful votes", value: profile.stats.helpfulVotes },
   ];
 
   return (
-    <div className="page py-12 sm:py-16">
-      <header className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-6">
+    <div className="mx-auto w-full max-w-[68.75rem] px-4 py-6 sm:px-10 sm:py-8">
+      <div className="flex min-h-11 items-center justify-between">
+        <Link href="/problems" className="tap inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+          <ArrowLeft className="size-4" aria-hidden="true" />
+          Back
+        </Link>
+      </div>
+
+      <header className="relative mt-1 border-b border-hairline pb-6 sm:mt-3 sm:flex sm:items-start sm:gap-6 sm:pb-8">
         {isSelf ? (
-          <Link
-            href="/settings"
-            aria-label="Change avatar"
-            className="group relative shrink-0 rounded-full focus-visible:outline-none"
-          >
-            <UserAvatar
-              name={profile.name}
-              username={profile.username}
-              avatar={profile.avatar}
-              size="xl"
-            />
-            <span className="absolute right-0 bottom-0 flex size-6 items-center justify-center rounded-full bg-foreground text-background ring-2 ring-background transition-transform group-hover:scale-110">
-              <Camera className="size-3" aria-hidden="true" />
-            </span>
+          <Link href="/settings" aria-label="Profile settings" className="tap absolute top-0 right-0 inline-flex size-11 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-sunken hover:text-foreground sm:hidden">
+            <MoreHorizontal className="size-5" aria-hidden="true" />
           </Link>
-        ) : (
-          <UserAvatar
-            name={profile.name}
-            username={profile.username}
-            avatar={profile.avatar}
-            size="xl"
-          />
-        )}
+        ) : null}
+        <div className="flex flex-col items-center text-center sm:items-start sm:text-left">
+          {isSelf ? (
+            <Link href="/settings" aria-label="Change avatar" className="group relative shrink-0 rounded-full focus-visible:outline-none">
+              <UserAvatar name={profile.name} username={profile.username} avatar={profile.avatar} size="xl" className="size-20 text-xl sm:size-24 sm:text-2xl" />
+              <span className="absolute right-0 bottom-0 flex size-7 items-center justify-center rounded-full bg-foreground text-background ring-2 ring-background transition-transform group-hover:scale-110">
+                <Camera className="size-3.5" aria-hidden="true" />
+              </span>
+            </Link>
+          ) : (
+            <UserAvatar name={profile.name} username={profile.username} avatar={profile.avatar} size="xl" className="size-20 text-xl sm:size-24 sm:text-2xl" />
+          )}
 
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <h1 className="text-2xl font-bold tracking-[-0.03em] text-foreground sm:text-[2rem]">
-              {profile.name}
-            </h1>
-            {tier ? (
-              <Badge variant="secondary" className="font-semibold">
-                {tier.label}
-              </Badge>
-            ) : null}
-            {profile.role !== "user" ? (
-              <Badge variant="outline" className="capitalize">
-                {profile.role}
-              </Badge>
-            ) : null}
+          <div className="mt-3 min-w-0 sm:hidden">
+            <ProfileIdentity profile={profile} tier={tier?.label} />
           </div>
-          <p className="mt-1 text-[0.9375rem] text-muted-foreground">
-            @{profile.username}
-          </p>
+        </div>
 
+        <div className="mt-5 min-w-0 flex-1 text-center sm:mt-0 sm:text-left">
+          <div className="hidden sm:block"><ProfileIdentity profile={profile} tier={tier?.label} /></div>
           {profile.bio ? (
-            <BioText className="mt-4 max-w-lg text-[0.9375rem] leading-relaxed text-muted-foreground">
+            <BioText className="mt-3 text-[0.9375rem] leading-6 text-muted-foreground">
               {profile.bio}
             </BioText>
           ) : null}
-
-          <SocialLinksRow socialLinks={profile.socialLinks} className="mt-4" />
-
-          <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-[0.8125rem] text-muted-foreground">
-            <span>
-              <span className="num font-medium text-foreground">
-                {formatCount(profile.reputation)}
-              </span>{" "}
-              reputation
-            </span>
+          <SocialLinksRow socialLinks={profile.socialLinks} className="mt-3 justify-center sm:justify-start" />
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[0.8125rem] text-muted-foreground sm:justify-start">
+            <span><span className="num font-semibold text-foreground">{formatCount(profile.reputation)}</span> reputation</span>
             <span aria-hidden="true">·</span>
             <span>Joined {formatMonthYear(profile.joinedAt)}</span>
           </div>
         </div>
 
         {isSelf ? (
-          <Button asChild variant="outline" className="tap pill shrink-0 gap-1.5 px-5 font-bold">
-            <Link href="/settings/profile">
-              <Pencil className="size-3.5" aria-hidden="true" />
-              Edit profile
-            </Link>
+          <Button asChild variant="outline" className="mt-5 h-11 w-full shrink-0 gap-1.5 px-5 font-semibold sm:mt-0 sm:w-auto">
+            <Link href="/settings/profile"><Pencil className="size-3.5" aria-hidden="true" />Edit profile</Link>
           </Button>
         ) : null}
       </header>
 
-      <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {stats.map((stat) => (
-          <Card key={stat.label} className="items-start gap-2 px-4 py-3.5">
-            <stat.icon className="size-4 text-brand" aria-hidden="true" />
-            <div>
-              <p className="num text-lg font-bold text-foreground">
-                {formatCount(stat.value)}
-              </p>
-              <p className="text-xs text-muted-foreground">{stat.label}</p>
-            </div>
-          </Card>
+      <section aria-label="Profile statistics" className="mt-5 grid grid-cols-2 overflow-hidden rounded-xl border border-hairline sm:mt-6 sm:grid-cols-4">
+        {stats.map((stat, index) => (
+          <div key={stat.label} className={`min-h-20 px-4 py-3.5 ${index % 2 === 1 ? "border-l border-hairline" : ""} ${index > 1 ? "border-t border-hairline sm:border-t-0" : ""} ${index > 0 ? "sm:border-l sm:border-hairline" : ""}`}>
+            <p className="num text-xl font-bold tracking-[-0.02em] text-foreground">{formatCount(stat.value)}</p>
+            <p className="mt-0.5 text-[0.8125rem] text-muted-foreground">{stat.label}</p>
+          </div>
         ))}
-      </div>
+      </section>
 
-      <Tabs value={tab} className="mt-8 mb-2">
-        <TabsList className="no-scrollbar max-w-full overflow-x-auto">
+      <div className="mt-6 -mx-4 overflow-x-auto px-4 no-scrollbar sm:mt-7 sm:mx-0 sm:px-0">
+      <Tabs value={tab} className="min-w-max">
+        <TabsList className="h-11 rounded-lg bg-sunken p-1">
           {visibleTabs.map((value) => (
             <TabsTrigger key={value} value={value} asChild>
               <Link
@@ -227,14 +198,17 @@ export default async function ProfilePage({ params, searchParams }: PageProps) {
                     : `/u/${profile.username}?tab=${value}`
                 }
                 scroll={false}
-                className="capitalize"
+                className="min-h-9 px-3.5 text-sm capitalize"
               >
-                {value}
+                {value === "problems" ? `Problems ${profile.stats.problems}` : value === "solutions" ? `Solutions ${profile.stats.solutions}` : value}
               </Link>
             </TabsTrigger>
           ))}
         </TabsList>
       </Tabs>
+      </div>
+
+      <main className="mt-4 sm:mt-5">
 
       {tab === "problems" ? (
         problems && problems.items.length > 0 ? (
@@ -243,21 +217,7 @@ export default async function ProfilePage({ params, searchParams }: PageProps) {
             isAuthenticated={Boolean(viewer)}
           />
         ) : (
-          <EmptyState
-            title={
-              isSelf
-                ? "You haven't shared a problem yet."
-                : `@${profile.username} hasn't shared a problem yet.`
-            }
-            description={
-              isSelf
-                ? "Anything you post anonymously stays off your public profile."
-                : undefined
-            }
-            action={
-              isSelf ? { label: "Share a problem", href: "/problems/new" } : undefined
-            }
-          />
+          <ProfileProblemsEmpty isSelf={isSelf} username={profile.username} />
         )
       ) : null}
 
@@ -377,6 +337,63 @@ export default async function ProfilePage({ params, searchParams }: PageProps) {
           />
         )
       ) : null}
+      </main>
     </div>
+  );
+}
+
+function ProfileIdentity({
+  profile,
+  tier,
+}: {
+  profile: ProfileDTO;
+  tier?: string;
+}) {
+  return (
+    <>
+      <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+        <h1 className="break-words text-[1.5rem] font-bold tracking-[-0.035em] text-foreground sm:text-[1.75rem]">
+          {profile.name}
+        </h1>
+        {profile.role !== "user" ? (
+          <Badge variant="outline" className="h-6 border-hairline px-2 text-[0.6875rem] font-semibold capitalize text-muted-foreground">
+            {profile.role}
+          </Badge>
+        ) : null}
+        {tier === "New" ? (
+          <Badge variant="secondary" className="h-6 px-2 text-[0.6875rem] font-medium text-muted-foreground">
+            New
+          </Badge>
+        ) : null}
+      </div>
+      <p className="mt-1 text-sm text-muted-foreground">@{profile.username}</p>
+    </>
+  );
+}
+
+function ProfileProblemsEmpty({
+  isSelf,
+  username,
+}: {
+  isSelf: boolean;
+  username: string;
+}) {
+  return (
+    <section className="rounded-xl border border-hairline bg-tint px-5 py-9 text-center sm:py-10">
+      <span className="mx-auto flex size-9 items-center justify-center rounded-lg border border-hairline bg-elevated text-brand" aria-hidden="true">
+        <FileText className="size-4" />
+      </span>
+      <h2 className="mt-3 text-base font-semibold text-foreground">No problems yet</h2>
+      <p className="mx-auto mt-1 max-w-md text-sm leading-6 text-muted-foreground">
+        {isSelf
+          ? "You haven't shared a problem yet. Have something you've been struggling with? Someone here might have the answer."
+          : `@${username} hasn't shared a problem yet.`}
+      </p>
+      {isSelf ? (
+        <Button asChild className="mt-5 h-11 px-4">
+          <Link href="/problems/new">+ Post a problem</Link>
+        </Button>
+      ) : null}
+    </section>
   );
 }

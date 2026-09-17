@@ -4,6 +4,8 @@ import { exchangeCodeForProfile } from "@/lib/auth/google";
 import { provisionUserFromGoogle } from "@/lib/auth/provision";
 import { createSessionToken, SESSION_COOKIE } from "@/lib/auth/session";
 import { env } from "@/lib/env";
+import { connectToDatabase } from "@/lib/db/mongoose";
+import { User } from "@/models";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +24,12 @@ function constantTimeEquals(a: string, b: string): boolean {
 function failure(reason: string): NextResponse {
   return NextResponse.redirect(
     `${env.appUrl}/?auth_error=${encodeURIComponent(reason)}`
+  );
+}
+
+function adminFailure(reason: string): NextResponse {
+  return NextResponse.redirect(
+    `${env.appUrl}/suhail/login?error=${encodeURIComponent(reason)}`,
   );
 }
 
@@ -60,10 +68,25 @@ export async function GET(request: NextRequest) {
       return clearOAuthCookies(failure("email_unverified"));
     }
 
+    const next = request.cookies.get(NEXT_COOKIE)?.value ?? "/";
+    const isSecretAdminLogin = next === "/suhail/complete";
+    if (isSecretAdminLogin) {
+      await connectToDatabase();
+      const existingAdmin = await User.exists({
+        email: profile.email,
+        role: "admin",
+      });
+      if (!existingAdmin && !env.adminEmails.includes(profile.email)) {
+        return clearOAuthCookies(adminFailure("not_authorized"));
+      }
+    }
+
     const user = await provisionUserFromGoogle(profile);
+    if (isSecretAdminLogin && user.role !== "admin") {
+      return clearOAuthCookies(adminFailure("not_authorized"));
+    }
     const token = await createSessionToken(String(user._id));
 
-    const next = request.cookies.get(NEXT_COOKIE)?.value ?? "/";
     const destination =
       next.startsWith("/") && !next.startsWith("//") ? next : "/";
 

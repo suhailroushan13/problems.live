@@ -75,6 +75,14 @@ export const env = {
       .map((e) => e.trim().toLowerCase())
       .filter(Boolean);
   },
+  get smtpUser() {
+    return required("SMTP_USER");
+  },
+  get smtpPassword() {
+    // Gmail app passwords may be displayed with spaces, but SMTP expects the
+    // underlying contiguous value.
+    return required("SMTP_PASSWORD").replaceAll(" ", "");
+  },
   get isProduction() {
     return process.env.NODE_ENV === "production";
   },

@@ -23,6 +23,8 @@ const SORT_SPECS: Record<ProblemSort, Record<string, SortOrder>> = {
   clicks: { viewCount: -1, createdAt: -1 },
   trending: { hotScore: -1, _id: -1 },
   newest: { createdAt: -1, _id: -1 },
+  updated: { updatedAt: -1, _id: -1 },
+  unsolved: { hotScore: -1, _id: -1 },
   oldest: { createdAt: 1, _id: 1 },
   discussed: { commentCount: -1, createdAt: -1 },
   solutions: { solutionCount: -1, createdAt: -1 },
@@ -144,8 +146,9 @@ export async function listProblems(
 
   const page = Math.max(1, filters.page ?? 1);
   const pageSize = filters.pageSize ?? PAGE_SIZE;
-  const sort = filters.sort ?? "validated";
+  const sort = filters.sort ?? "trending";
   const filter = await buildProblemFilter(filters);
+  if (sort === "unsolved") filter.status = { $ne: "solved" };
 
   // Free-text search ranks by relevance; everything else uses an index-backed
   // sort on the matching compound index.

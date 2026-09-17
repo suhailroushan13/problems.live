@@ -9,7 +9,7 @@ import { Setting } from "@/models";
  */
 export const SETTING_DEFAULTS = {
   /** Credits granted to a brand new account. */
-  startingProblemCredits: 3,
+  startingProblemCredits: 10,
   /** Credits refunded/earned when a problem attracts real validation. */
   creditsPerValidatedProblem: 1,
   /** Validations a problem needs before it earns its author a credit back. */

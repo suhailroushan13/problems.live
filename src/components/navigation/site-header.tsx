@@ -23,7 +23,7 @@ export function SiteHeader({
   const pathname = usePathname();
   const isPosting = pathname === "/problems/new";
   const isAuthenticating = pathname === "/login";
-  const postHref = user ? "/problems/new" : "/login?next=%2F";
+  const postHref = "/wait-list";
 
   if (isPosting) {
     return (
@@ -81,11 +81,10 @@ export function SiteHeader({
 
           {!isAuthenticating ? <Button
             asChild
-            size="icon"
-            className="size-10 shrink-0 rounded-md sm:hidden"
+            className="shrink-0 sm:hidden"
           >
-            <Link href={postHref} aria-label="Post a problem">
-              <Plus className="size-4" aria-hidden="true" />
+            <Link href={postHref}>
+              Post a problem
             </Link>
           </Button> : null}
         </div>

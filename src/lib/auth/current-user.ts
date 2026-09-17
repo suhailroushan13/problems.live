@@ -35,6 +35,7 @@ export interface SessionUser {
   role: UserRole;
   reputation: number;
   problemCredits: number;
+  inviteCredits: number;
   trust: TrustTier;
   isAdmin: boolean;
   isModerator: boolean;
@@ -68,6 +69,7 @@ function toSessionUser(doc: IUser): SessionUser {
     role: doc.role,
     reputation: doc.reputation,
     problemCredits: doc.problemCredits,
+    inviteCredits: doc.inviteCredits ?? 0,
     trust: trustTierFor(doc.reputation),
     isAdmin: doc.role === "admin",
     isModerator: doc.role === "admin" || doc.role === "moderator",

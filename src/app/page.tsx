@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { CategoryBar } from "@/components/navigation/category-bar";
 import { ProblemsToolbar } from "@/components/problems/problems-toolbar";
 import { ProblemCard } from "@/components/problems/problem-card";
@@ -7,6 +8,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { GithubBadge } from "@/components/shared/github-badge";
 // import { SignInSoundControl } from "@/components/auth/sign-in-sound-control";
 import { NumberTicker } from "@/components/ui/number-ticker";
+import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { listProblems } from "@/lib/data/problems";
 import { listCategories } from "@/lib/data/categories";
@@ -21,10 +23,8 @@ export default async function HomePage({
 }) {
   const params = await searchParams;
 
-  // The directory defaults to "Most validated" — the app's one upvote-
-  // equivalent signal — rather than the sitewide "trending" default.
   const filters = problemFiltersSchema.parse({
-    sort: params.sort ?? "validated",
+    sort: params.sort ?? "trending",
     category: params.category,
     status: params.status,
     q: params.q,
@@ -47,6 +47,7 @@ export default async function HomePage({
   // Signed-out users see the marketing landing page. Signed-in users go
   // straight to the directory, using the same desktop content rail as header.
   const isLoggedIn = Boolean(user);
+  const desktopItems = isLoggedIn ? result.items : result.items.slice(0, 5);
   return (
     <>
       {/* Hero — logged-out only ------------------------------------------ */}
@@ -58,7 +59,7 @@ export default async function HomePage({
 
           <h1
             className={cn(
-              "mx-auto max-w-4xl text-[clamp(1.25rem,8vw,1.875rem)] leading-[1.08] font-bold tracking-[-0.04em] text-foreground sm:mt-6 sm:text-4xl sm:tracking-[-0.03em] lg:text-5xl",
+              "mx-auto max-w-4xl text-[clamp(1.125rem,calc(8vw_-_2px),1.75rem)] leading-[1.08] font-bold tracking-[-0.04em] text-foreground sm:mt-6 sm:text-4xl sm:tracking-[-0.03em] lg:text-5xl",
               activeCategory ? "text-balance" : "whitespace-nowrap"
             )}
           >
@@ -78,7 +79,7 @@ export default async function HomePage({
             {formatCount(result.total)} live {result.total === 1 ? "problem" : "problems"}
           </p>
           <p className="mx-auto mt-3 hidden max-w-[20rem] text-[0.8125rem] leading-5 text-muted-foreground sm:mt-4 sm:block sm:max-w-xl sm:text-sm sm:leading-relaxed">
-            A public directory of problems people face, share, and want solved.
+            Real problems people face, share, and want solved.
           </p>
         </section>
       ) : null}
@@ -93,8 +94,8 @@ export default async function HomePage({
             />
             <span>
               {result.total === 1
-                ? "live problem waiting to be solved"
-                : "live problems waiting to be solved"}
+                ? "problem waiting to be solved"
+                : "problems waiting to be solved"}
             </span>
           </p>
           <ProblemsToolbar categories={categories} />
@@ -126,24 +127,48 @@ export default async function HomePage({
                     : "hidden space-y-3 sm:block",
                 )}
               >
-                {result.items.map((problem) => (
-                  <ProblemCard
-                    key={problem.id}
-                    problem={problem}
-                    isAuthenticated={Boolean(user)}
-                    isModerator={Boolean(user?.isModerator)}
-                  />
-                ))}
+                {desktopItems.map((problem, index) => {
+                  const isSignInPreview = !isLoggedIn && index === 4;
+
+                  if (isSignInPreview) {
+                    return (
+                      <div key={problem.id} className="relative overflow-hidden rounded-xl">
+                        <div aria-hidden="true" inert className="pointer-events-none select-none blur-sm">
+                          <ProblemCard
+                            problem={problem}
+                            isAuthenticated={false}
+                            isModerator={false}
+                          />
+                        </div>
+                        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-background/40 px-4 text-center backdrop-blur-[1px]">
+                          <p className="text-sm font-semibold text-foreground">Sign in to see more problems</p>
+                          <Button asChild size="sm">
+                            <Link href="/login?next=%2F">Sign in</Link>
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <ProblemCard
+                      key={problem.id}
+                      problem={problem}
+                      isAuthenticated={isLoggedIn}
+                      isModerator={Boolean(user?.isModerator)}
+                    />
+                  );
+                })}
               </div>
 
               <div className="mt-3 hidden flex-wrap items-center justify-between gap-3 sm:flex">
                 <p className="text-xs text-muted-foreground">
-                  Showing {formatCount(rangeStart)}–{formatCount(rangeEnd)} of{" "}
+                  Showing {formatCount(isLoggedIn ? rangeStart : Math.min(4, result.items.length))}{isLoggedIn ? `–${formatCount(rangeEnd)}` : ""} of{" "}
                   {formatCount(result.total)} problems
                 </p>
               </div>
 
-              <div className="hidden sm:block"><PaginationBar page={result.page} totalPages={result.totalPages} /></div>
+              {isLoggedIn ? <div className="hidden sm:block"><PaginationBar page={result.page} totalPages={result.totalPages} /></div> : null}
             </>
           ) : isFiltered ? (
             <EmptyState
