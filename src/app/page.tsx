@@ -52,36 +52,55 @@ export default async function HomePage({
     <>
       {/* Hero — logged-out only ------------------------------------------ */}
       {!isLoggedIn ? (
-        <section className="page pt-3 pb-2 text-left sm:pt-16 sm:pb-10 sm:text-center">
-          <div className="hidden sm:block">
+        <>
+          <section className="page pt-3 pb-3 sm:hidden">
+            <div className="relative overflow-hidden rounded-2xl border border-hairline bg-elevated px-4 py-4 shadow-[0_1px_0_rgb(0_0_0_/_0.02)]">
+              <span className="pointer-events-none absolute -top-10 -right-8 size-28 rounded-full bg-brand-muted blur-2xl" aria-hidden="true" />
+              <div className="relative">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="label text-brand">Open directory</p>
+                  <span className="num rounded-full border border-brand-border bg-brand-muted px-2.5 py-1 text-[0.6875rem] font-bold text-brand">
+                    {formatCount(result.total)} live
+                  </span>
+                </div>
+                <h1 className="mt-3 max-w-[16rem] text-[1.5rem] leading-[1.05] font-bold tracking-[-0.04em] text-foreground">
+                  {activeCategory ? (
+                    <>Problems in <span className="text-brand">{activeCategory.name}</span></>
+                  ) : (
+                    <>Problems worth <span className="text-brand">solving.</span></>
+                  )}
+                </h1>
+                <p className="mt-2 max-w-[18rem] text-xs leading-relaxed text-muted-foreground">
+                  Real problems, shared by the people living with them.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section className="page hidden pt-16 pb-10 text-center sm:block">
             <GithubBadge className="sm:translate-y-3" />
-          </div>
-
-          <h1
-            className={cn(
-              "mx-auto max-w-4xl text-[clamp(1.125rem,calc(8vw_-_2px),1.75rem)] leading-[1.08] font-bold tracking-[-0.04em] text-foreground sm:mt-6 sm:text-4xl sm:tracking-[-0.03em] lg:text-5xl",
-              activeCategory ? "text-balance" : "whitespace-nowrap"
-            )}
-          >
-            {activeCategory ? (
-              <>
-                Problems in{" "}
-                <span className="text-brand">{activeCategory.name}</span>
-              </>
-            ) : (
-              <>
-                The <span className="text-brand">problems</span> directory
-              </>
-            )}
-          </h1>
-
-          <p className="mt-1 text-[0.9375rem] font-medium text-muted-foreground sm:hidden">
-            {formatCount(result.total)} live {result.total === 1 ? "problem" : "problems"}
-          </p>
-          <p className="mx-auto mt-3 hidden max-w-[20rem] text-[0.8125rem] leading-5 text-muted-foreground sm:mt-4 sm:block sm:max-w-xl sm:text-sm sm:leading-relaxed">
-            Real problems people face, share, and want solved.
-          </p>
-        </section>
+            <h1
+              className={cn(
+                "mx-auto mt-6 max-w-4xl text-4xl leading-[1.08] font-bold tracking-[-0.03em] text-foreground lg:text-5xl",
+                activeCategory ? "text-balance" : "whitespace-nowrap"
+              )}
+            >
+              {activeCategory ? (
+                <>
+                  Problems in{" "}
+                  <span className="text-brand">{activeCategory.name}</span>
+                </>
+              ) : (
+                <>
+                  The <span className="text-brand">problems</span> directory
+                </>
+              )}
+            </h1>
+            <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground">
+              Real problems people face, share, and want solved.
+            </p>
+          </section>
+        </>
       ) : null}
 
       {/* Problems directory ---------------------------------------------- */}
@@ -104,7 +123,7 @@ export default async function HomePage({
         <CategoryBar
           categories={categories}
           activeSlug={filters.category}
-          className="mt-3 sm:mt-3.5"
+          className={cn("mt-3 sm:mt-3.5", !isLoggedIn && "hidden sm:block")}
         />
 
         <div className="page mt-3 sm:mt-4">
@@ -181,7 +200,7 @@ export default async function HomePage({
             <EmptyState
               title="No problems yet."
               description="Be the first person to share a problem worth solving."
-              action={{ label: "Post a problem", href: "/problems/new" }}
+              action={{ label: "Join the waitlist", href: "/wait-list" }}
             />
           )}
         </div>

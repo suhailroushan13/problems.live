@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Figtree, Inter } from "next/font/google";
 import Script from "next/script";
+import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "@/components/ui/sonner";
 import { SiteHeader } from "@/components/navigation/site-header";
 import { SiteFooter } from "@/components/navigation/site-footer";
@@ -121,6 +122,7 @@ export default async function RootLayout({
         {!user ? <SiteFooter /> : null}
         <Toaster position="top-center" />
         <AuthErrorToast />
+        <Analytics />
         <Script
           strategy="afterInteractive"
           data-website-id="dfid_6rsKInmebGFZpSFynBB68"
