@@ -194,7 +194,7 @@ export async function approveWaitlistEntry(id: string): Promise<ActionResult<und
         role: "user",
         reputation: 0,
         problemCredits: startingCredits,
-        inviteCredits: 0,
+        inviteCredits: 5,
         waitlistApprovalTokenHash: approvalTokenHash,
         lastSeenAt: new Date(),
       });
@@ -202,7 +202,12 @@ export async function approveWaitlistEntry(id: string): Promise<ActionResult<und
     } else {
       await User.updateOne(
         { email: entry.email },
-        { $set: { waitlistApprovalTokenHash: approvalTokenHash } },
+        {
+          $set: { waitlistApprovalTokenHash: approvalTokenHash },
+          // Never lower an existing balance (e.g. an admin's), only raise it
+          // to the standard approval grant.
+          $max: { inviteCredits: 5 },
+        },
       ).exec();
     }
 
