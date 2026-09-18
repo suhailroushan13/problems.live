@@ -95,7 +95,7 @@ export default function GuidelinesPage() {
 
       <div className="mt-10 flex flex-wrap gap-2">
         <Button asChild size="lg">
-          <Link href="/problems/new">Share a problem</Link>
+          <Link href="/problems/new">Post a Problem</Link>
         </Button>
         <Button asChild size="lg" variant="outline">
           <Link href="/problems">Explore problems</Link>

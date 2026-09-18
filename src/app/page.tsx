@@ -193,7 +193,7 @@ export default async function HomePage({
             <EmptyState
               title="Nothing matches these filters."
               description="Try widening them, or be the first to share a problem that fits."
-              action={{ label: "Post a problem", href: "/problems/new" }}
+              action={{ label: "Post a Problem", href: "/problems/new" }}
               secondaryAction={{ label: "Clear filters", href: "/" }}
             />
           ) : (

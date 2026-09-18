@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, LogIn, Plus } from "lucide-react";
+import { Bell, Plus } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Logo } from "./logo";
 import { LivePill } from "./live-pill";
 import { UserMenu } from "./user-menu";
+import { useWaitlistApproved } from "@/hooks/use-waitlist-approved";
 import type { SessionUser } from "@/lib/auth/current-user";
 
 /** No visible container — a comfortable hit area, not a decorative circle. */
@@ -21,11 +22,15 @@ export function SiteHeader({
   unreadCount: number;
 }) {
   const pathname = usePathname();
+  const approved = useWaitlistApproved();
   const isPosting = pathname === "/problems/new";
   const isAuthenticating = pathname === "/login";
-  const postHref = user ? "/problems/new" : "/api/auth/google?next=%2Fproblems%2Fnew";
-  const postLabel = user ? "Post a problem" : "Sign in with Google";
-  const PostIcon = user ? Plus : LogIn;
+  const postHref = !approved
+    ? "/wait-list"
+    : user
+      ? "/problems/new"
+      : "/api/auth/google?next=%2Fproblems%2Fnew";
+  const postLabel = "Post a Problem";
 
   if (isPosting) {
     return (
@@ -52,7 +57,7 @@ export function SiteHeader({
           <LivePill className="hidden md:inline-flex" />
           {!isAuthenticating ? <Button asChild className="hidden shrink-0 gap-1.5 sm:inline-flex">
             <Link href={postHref} title={postLabel}>
-              <PostIcon className="size-4" aria-hidden="true" />
+              {user ? <Plus className="size-4" aria-hidden="true" /> : null}
               <span className="hidden sm:inline">{postLabel}</span>
               <span className="sr-only sm:not-sr-only sm:hidden">
                 {postLabel}

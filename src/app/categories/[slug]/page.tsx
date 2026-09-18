@@ -126,6 +126,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
           <ProblemList
             problems={result.items}
             isAuthenticated={Boolean(user)}
+            isModerator={Boolean(user?.isModerator)}
           />
           <PaginationBar page={result.page} totalPages={result.totalPages} />
         </>
@@ -133,7 +134,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
         <EmptyState
           title={`No problems in ${category.name} yet.`}
           description="Be the first person to share one, it takes two minutes."
-          action={{ label: "Share a problem", href: "/problems/new" }}
+          action={{ label: "Post a Problem", href: "/problems/new" }}
         />
       )}
 

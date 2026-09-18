@@ -115,7 +115,7 @@ export default async function ProblemsPage({
         <EmptyState
           title={`Nothing matches “${filters.q}”.`}
           description="Try fewer words, or share this problem yourself. You might be the first."
-          action={{ label: "Share a problem", href: "/problems/new" }}
+          action={{ label: "Post a Problem", href: "/problems/new" }}
           secondaryAction={{ label: "Clear search", href: "/problems" }}
           className="page"
         />
@@ -123,7 +123,7 @@ export default async function ProblemsPage({
         <EmptyState
           title="No problems here yet."
           description="Nothing matches these filters. Try widening them, or be the first to share a problem that fits."
-          action={{ label: "Share a problem", href: "/problems/new" }}
+          action={{ label: "Post a Problem", href: "/problems/new" }}
           secondaryAction={{ label: "Clear filters", href: "/problems" }}
           className="page"
         />

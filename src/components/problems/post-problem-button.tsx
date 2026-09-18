@@ -11,7 +11,7 @@ import type { CategoryDTO } from "@/types";
  */
 export function PostProblemButton({
   user,
-  label = "Post problem",
+  label = "Post a Problem",
   className,
 }: {
   user: SessionUser | null;

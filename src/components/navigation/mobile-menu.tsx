@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Compass, LogIn, Menu, Plus } from "lucide-react";
+import { Compass, Menu, Plus } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -16,11 +16,18 @@ import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { signOut } from "@/actions/auth";
 import { formatCount } from "@/lib/utils/format";
+import { useWaitlistApproved } from "@/hooks/use-waitlist-approved";
 import type { SessionUser } from "@/lib/auth/current-user";
 
 /** A one-handed mobile dock with a secondary account sheet. */
 export function MobileMenu({ user }: { user: SessionUser | null }) {
   const [open, setOpen] = useState(false);
+  const approved = useWaitlistApproved();
+  const postHref = !approved
+    ? "/wait-list"
+    : user
+      ? "/problems/new"
+      : "/api/auth/google?next=%2Fproblems%2Fnew";
 
   const accountLinks = user
     ? [
@@ -46,11 +53,11 @@ export function MobileMenu({ user }: { user: SessionUser | null }) {
         </Link>
 
         <Link
-          href={user ? "/problems/new" : "/api/auth/google?next=%2Fproblems%2Fnew"}
+          href={postHref}
           className="tap flex h-12 items-center justify-center gap-1.5 rounded-md bg-primary px-3 text-xs font-semibold text-primary-foreground transition-colors hover:bg-brand-hover active:bg-brand-active"
         >
-          {user ? <Plus className="size-4" aria-hidden="true" /> : <LogIn className="size-4" aria-hidden="true" />}
-          {user ? "Post a problem" : "Sign in with Google"}
+          {approved && user ? <Plus className="size-4" aria-hidden="true" /> : null}
+          Post a Problem
         </Link>
 
         <Sheet open={open} onOpenChange={setOpen}>
