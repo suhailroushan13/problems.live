@@ -320,6 +320,7 @@ export const AnimatedThemeToggler = ({
       type="button"
       ref={buttonRef}
       onClick={toggleTheme}
+      aria-pressed={isDark}
       className={cn(className)}
       {...props}
     >

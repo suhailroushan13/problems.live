@@ -52,7 +52,7 @@ export function LivePill({ className }: { className?: string }) {
       aria-label={label}
       title={label}
       className={cn(
-        "home-landing__stats group inline-flex h-6 min-w-0 items-center gap-1.5 rounded-full border border-hairline bg-elevated px-2 text-xs leading-none font-normal whitespace-nowrap text-foreground shadow-xs transition-colors hover:border-rule hover:bg-sunken",
+        "home-landing__stats group inline-flex h-8 min-w-0 items-center gap-1.5 rounded-full border border-hairline bg-elevated px-2.5 text-sm leading-none font-normal whitespace-nowrap text-foreground shadow-xs transition-colors hover:border-rule hover:bg-sunken",
         className
       )}
     >

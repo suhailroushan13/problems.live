@@ -3,6 +3,7 @@ import { Figtree, Inter } from "next/font/google";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "@/components/ui/sonner";
+import { SoundEffects } from "@/components/ui/sound";
 import { SiteHeader } from "@/components/navigation/site-header";
 import { SiteFooter } from "@/components/navigation/site-footer";
 import { PageBackButton } from "@/components/navigation/page-back-button";
@@ -111,17 +112,19 @@ export default async function RootLayout({
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: SCROLL_RESET_ON_RELOAD_SCRIPT }}
         />
-        <SiteHeader user={user} unreadCount={unreadCount} />
-        <div className="flex-1">
-          <PageBackButton />
-          {children}
-        </div>
-        {/* Marketing chrome — signed-in users are in the app, not on the
-            landing page, so the footer's nav/legal links (already reachable
-            elsewhere) stop showing once there's a session. */}
-        {!user ? <SiteFooter /> : null}
-        <Toaster position="top-center" />
-        <AuthErrorToast />
+        <SoundEffects>
+          <SiteHeader user={user} unreadCount={unreadCount} />
+          <div className="flex-1">
+            <PageBackButton />
+            {children}
+          </div>
+          {/* Marketing chrome — signed-in users are in the app, not on the
+              landing page, so the footer's nav/legal links (already reachable
+              elsewhere) stop showing once there's a session. */}
+          {!user ? <SiteFooter /> : null}
+          <Toaster position="top-center" />
+          <AuthErrorToast />
+        </SoundEffects>
         <Analytics />
         <Script
           strategy="afterInteractive"
