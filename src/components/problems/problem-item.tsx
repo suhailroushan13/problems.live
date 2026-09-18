@@ -2,6 +2,7 @@ import Link from "next/link";
 import { MousePointerClick } from "lucide-react";
 import { CategoryIcon } from "@/components/shared/category-icon";
 import { PriorityBadge } from "./priority-badge";
+import { ProblemActions } from "./problem-actions";
 import { StatusDot } from "./status-dot";
 import { ValidateButton } from "./validate-button";
 import { ProblemLink } from "./problem-link";
@@ -19,6 +20,7 @@ export function ProblemItem({
   problem,
   rank,
   isAuthenticated,
+  isModerator = false,
   featured = false,
   compact = false,
   className,
@@ -26,6 +28,7 @@ export function ProblemItem({
   problem: ProblemDTO;
   rank?: number;
   isAuthenticated: boolean;
+  isModerator?: boolean;
   featured?: boolean;
   /** Smaller type throughout — used on the landing page only. */
   compact?: boolean;
@@ -63,24 +66,36 @@ export function ProblemItem({
       </span>
 
       <div className="min-w-0 flex-1">
-        <h3
-          className={cn(
-            "flex flex-wrap items-center gap-1.5 leading-snug font-semibold text-foreground",
-            compact ? "text-sm sm:text-base" : "text-base sm:text-lg",
-          )}
-        >
-          <PriorityBadge
-            priority={problem.priority}
-            className="h-4 px-1.5 text-[10px]"
-          />
-          <ProblemLink
-            problemId={problem.id}
-            slug={problem.slug}
-            className="after:absolute after:inset-0 after:content-['']"
+        <div className="flex items-start justify-between gap-2">
+          <h3
+            className={cn(
+              "flex flex-wrap items-center gap-1.5 leading-snug font-semibold text-foreground",
+              compact ? "text-sm sm:text-base" : "text-base sm:text-lg",
+            )}
           >
-            {problem.title}
-          </ProblemLink>
-        </h3>
+            <PriorityBadge
+              priority={problem.priority}
+              className="h-4 px-1.5 text-[10px]"
+            />
+            <ProblemLink
+              problemId={problem.id}
+              slug={problem.slug}
+              className="after:absolute after:inset-0 after:content-['']"
+            >
+              {problem.title}
+            </ProblemLink>
+          </h3>
+          <div className="relative z-10 -mt-1 -mr-1.5 shrink-0">
+            <ProblemActions
+              problemId={problem.id}
+              slug={problem.slug}
+              status={problem.status}
+              isOwn={problem.isOwn}
+              isModerator={isModerator}
+              isAuthenticated={isAuthenticated}
+            />
+          </div>
+        </div>
 
         <p
           className={cn(
@@ -204,12 +219,14 @@ export function ProblemItem({
 export function ProblemList({
   problems,
   isAuthenticated,
+  isModerator = false,
   ranked = false,
   compact = false,
   className,
 }: {
   problems: ProblemDTO[];
   isAuthenticated: boolean;
+  isModerator?: boolean;
   ranked?: boolean;
   /** Smaller type throughout — used on the landing page only. */
   compact?: boolean;
@@ -223,6 +240,7 @@ export function ProblemList({
           problem={problem}
           rank={ranked ? index + 1 : undefined}
           isAuthenticated={isAuthenticated}
+          isModerator={isModerator}
           featured={ranked && index === 0}
           compact={compact}
         />

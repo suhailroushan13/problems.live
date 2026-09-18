@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
-import { ArrowDown, ArrowRight, ArrowUp, MessageCircle, Share2, Users } from "lucide-react";
+import { ArrowDown, ArrowRight, ArrowUp, MessageCircle, MousePointerClick, Share2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { AuthorLine } from "@/components/shared/author-line";
 import { CategoryIcon } from "@/components/shared/category-icon";
@@ -83,6 +83,7 @@ export function ProblemCard({ problem, isAuthenticated, isModerator }: { problem
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs font-medium text-muted-foreground">
           {count > 0 ? <span className="inline-flex items-center gap-1"><Users className="size-3.5 text-brand" />{formatCount(count)} {count === 1 ? "person interested" : "people interested"}</span> : null}
           {problem.commentCount > 0 ? <Link href={`/problems/${problem.slug}#discussion`} onClick={recordOpen} className="inline-flex items-center gap-1 hover:text-foreground"><MessageCircle className="size-3.5" />{formatCount(problem.commentCount)} discussing</Link> : null}
+          <span title={`${formatCount(problem.clickCount)} ${problem.clickCount === 1 ? "click" : "clicks"}`} className="num inline-flex items-center gap-1"><MousePointerClick className="size-3.5" />{formatCount(problem.clickCount)}</span>
           {problem.status === "being_solved" ? <span>Someone is working on it</span> : null}
         </div>
         <div className="mt-4 flex items-center gap-2 border-t border-hairline pt-3">
@@ -111,6 +112,7 @@ export function ProblemCard({ problem, isAuthenticated, isModerator }: { problem
             <CategoryStatus problem={problem} />
             <AuthorLine author={problem.author} createdAt={problem.createdAt} editedAt={problem.editedAt} />
             {count > 0 ? <span className="inline-flex items-center gap-1"><Users className="size-3.5 text-brand" />{formatCount(count)} interested</span> : null}
+            <span title={`${formatCount(problem.clickCount)} ${problem.clickCount === 1 ? "click" : "clicks"}`} className="num inline-flex items-center gap-1"><MousePointerClick className="size-3.5" />{formatCount(problem.clickCount)}</span>
             {problem.status === "being_solved" ? <span>Someone is working on it</span> : null}
             {isSolved && problem.solutionCount > 0 ? <span className="ml-auto font-medium text-muted-foreground">Solution published</span> : null}
             <Link href={participationHref} onClick={recordOpen} className={cn("inline-flex items-center gap-1 font-semibold text-brand transition-colors hover:text-brand-hover", !(isSolved && problem.solutionCount > 0) && "ml-auto")}>{participationLabel}<ArrowRight className="size-3.5" /></Link>
