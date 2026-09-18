@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { connectToDatabase } from "@/lib/db/mongoose";
 import { User, type IUser } from "@/models";
 import { usernameFromEmail } from "@/lib/utils/slug";
+import { toTitleCase } from "@/lib/utils/text";
 import { env } from "@/lib/env";
 import { getSetting } from "@/lib/config/settings";
 import { isReservedUsername } from "@/lib/constants";
@@ -45,7 +46,7 @@ export async function provisionUserFromGoogle(
     existing.googleId = profile.googleId;
     existing.email = profile.email;
     existing.emailVerified = profile.emailVerified;
-    existing.name = profile.name;
+    existing.name = toTitleCase(profile.name);
     if (profile.picture) {
       existing.googleAvatarUrl = profile.picture;
       if (existing.avatarType === "google" || !existing.avatarType) {
@@ -76,7 +77,7 @@ export async function provisionUserFromGoogle(
     googleId: profile.googleId,
     email: profile.email,
     emailVerified: profile.emailVerified,
-    name: profile.name,
+    name: toTitleCase(profile.name),
     username,
     avatar: profile.picture ?? generatedAvatarUrl(avatarSeed, "people"),
     avatarType: profile.picture ? "google" : "generated",

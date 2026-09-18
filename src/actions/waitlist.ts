@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { headers } from "next/headers";
 import { connectToDatabase } from "@/lib/db/mongoose";
 import { DomainError, isDuplicateKeyError, okVoid, toActionError } from "@/lib/action-helpers";
-import { sendWaitlistConfirmation } from "@/lib/services/email";
+import { sendWaitlistAdminNotification, sendWaitlistConfirmation } from "@/lib/services/email";
 import { waitlistSchema } from "@/lib/validation/schemas";
 import { RateLimit, WaitlistEntry } from "@/models";
 import type { ActionResult } from "@/types";
@@ -81,6 +81,11 @@ export async function joinWaitlist(raw: unknown): Promise<ActionResult> {
       // Do not make a successful waitlist request look unsuccessful when the
       // mail provider has a temporary problem. It can be safely resent later.
       console.error("[waitlist] confirmation email failed", error);
+    }
+    try {
+      await sendWaitlistAdminNotification(input);
+    } catch (error) {
+      console.error("[waitlist] admin notification email failed", error);
     }
 
     return okVoid("We received your request and will inform you soon.");

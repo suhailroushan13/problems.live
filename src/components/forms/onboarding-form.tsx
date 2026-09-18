@@ -7,12 +7,14 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AvatarPicker } from "@/components/forms/avatar-picker";
 import {
   checkUsernameAvailable,
   completeOnboarding,
   generateAnonymousUsername,
 } from "@/actions/auth";
 import { usernameSchema } from "@/lib/validation/schemas";
+import type { AvatarStyle, AvatarType } from "@/lib/avatar";
 import { cn } from "@/lib/utils";
 
 type UsernameStatus =
@@ -26,9 +28,23 @@ const CHECK_DELAY_MS = 400;
 export function OnboardingForm({
   initialUsername,
   next,
+  name,
+  avatar,
+  avatarType,
+  avatarStyle,
+  avatarSeed,
+  uploadedAvatarUrl,
+  googleAvatarUrl,
 }: {
   initialUsername: string;
   next: string;
+  name: string;
+  avatar?: string;
+  avatarType?: AvatarType;
+  avatarStyle?: AvatarStyle;
+  avatarSeed?: string;
+  uploadedAvatarUrl?: string;
+  googleAvatarUrl?: string;
 }) {
   const router = useRouter();
   const [username, setUsername] = useState(initialUsername);
@@ -105,6 +121,25 @@ export function OnboardingForm({
   return (
     <form onSubmit={submit} className="space-y-7">
       <section>
+        <Label>Profile photo</Label>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Your Google photo is used by default. Click it to pick an illustrated avatar or upload your own instead.
+        </p>
+        <div className="mt-3">
+          <AvatarPicker
+            name={name}
+            username={username}
+            avatar={avatar}
+            avatarType={avatarType}
+            avatarStyle={avatarStyle}
+            avatarSeed={avatarSeed}
+            uploadedAvatarUrl={uploadedAvatarUrl}
+            googleAvatarUrl={googleAvatarUrl}
+          />
+        </div>
+      </section>
+
+      <section className="border-t border-hairline pt-7">
         <div className="mb-3 flex items-center justify-between gap-3">
           <div>
             <Label htmlFor="onboard-username">Choose a username</Label>

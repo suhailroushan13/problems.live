@@ -11,7 +11,7 @@ import {
   SOLUTION_SORTS,
   SOLUTION_STATUSES,
 } from "@/lib/constants";
-import { normalizeSocialHandle, normalizeWebsiteUrl } from "@/lib/utils/text";
+import { normalizeSocialHandle, normalizeWebsiteUrl, toTitleCase } from "@/lib/utils/text";
 
 /**
  * One schema per input, shared by the client form and the server action.
@@ -292,12 +292,12 @@ export const checkUsernameSchema = z.object({
 });
 
 export const waitlistSchema = z.object({
-  name: trimmed(2, 80, "Name"),
+  name: trimmed(2, 80, "Name").transform(toTitleCase),
   email: z.string().trim().toLowerCase().email("Enter a valid email address.").max(254),
 });
 
 export const inviteSchema = z.object({
-  name: trimmed(2, 80, "Name"),
+  name: trimmed(2, 80, "Name").transform(toTitleCase),
   email: z.string().trim().toLowerCase().email("Enter a valid email address.").max(254),
 });
 

@@ -8,8 +8,10 @@ export default async function AdminInvitesPage() {
   const user = await getCurrentUser();
   await connectToDatabase();
   const invites = await Invite.find({}, { name: 1, email: 1, inviterId: 1, claimedBy: 1, status: 1 }).sort({ createdAt: 1 }).lean().exec();
-  const involvedIds = Array.from(new Set(invites.flatMap((invite) => [invite.inviterId, invite.claimedBy].filter(Boolean).map(String))));
-  const people = await User.find({ _id: { $in: involvedIds } }, { name: 1, email: 1, inviteCredits: 1 }).lean().exec();
+  // Every user is a node, not just ones already linked by an Invite — someone
+  // who joined directly from the website (never sent or received an invite)
+  // still belongs on the map as their own root.
+  const people = await User.find({}, { name: 1, email: 1, inviteCredits: 1 }).sort({ createdAt: 1 }).lean().exec();
   const nodes: TraceNode[] = people.map((person) => ({ id: `user:${person._id}`, label: person.name, email: person.email, credits: person.inviteCredits ?? 0, pending: false }));
   const edges = invites.flatMap((invite) => {
     if (!invite.inviterId) return [];

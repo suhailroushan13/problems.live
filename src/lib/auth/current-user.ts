@@ -41,6 +41,8 @@ export interface SessionUser {
   isModerator: boolean;
   isSuspended: boolean;
   suspendedUntil: Date | null;
+  /** False until the one-time onboarding step (username + date of birth) is done. */
+  isOnboarded: boolean;
 }
 
 export function trustTierFor(reputation: number): TrustTier {
@@ -75,6 +77,7 @@ function toSessionUser(doc: IUser): SessionUser {
     isModerator: doc.role === "admin" || doc.role === "moderator",
     isSuspended: stillSuspended,
     suspendedUntil,
+    isOnboarded: Boolean(doc.dateOfBirth),
   };
 }
 

@@ -17,6 +17,7 @@ export default async function NewProblemPage() {
 
   // The composer is meaningless without an identity to attribute the post to.
   if (!user) redirect("/login?next=/problems/new");
+  if (!user.isOnboarded) redirect("/onboard?next=/problems/new");
 
   const [categories, credits] = await Promise.all([
     listCategories(),

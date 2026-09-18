@@ -26,7 +26,9 @@ export default async function AdminWaitlistPage() {
 
   await connectToDatabase();
   const entries = await WaitlistEntry.find(
-    {},
+    // Approved requests are provisioned as user accounts and removed from
+    // the waitlist entirely; this filter only guards against legacy rows.
+    { status: { $ne: "approved" } },
     { name: 1, email: 1, status: 1, confirmationSentAt: 1, createdAt: 1 },
   )
     .sort({ createdAt: -1 })

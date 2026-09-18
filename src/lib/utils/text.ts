@@ -3,6 +3,20 @@ export function normalizeWhitespace(input: string): string {
   return input.replace(/\r\n/g, "\n").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
 }
 
+/**
+ * Capitalizes the first letter of each space-separated word, lowercasing the
+ * rest — the default casing for a name at the point it first enters the
+ * system (waitlist join, invite, Google sign-in). Only applied at those
+ * entry points; a person's own later edit to their name is stored exactly
+ * as they typed it.
+ */
+export function toTitleCase(input: string): string {
+  return input
+    .split(" ")
+    .map((word) => (word.length > 0 ? word[0].toUpperCase() + word.slice(1).toLowerCase() : word))
+    .join(" ");
+}
+
 export function excerpt(input: string, maxLength = 180): string {
   const flat = input.replace(/\s+/g, " ").trim();
   if (flat.length <= maxLength) return flat;

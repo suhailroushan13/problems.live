@@ -30,7 +30,15 @@ export default async function OnboardPage({
 
   await connectToDatabase();
   const [account, startingCredits] = await Promise.all([
-    User.findById(toObjectId(user.id), { dateOfBirth: 1 }).lean().exec(),
+    User.findById(toObjectId(user.id), {
+      dateOfBirth: 1,
+      avatar: 1,
+      avatarType: 1,
+      avatarStyle: 1,
+      avatarSeed: 1,
+      avatarUrl: 1,
+      googleAvatarUrl: 1,
+    }).lean().exec(),
     getSetting("startingProblemCredits"),
   ]);
 
@@ -50,7 +58,17 @@ export default async function OnboardPage({
           You have {startingCredits} Credits to post your first problems. Credits are posting currency, not real money.
         </p>
         <div className="mt-9">
-          <OnboardingForm initialUsername={user.username} next={destination} />
+          <OnboardingForm
+            initialUsername={user.username}
+            next={destination}
+            name={user.name}
+            avatar={account?.avatar ?? user.avatar}
+            avatarType={account?.avatarType}
+            avatarStyle={account?.avatarStyle}
+            avatarSeed={account?.avatarSeed}
+            uploadedAvatarUrl={account?.avatarUrl}
+            googleAvatarUrl={account?.googleAvatarUrl}
+          />
         </div>
       </div>
     </main>

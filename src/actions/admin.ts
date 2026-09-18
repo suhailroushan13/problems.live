@@ -1,8 +1,11 @@
 "use server";
 
+import { createHash, randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { connectToDatabase } from "@/lib/db/mongoose";
+import { env } from "@/lib/env";
+import { sendWaitlistApprovalEmail } from "@/lib/services/email";
 import {
   AuditLog,
   Category,
@@ -160,7 +163,6 @@ export async function approveWaitlistEntry(id: string): Promise<ActionResult<und
 
     const entry = await WaitlistEntry.findById(objectId(id)).exec();
     if (!entry) throw new NotFoundError("That waitlist request no longer exists.");
-    if (entry.status === "approved") return okVoid("This request is already approved.");
     // Access is now granted by the approved waitlist record, not invitations.
     // Remove any legacy pending invite so it cannot become a parallel path.
     const previousInvites = await Invite.deleteMany({
@@ -170,6 +172,12 @@ export async function approveWaitlistEntry(id: string): Promise<ActionResult<und
 
     const existingUser = await User.exists({ email: entry.email });
     let createdUser = false;
+
+    // Confirming this token on /approved/[token] is how the client-side
+    // "approved" gate on the Post a Problem button gets unlocked.
+    const approvalToken = randomBytes(32).toString("base64url");
+    const approvalTokenHash = createHash("sha256").update(approvalToken).digest("hex");
+
     if (!existingUser) {
       const [username, startingCredits] = await Promise.all([
         reserveUsernameForWaitlist(entry.email),
@@ -187,14 +195,32 @@ export async function approveWaitlistEntry(id: string): Promise<ActionResult<und
         reputation: 0,
         problemCredits: startingCredits,
         inviteCredits: 0,
+        waitlistApprovalTokenHash: approvalTokenHash,
         lastSeenAt: new Date(),
       });
       createdUser = true;
+    } else {
+      await User.updateOne(
+        { email: entry.email },
+        { $set: { waitlistApprovalTokenHash: approvalTokenHash } },
+      ).exec();
     }
 
-    entry.status = "approved";
-    entry.reviewedAt = new Date();
-    await entry.save();
+    // Approved requests are provisioned as real user accounts, so the
+    // waitlist entry is removed rather than kept around with a status flag.
+    await WaitlistEntry.deleteOne({ _id: entry._id }).exec();
+
+    let emailSent = true;
+    try {
+      await sendWaitlistApprovalEmail({
+        name: entry.name,
+        email: entry.email,
+        approvalUrl: `${env.appUrl}/approved/${approvalToken}`,
+      });
+    } catch (error) {
+      emailSent = false;
+      console.error("[waitlist] approval email failed", error);
+    }
 
     await audit({
       actorId: admin.id,
@@ -204,15 +230,18 @@ export async function approveWaitlistEntry(id: string): Promise<ActionResult<und
       meta: {
         createdUser,
         revokedPendingInvites: previousInvites.deletedCount,
+        emailSent,
       },
     });
     revalidatePath("/admin/waitlist");
     revalidatePath("/admin/users");
     revalidatePath("/admin/invites");
+
+    const base = createdUser
+      ? "Waitlist request approved and user created."
+      : "Waitlist request approved. This email already has a user account.";
     return okVoid(
-      createdUser
-        ? "Waitlist request approved and user created. They can now sign in with Google."
-        : "Waitlist request approved. This email already has a user account.",
+      emailSent ? `${base} They've been emailed their access link.` : `${base} The approval email failed to send — resend it manually.`,
     );
   } catch (error) {
     return toActionError(error);
