@@ -7,24 +7,26 @@ import {
 } from "@/lib/constants";
 
 const DOT: Record<ProblemStatus, string> = {
-  open: "bg-status-open",
-  needs_collaborators: "bg-status-solving",
-  being_solved: "bg-status-solving",
-  solved: "bg-status-solved",
-  not_relevant: "bg-status-stale",
+  open: "bg-muted-foreground",
+  needs_collaborators: "bg-brand",
+  being_solved: "bg-brand",
+  solved: "bg-success",
+  not_relevant: "bg-destructive",
 };
 
-const TEXT: Record<ProblemStatus, string> = {
-  open: "text-muted-foreground",
-  needs_collaborators: "text-brand",
-  being_solved: "text-status-solving",
-  solved: "text-status-solved",
-  not_relevant: "text-muted-foreground",
+const BADGE: Record<ProblemStatus, string> = {
+  open: "border-hairline bg-tint text-muted-foreground",
+  needs_collaborators: "border-transparent bg-brand-muted text-brand",
+  being_solved: "border-transparent bg-brand-muted text-brand",
+  solved: "border-transparent bg-success-subtle text-success",
+  not_relevant: "border-transparent bg-error-subtle text-destructive",
 };
 
 /**
- * Every directory card exposes its lifecycle stage. The neutral pill keeps
- * that signal readable without competing with the category or title.
+ * Every directory card exposes its lifecycle stage. Open stays neutral (the
+ * silent default, same philosophy as PriorityBadge's "normal"); the other
+ * stages get a color — blue while work is in progress, green once solved,
+ * red once marked no longer relevant — so status reads at a glance.
  */
 export function StatusDot({
   status,
@@ -36,8 +38,8 @@ export function StatusDot({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border border-hairline bg-tint px-2 py-1 text-[0.6875rem] font-semibold whitespace-nowrap",
-        TEXT[status],
+        "inline-flex items-center gap-1.5 rounded-full border px-2 py-1 text-[0.6875rem] font-semibold whitespace-nowrap",
+        BADGE[status],
         className
       )}
     >
