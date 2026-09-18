@@ -107,9 +107,13 @@ export async function GET(request: NextRequest) {
     const destination =
       next.startsWith("/") && !next.startsWith("//") ? next : "/";
 
-    // Profile details are editable in Settings. Never trap a returning user
-    // in onboarding because an older account lacks an optional field.
-    const response = NextResponse.redirect(`${env.appUrl}${destination}`);
+    // /onboard immediately redirects to `next` for anyone who already has a
+    // dateOfBirth on file, so this is a no-op hop for returning users and
+    // only actually stops first-time/incomplete accounts.
+    const redirectTarget = isSecretAdminLogin
+      ? destination
+      : `/onboard?next=${encodeURIComponent(destination)}`;
+    const response = NextResponse.redirect(`${env.appUrl}${redirectTarget}`);
     response.cookies.set(SESSION_COOKIE, token, {
       httpOnly: true,
       secure: env.isProduction,
