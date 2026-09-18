@@ -21,8 +21,9 @@ export function AdminNav({
   const [collapsed, setCollapsed] = useState(false);
 
   const links = [
-    { href: "/admin/invites", label: "Invite", icon: Send, badge: 0, adminOnly: true },
     { href: "/admin/waitlist", label: "Waitlist", icon: ClipboardList, badge: 0, adminOnly: true },
+    { href: "/admin/users", label: "Users", icon: Users, badge: 0, adminOnly: true },
+    { href: "/admin/invites", label: "Invite", icon: Send, badge: 0, adminOnly: true },
     { href: "/admin", label: "Overview", icon: Gauge, badge: 0, adminOnly: false },
     {
       href: "/admin/moderation",
@@ -46,7 +47,6 @@ export function AdminNav({
       badge: pendingCategories,
       adminOnly: true,
     },
-    { href: "/admin/users", label: "Users", icon: Users, badge: 0, adminOnly: true },
     { href: "/admin/settings", label: "Settings", icon: Settings, badge: 0, adminOnly: true },
   ].filter((link) => isAdmin || !link.adminOnly);
 

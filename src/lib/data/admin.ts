@@ -3,19 +3,27 @@ import { connectToDatabase } from "@/lib/db/mongoose";
 import {
   Category,
   Comment,
+  CommentAward,
+  CommentVote,
   Problem,
+  ProblemBookmark,
+  ProblemValidation,
   Report,
   Solution,
+  SolutionVote,
   User,
   type ICategory,
   type IComment,
   type IProblem,
+  type IProblemBookmark,
   type IReport,
   type ISolution,
   type IUser,
 } from "@/models";
 import { findReportTarget } from "@/lib/db/content";
 import { excerpt } from "@/lib/utils/text";
+import { locationLabel } from "@/lib/data/serialize";
+import { toObjectId } from "@/lib/utils/sanitize-query";
 import type { ModerationStatus } from "@/lib/constants";
 import type { ReportDTO } from "@/types";
 import type { Types } from "mongoose";
@@ -348,4 +356,275 @@ export async function listAdminProblems(limit = 50): Promise<AdminProblem[]> {
       (doc.authorId as unknown as { username?: string })?.username ?? null,
     createdAt: new Date(doc.createdAt).toISOString(),
   }));
+}
+
+export interface AdminUserDetail {
+  id: string;
+  name: string;
+  username: string;
+  email: string;
+  emailVerified: boolean;
+  avatar?: string;
+  bio?: string;
+  gender: IUser["gender"];
+  location: string;
+  socialLinks?: IUser["socialLinks"];
+  role: IUser["role"];
+  status: IUser["status"];
+  reputation: number;
+  problemCredits: number;
+  inviteCredits: number;
+  invitedBy: { id: string; name: string; username: string } | null;
+  stats: IUser["stats"];
+  suspendedUntil: string | null;
+  suspensionReason?: string;
+  dateOfBirth: string | null;
+  usernameChangedAt: string | null;
+  lastSeenAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminUserProblemItem {
+  id: string;
+  title: string;
+  slug: string;
+  status: IProblem["status"];
+  moderationStatus: ModerationStatus;
+  isAnonymous: boolean;
+  featured: boolean;
+  validationCount: number;
+  solutionCount: number;
+  commentCount: number;
+  bookmarkCount: number;
+  reportCount: number;
+  createdAt: string;
+}
+
+export interface AdminUserSolutionItem {
+  id: string;
+  title: string;
+  status: ISolution["status"];
+  moderationStatus: ModerationStatus;
+  isAnonymous: boolean;
+  helpfulCount: number;
+  commentCount: number;
+  reportCount: number;
+  problemTitle: string | null;
+  problemSlug: string | null;
+  createdAt: string;
+}
+
+export interface AdminUserCommentItem {
+  id: string;
+  content: string;
+  status: IComment["status"];
+  moderationStatus: ModerationStatus;
+  isAnonymous: boolean;
+  isReply: boolean;
+  helpfulCount: number;
+  replyCount: number;
+  reportCount: number;
+  problemTitle: string | null;
+  problemSlug: string | null;
+  createdAt: string;
+}
+
+export interface AdminUserBookmarkItem {
+  id: string;
+  problemTitle: string | null;
+  problemSlug: string | null;
+  createdAt: string;
+}
+
+export interface AdminUserEngagement {
+  problemsValidated: number;
+  solutionsMarkedHelpful: number;
+  commentUpvotesGiven: number;
+  commentDownvotesGiven: number;
+  commentAwardsGiven: number;
+  reportsFiled: number;
+}
+
+export interface AdminUserActivity {
+  user: AdminUserDetail;
+  problems: AdminUserProblemItem[];
+  solutions: AdminUserSolutionItem[];
+  comments: AdminUserCommentItem[];
+  bookmarks: AdminUserBookmarkItem[];
+  engagement: AdminUserEngagement;
+}
+
+const ADMIN_ACTIVITY_LIMIT = 100;
+
+const refSlug = (value: unknown): string | null =>
+  (value as { slug?: string } | undefined)?.slug ?? null;
+const refTitle = (value: unknown): string | null =>
+  (value as { title?: string } | undefined)?.title ?? null;
+
+/**
+ * Everything an admin is allowed to see about a single user: their raw
+ * profile, and every problem, solution, comment and bookmark they've ever
+ * created — unfiltered by moderation status or anonymity, unlike the public
+ * profile queries in lib/data/*.
+ */
+export async function getAdminUserDetail(
+  id: string
+): Promise<AdminUserActivity | null> {
+  await connectToDatabase();
+
+  const userId = toObjectId(id);
+  if (!userId) return null;
+
+  const doc = await User.findById(userId)
+    .populate("invitedBy", "name username")
+    .lean<IUser>()
+    .exec();
+  if (!doc) return null;
+
+  const [problems, solutions, comments, bookmarks, engagementCounts] =
+    await Promise.all([
+      Problem.find({ authorId: userId })
+        .sort({ createdAt: -1 })
+        .limit(ADMIN_ACTIVITY_LIMIT)
+        .lean<IProblem[]>()
+        .exec(),
+      Solution.find({ authorId: userId })
+        .sort({ createdAt: -1 })
+        .limit(ADMIN_ACTIVITY_LIMIT)
+        .populate("problemId", "slug title")
+        .lean<ISolution[]>()
+        .exec(),
+      Comment.find({ authorId: userId })
+        .sort({ createdAt: -1 })
+        .limit(ADMIN_ACTIVITY_LIMIT)
+        .populate("problemId", "slug title")
+        .lean<IComment[]>()
+        .exec(),
+      ProblemBookmark.find({ userId })
+        .sort({ createdAt: -1 })
+        .limit(ADMIN_ACTIVITY_LIMIT)
+        .populate("problemId", "slug title")
+        .lean<IProblemBookmark[]>()
+        .exec(),
+      Promise.all([
+        ProblemValidation.countDocuments({ userId }).exec(),
+        SolutionVote.countDocuments({ userId }).exec(),
+        CommentVote.countDocuments({ userId, direction: "up" }).exec(),
+        CommentVote.countDocuments({ userId, direction: "down" }).exec(),
+        CommentAward.countDocuments({ userId }).exec(),
+        Report.countDocuments({ reporterId: userId }).exec(),
+      ]),
+    ]);
+
+  const invitedBy = doc.invitedBy as unknown as
+    | { _id?: unknown; name?: string; username?: string }
+    | null;
+
+  const [
+    problemsValidated,
+    solutionsMarkedHelpful,
+    commentUpvotesGiven,
+    commentDownvotesGiven,
+    commentAwardsGiven,
+    reportsFiled,
+  ] = engagementCounts;
+
+  return {
+    user: {
+      id: String(doc._id),
+      name: doc.name,
+      username: doc.username,
+      email: doc.email,
+      emailVerified: doc.emailVerified,
+      avatar: doc.avatar,
+      bio: doc.bio,
+      gender: doc.gender,
+      location: locationLabel(doc.defaultLocation),
+      socialLinks: doc.socialLinks,
+      role: doc.role,
+      status: doc.status,
+      reputation: doc.reputation ?? 0,
+      problemCredits: doc.problemCredits ?? 0,
+      inviteCredits: doc.inviteCredits ?? 0,
+      invitedBy:
+        invitedBy?._id
+          ? {
+              id: String(invitedBy._id),
+              name: invitedBy.name ?? "",
+              username: invitedBy.username ?? "",
+            }
+          : null,
+      stats: doc.stats,
+      suspendedUntil: doc.suspendedUntil
+        ? new Date(doc.suspendedUntil).toISOString()
+        : null,
+      suspensionReason: doc.suspensionReason,
+      dateOfBirth: doc.dateOfBirth
+        ? new Date(doc.dateOfBirth).toISOString()
+        : null,
+      usernameChangedAt: doc.usernameChangedAt
+        ? new Date(doc.usernameChangedAt).toISOString()
+        : null,
+      lastSeenAt: new Date(doc.lastSeenAt).toISOString(),
+      createdAt: new Date(doc.createdAt).toISOString(),
+      updatedAt: new Date(doc.updatedAt).toISOString(),
+    },
+    problems: problems.map((p) => ({
+      id: String(p._id),
+      title: p.title,
+      slug: p.slug,
+      status: p.status,
+      moderationStatus: p.moderationStatus,
+      isAnonymous: p.isAnonymous,
+      featured: p.featured ?? false,
+      validationCount: p.validationCount ?? 0,
+      solutionCount: p.solutionCount ?? 0,
+      commentCount: p.commentCount ?? 0,
+      bookmarkCount: p.bookmarkCount ?? 0,
+      reportCount: p.reportCount ?? 0,
+      createdAt: new Date(p.createdAt).toISOString(),
+    })),
+    solutions: solutions.map((s) => ({
+      id: String(s._id),
+      title: s.title,
+      status: s.status,
+      moderationStatus: s.moderationStatus,
+      isAnonymous: s.isAnonymous,
+      helpfulCount: s.helpfulCount ?? 0,
+      commentCount: s.commentCount ?? 0,
+      reportCount: s.reportCount ?? 0,
+      problemTitle: refTitle(s.problemId),
+      problemSlug: refSlug(s.problemId),
+      createdAt: new Date(s.createdAt).toISOString(),
+    })),
+    comments: comments.map((c) => ({
+      id: String(c._id),
+      content: c.content,
+      status: c.status,
+      moderationStatus: c.moderationStatus,
+      isAnonymous: c.isAnonymous,
+      isReply: Boolean(c.parentId),
+      helpfulCount: c.helpfulCount ?? 0,
+      replyCount: c.replyCount ?? 0,
+      reportCount: c.reportCount ?? 0,
+      problemTitle: refTitle(c.problemId),
+      problemSlug: refSlug(c.problemId),
+      createdAt: new Date(c.createdAt).toISOString(),
+    })),
+    bookmarks: bookmarks.map((b) => ({
+      id: String(b._id),
+      problemTitle: refTitle(b.problemId),
+      problemSlug: refSlug(b.problemId),
+      createdAt: new Date(b.createdAt).toISOString(),
+    })),
+    engagement: {
+      problemsValidated,
+      solutionsMarkedHelpful,
+      commentUpvotesGiven,
+      commentDownvotesGiven,
+      commentAwardsGiven,
+      reportsFiled,
+    },
+  };
 }

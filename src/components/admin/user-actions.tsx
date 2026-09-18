@@ -52,9 +52,14 @@ import type { AdminUser } from "@/lib/data/admin";
 export function UserActions({
   user,
   isSelf,
+  onDeleted,
 }: {
   user: AdminUser;
   isSelf: boolean;
+  /** Called instead of `router.refresh()` after a successful delete — pass
+   * this on pages keyed by the user's id (like the detail page) so a
+   * deletion navigates away instead of re-fetching a now-404 route. */
+  onDeleted?: () => void;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -81,6 +86,23 @@ export function UserActions({
     });
   }
 
+  function confirmDelete() {
+    startTransition(async () => {
+      const result = await bulkDeleteUsers([user.id]);
+      if (!result.ok) {
+        toast.error(result.error ?? "That didn't work.");
+        return;
+      }
+      toast.success(result.message ?? "Done.");
+      setDeleteOpen(false);
+      if (onDeleted) {
+        onDeleted();
+      } else {
+        router.refresh();
+      }
+    });
+  }
+
   if (isSelf) {
     return (
       <span className="text-xs text-muted-foreground italic">You</span>
@@ -89,71 +111,80 @@ export function UserActions({
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label={`Actions for @${user.username}`}
-            disabled={pending}
-          >
-            <MoreHorizontal className="size-4" />
-          </Button>
-        </DropdownMenuTrigger>
+      <div className="flex items-center justify-end gap-1">
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label={`Edit @${user.username}`}
+          title="Edit"
+          disabled={pending}
+          onClick={() => setEditOpen(true)}
+        >
+          <Pencil className="size-4" />
+        </Button>
 
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem onSelect={() => setEditOpen(true)}>
-            <Pencil className="size-4" />
-            Edit profile
-          </DropdownMenuItem>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+          aria-label={`Delete @${user.username}`}
+          title="Delete"
+          disabled={pending}
+          onClick={() => setDeleteOpen(true)}
+        >
+          <Trash2 className="size-4" />
+        </Button>
 
-          <DropdownMenuSeparator />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={`More actions for @${user.username}`}
+              title="More actions"
+              disabled={pending}
+            >
+              <MoreHorizontal className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
 
-          <DropdownMenuLabel className="text-xs text-muted-foreground">
-            Role
-          </DropdownMenuLabel>
-          {(["user", "admin"] as const)
-            .filter((role) => role !== user.role)
-            .map((role) => (
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuLabel className="text-xs text-muted-foreground">
+              Role
+            </DropdownMenuLabel>
+            {(["user", "admin"] as const)
+              .filter((role) => role !== user.role)
+              .map((role) => (
+                <DropdownMenuItem
+                  key={role}
+                  onSelect={() => run(() => setUserRole(user.id, role))}
+                >
+                  <ShieldCheck className="size-4" />
+                  Make {role}
+                </DropdownMenuItem>
+              ))}
+
+            <DropdownMenuSeparator />
+
+            {user.status === "suspended" ? (
               <DropdownMenuItem
-                key={role}
-                onSelect={() => run(() => setUserRole(user.id, role))}
+                onSelect={() => run(() => unsuspendUser(user.id))}
               >
-                <ShieldCheck className="size-4" />
-                Make {role}
+                <UserCheck className="size-4" />
+                Reinstate
               </DropdownMenuItem>
-            ))}
-
-          <DropdownMenuSeparator />
-
-          {user.status === "suspended" ? (
-            <DropdownMenuItem
-              onSelect={() => run(() => unsuspendUser(user.id))}
-            >
-              <UserCheck className="size-4" />
-              Reinstate
-            </DropdownMenuItem>
-          ) : (
-            <DropdownMenuItem
-              variant="destructive"
-              onSelect={() => setConfirmSuspend(true)}
-            >
-              <Ban className="size-4" />
-              Suspend
-            </DropdownMenuItem>
-          )}
-
-          <DropdownMenuSeparator />
-
-          <DropdownMenuItem
-            variant="destructive"
-            onSelect={() => setDeleteOpen(true)}
-          >
-            <Trash2 className="size-4" />
-            Delete from database
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            ) : (
+              <DropdownMenuItem
+                variant="destructive"
+                onSelect={() => setConfirmSuspend(true)}
+              >
+                <Ban className="size-4" />
+                Suspend
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent>
@@ -262,7 +293,7 @@ export function UserActions({
               disabled={pending}
               onClick={(event) => {
                 event.preventDefault();
-                run(() => bulkDeleteUsers([user.id]));
+                confirmDelete();
               }}
             >
               {pending ? "Deleting…" : "Delete permanently"}

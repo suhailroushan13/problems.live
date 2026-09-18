@@ -63,6 +63,17 @@ export function formatDateTime(date: Date | string | number): string {
   }).format(new Date(date));
 }
 
+export function formatDateTimeWithSeconds(date: Date | string | number): string {
+  return new Intl.DateTimeFormat("en", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+  }).format(new Date(date));
+}
+
 export function formatMonthYear(date: Date | string | number): string {
   return new Intl.DateTimeFormat("en", {
     month: "long",

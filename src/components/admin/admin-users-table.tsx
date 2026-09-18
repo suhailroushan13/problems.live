@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -31,7 +30,7 @@ import { UserActions } from "@/components/admin/user-actions";
 import { bulkDeleteUsers } from "@/actions/admin";
 import type { AdminUser } from "@/lib/data/admin";
 import { formatCount } from "@/lib/utils/format";
-import { formatDate } from "@/lib/utils/time";
+import { formatDateTimeWithSeconds } from "@/lib/utils/time";
 
 export function AdminUsersTable({
   users,
@@ -120,7 +119,10 @@ export function AdminUsersTable({
                   aria-label="Select all deletable users"
                 />
               </TableHead>
-              <TableHead>User</TableHead>
+              <TableHead className="w-10">#</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Username</TableHead>
+              <TableHead>Email</TableHead>
               <TableHead>Role</TableHead>
               <TableHead className="text-right">Score</TableHead>
               <TableHead className="text-right">Problems</TableHead>
@@ -130,13 +132,17 @@ export function AdminUsersTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((user) => {
+            {users.map((user, index) => {
               const isSelf = user.id === viewerId;
               const isProtected = isSelf || user.role === "admin";
 
               return (
-                <TableRow key={user.id}>
-                  <TableCell>
+                <TableRow
+                  key={user.id}
+                  className="cursor-pointer"
+                  onClick={() => router.push(`/admin/users/${user.id}`)}
+                >
+                  <TableCell onClick={(event) => event.stopPropagation()}>
                     <Checkbox
                       checked={selected.has(user.id)}
                       onCheckedChange={() => toggleOne(user.id)}
@@ -149,6 +155,9 @@ export function AdminUsersTable({
                       }
                     />
                   </TableCell>
+                  <TableCell className="num text-muted-foreground">
+                    {index + 1}
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2.5">
                       <UserAvatar
@@ -157,18 +166,16 @@ export function AdminUsersTable({
                         avatar={user.avatar}
                         size="sm"
                       />
-                      <div className="min-w-0">
-                        <Link
-                          href={`/u/${user.username}`}
-                          className="block truncate text-sm font-medium text-foreground transition-colors hover:text-brand"
-                        >
-                          {user.name}
-                        </Link>
-                        <span className="block truncate text-xs text-muted-foreground">
-                          @{user.username}
-                        </span>
-                      </div>
+                      <span className="block max-w-[14rem] truncate text-sm font-medium text-foreground">
+                        {user.name}
+                      </span>
                     </div>
+                  </TableCell>
+                  <TableCell className="text-sm whitespace-nowrap text-muted-foreground">
+                    @{user.username}
+                  </TableCell>
+                  <TableCell className="max-w-[16rem] truncate text-sm text-muted-foreground">
+                    {user.email}
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap items-center gap-1.5">
@@ -193,9 +200,9 @@ export function AdminUsersTable({
                     {formatCount(user.solutions)}
                   </TableCell>
                   <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
-                    {formatDate(user.createdAt)}
+                    {formatDateTimeWithSeconds(user.createdAt)}
                   </TableCell>
-                  <TableCell>
+                  <TableCell onClick={(event) => event.stopPropagation()}>
                     <div className="flex justify-end">
                       <UserActions user={user} isSelf={isSelf} />
                     </div>
