@@ -188,22 +188,39 @@ export default async function ProfilePage({ params, searchParams }: PageProps) {
 
       <div className="mt-6 -mx-4 overflow-x-auto px-4 no-scrollbar sm:mt-7 sm:mx-0 sm:px-0">
       <Tabs value={tab} className="min-w-max">
-        <TabsList className="h-11 rounded-lg bg-sunken p-1">
-          {visibleTabs.map((value) => (
-            <TabsTrigger key={value} value={value} asChild>
-              <Link
-                href={
-                  value === "problems"
-                    ? `/u/${profile.username}`
-                    : `/u/${profile.username}?tab=${value}`
-                }
-                scroll={false}
-                className="min-h-9 px-3.5 text-sm capitalize"
-              >
-                {value === "problems" ? `Problems ${profile.stats.problems}` : value === "solutions" ? `Solutions ${profile.stats.solutions}` : value}
-              </Link>
-            </TabsTrigger>
-          ))}
+        <TabsList className="h-13 gap-0.5 rounded-full bg-sunken p-2">
+          {visibleTabs.map((value) => {
+            const count =
+              value === "problems"
+                ? profile.stats.problems
+                : value === "solutions"
+                  ? profile.stats.solutions
+                  : null;
+
+            return (
+              <TabsTrigger key={value} value={value} asChild>
+                <Link
+                  href={
+                    value === "problems"
+                      ? `/u/${profile.username}`
+                      : `/u/${profile.username}?tab=${value}`
+                  }
+                  scroll={false}
+                  className="min-h-9 gap-2 rounded-full px-4 text-[0.9375rem] capitalize data-active:font-semibold"
+                >
+                  {value}
+                  {count !== null ? (
+                    <Badge
+                      variant="secondary"
+                      className="h-5.5 min-w-5.5 justify-center rounded-full px-1.5 text-[0.6875rem] font-bold text-white tabular-nums"
+                    >
+                      {formatCount(count)}
+                    </Badge>
+                  ) : null}
+                </Link>
+              </TabsTrigger>
+            );
+          })}
         </TabsList>
       </Tabs>
       </div>
@@ -215,6 +232,7 @@ export default async function ProfilePage({ params, searchParams }: PageProps) {
           <ProblemList
             problems={problems.items}
             isAuthenticated={Boolean(viewer)}
+            isModerator={Boolean(viewer?.isModerator)}
           />
         ) : (
           <ProfileProblemsEmpty isSelf={isSelf} username={profile.username} />
@@ -292,7 +310,11 @@ export default async function ProfilePage({ params, searchParams }: PageProps) {
             <p className="mb-4 text-sm text-muted-foreground">
               Problems you marked as having too.
             </p>
-            <ProblemList problems={upvotedProblems} isAuthenticated />
+            <ProblemList
+              problems={upvotedProblems}
+              isAuthenticated
+              isModerator={Boolean(viewer?.isModerator)}
+            />
           </>
         ) : (
           <EmptyState
@@ -391,7 +413,7 @@ function ProfileProblemsEmpty({
       </p>
       {isSelf ? (
         <Button asChild className="mt-5 h-11 px-4">
-          <Link href="/problems/new">+ Post a problem</Link>
+          <Link href="/problems/new">+ Post a Problem</Link>
         </Button>
       ) : null}
     </section>
