@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -101,10 +101,11 @@ function structuredData(problem: ProblemDTO) {
 export default async function ProblemPage({ params }: PageProps) {
   const { slug } = await params;
 
-  const [problem, user] = await Promise.all([
-    getProblemBySlug(slug),
-    getCurrentUser(),
-  ]);
+  const user = await getCurrentUser();
+
+  if (!user) redirect(`/login?next=/problems/${slug}`);
+
+  const problem = await getProblemBySlug(slug);
 
   if (!problem) notFound();
 

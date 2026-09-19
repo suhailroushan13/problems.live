@@ -7,7 +7,8 @@ import { Check, Heart, Lightbulb, MessageCircle, Share2, Users } from "lucide-re
 import { toast } from "sonner";
 import { toggleProblemValidation } from "@/actions/votes";
 import { goToSignIn } from "@/lib/auth/sign-in-redirect";
-import { BookmarkButton } from "./bookmark-button";
+// Bookmarks are hidden for now — bring this back with the bookmark feature.
+// import { BookmarkButton } from "./bookmark-button";
 import { formatCount } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
 
@@ -160,6 +161,7 @@ export function ValidationPanel({
       <button type="button" onClick={() => void share()} className="tap ml-auto inline-flex size-10 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-sunken hover:text-foreground" aria-label="Share problem">
         <Share2 className="size-[1.125rem]" aria-hidden="true" />
       </button>
+      {/* Bookmarks are hidden for now — bring this back with the bookmark feature.
       <BookmarkButton
         problemId={problemId}
         initialCount={bookmarkCount}
@@ -169,6 +171,7 @@ export function ValidationPanel({
         iconClassName="size-4"
         showCount={false}
       />
+      */}
     </div>
   );
 }

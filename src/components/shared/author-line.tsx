@@ -13,6 +13,7 @@ export function AuthorLine({
   createdAt,
   editedAt,
   showAvatar = true,
+  showName = true,
   avatarSize = "sm",
   className,
 }: {
@@ -20,6 +21,8 @@ export function AuthorLine({
   createdAt: string;
   editedAt?: string | null;
   showAvatar?: boolean;
+  /** Off on directory listings — who wrote it is only revealed on the problem page. */
+  showName?: boolean;
   avatarSize?: "sm" | "md";
   className?: string;
 }) {
@@ -44,21 +47,23 @@ export function AuthorLine({
         )
       ) : null}
 
-      {author ? (
-        <Link
-          href={`/u/${author.username}`}
-          className={cn(
-            "truncate text-foreground/80 transition-colors hover:text-foreground",
-            avatarSize === "md" && "font-medium text-foreground"
-          )}
-        >
-          {author.name}
-        </Link>
-      ) : (
-        <span className="truncate text-foreground/70">Anonymous</span>
-      )}
+      {showName ? (
+        author ? (
+          <Link
+            href={`/u/${author.username}`}
+            className={cn(
+              "truncate text-foreground/80 transition-colors hover:text-foreground",
+              avatarSize === "md" && "font-medium text-foreground"
+            )}
+          >
+            {author.name}
+          </Link>
+        ) : (
+          <span className="truncate text-foreground/70">Anonymous</span>
+        )
+      ) : null}
 
-      <span aria-hidden="true">·</span>
+      {showAvatar || showName ? <span aria-hidden="true">·</span> : null}
       <time dateTime={createdAt} className="whitespace-nowrap">
         {timeAgoLong(createdAt)}
       </time>

@@ -32,10 +32,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ReportDialog } from "@/components/shared/report-dialog";
-import { BookmarkButton } from "./bookmark-button";
+// Bookmarks are hidden for now — bring this back with the bookmark feature.
+// import { BookmarkButton } from "./bookmark-button";
 import { deleteProblem, setProblemStatus } from "@/actions/problems";
 import type { ProblemStatus } from "@/lib/constants";
 import { goToSignIn } from "@/lib/auth/sign-in-redirect";
+import { cn } from "@/lib/utils";
 
 const STATUS_ACTIONS: Array<{
   value: ProblemStatus;
@@ -58,6 +60,8 @@ export function ProblemActions({
   isAuthenticated,
   bookmark,
   onEdit,
+  triggerClassName,
+  variant = "menu",
 }: {
   problemId: string;
   slug: string;
@@ -70,6 +74,9 @@ export function ProblemActions({
     initialActive: boolean;
   };
   onEdit?: () => void;
+  triggerClassName?: string;
+  /** "report" skips the "..." menu (and edit/delete/status actions) and shows a direct report button instead. */
+  variant?: "menu" | "report";
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -77,6 +84,39 @@ export function ProblemActions({
   const [reportOpen, setReportOpen] = useState(false);
 
   const canManage = isOwn || isModerator;
+
+  function openReport() {
+    if (!isAuthenticated) {
+      goToSignIn(`/problems/${slug}`);
+      return;
+    }
+    setReportOpen(true);
+  }
+
+  if (variant === "report") {
+    if (isOwn) return null;
+    return (
+      <>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Report problem"
+          title="Report"
+          className={cn("text-muted-foreground", triggerClassName)}
+          onClick={openReport}
+        >
+          <Flag className="size-4" />
+        </Button>
+        <ReportDialog
+          open={reportOpen}
+          onOpenChange={setReportOpen}
+          targetType="problem"
+          targetId={problemId}
+          targetLabel="problem"
+        />
+      </>
+    );
+  }
 
   function changeStatus(next: ProblemStatus) {
     startTransition(async () => {
@@ -111,7 +151,7 @@ export function ProblemActions({
             variant="ghost"
             size="icon-sm"
             aria-label="More actions"
-            className="text-muted-foreground"
+            className={cn("text-muted-foreground", triggerClassName)}
             disabled={pending}
           >
             <MoreHorizontal className="size-4" />
@@ -161,20 +201,13 @@ export function ProblemActions({
           {!isOwn ? (
             <>
               {canManage ? <DropdownMenuSeparator /> : null}
-              <DropdownMenuItem
-                onSelect={() => {
-                  if (!isAuthenticated) {
-                    goToSignIn(`/problems/${slug}`);
-                    return;
-                  }
-                  setReportOpen(true);
-                }}
-              >
+              <DropdownMenuItem onSelect={openReport}>
                 <Flag className="size-4" /> Report
               </DropdownMenuItem>
             </>
           ) : null}
 
+          {/* Bookmarks are hidden for now — bring this back with the bookmark feature.
           {bookmark ? (
             <>
               <DropdownMenuSeparator />
@@ -187,6 +220,7 @@ export function ProblemActions({
               />
             </>
           ) : null}
+          */}
         </DropdownMenuContent>
       </DropdownMenu>
 
