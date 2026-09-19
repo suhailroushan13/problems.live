@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useId } from "react";
 import { usePathname } from "next/navigation";
 import { Logo } from "./logo";
 import { MobileSiteFooter } from "./mobile-site-footer";
@@ -65,7 +64,7 @@ export function SiteFooter() {
         <Link
           href="/"
           aria-label="problems.live, home"
-          className="page block pb-6 text-center transition-opacity hover:opacity-80 sm:pb-10"
+          className="page block pb-6 text-center sm:pb-10"
         >
           <FooterWordmark />
         </Link>
@@ -104,46 +103,20 @@ export function SiteFooter() {
   );
 }
 
-/**
- * Renders the wordmark as real SVG text with a gradient fill instead of the
- * CSS `background-clip: text` trick. At this size, `-webkit-text-fill-color:
- * transparent` masking is prone to a Chromium/WebKit compositing bug where a
- * glyph's stroke (most visibly the "p" stem) paints as transparent until a
- * forced repaint — e.g. selecting the text — reveals it. SVG `<text>` paints
- * the font's own glyph outlines directly with the gradient, so there's no
- * separate mask layer to fall out of sync with the glyph paint.
- */
 function FooterWordmark() {
-  const gradientId = useId();
-
   return (
-    <svg
-      aria-hidden="true"
-      className="mx-auto block h-[clamp(2.5rem,11vw,7rem)] w-full overflow-visible"
+    <span
+      className="block text-brand"
+      style={{
+        fontFamily: "var(--font-figtree), ui-sans-serif, system-ui, sans-serif",
+        fontWeight: 800,
+        fontSize: "clamp(2.5rem, 11vw, 7rem)",
+        lineHeight: 1,
+        letterSpacing: "-0.06em",
+      }}
     >
-      <defs>
-        <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="var(--foreground)" />
-          <stop offset="55%" stopColor="var(--foreground)" stopOpacity="0.5" />
-          <stop offset="100%" stopColor="var(--brand)" />
-        </linearGradient>
-      </defs>
-      <text
-        x="50%"
-        y="50%"
-        dy="0.32em"
-        textAnchor="middle"
-        fill={`url(#${gradientId})`}
-        style={{
-          fontFamily: "var(--font-figtree), ui-sans-serif, system-ui, sans-serif",
-          fontWeight: 800,
-          fontSize: "clamp(2.5rem, 11vw, 7rem)",
-          letterSpacing: "-0.06em",
-        }}
-      >
-        problems.live
-      </text>
-    </svg>
+      problems.live
+    </span>
   );
 }
 

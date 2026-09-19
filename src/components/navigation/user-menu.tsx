@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useTransition } from "react";
 import {
   Bell,
-  Bookmark,
+  // Bookmark, — bookmarks are hidden for now, bring this back with the bookmark feature.
   LayoutDashboard,
   LogOut,
   Settings,
@@ -127,11 +127,13 @@ export function UserMenu({
               <UserRound className="size-4" /> Your profile
             </Link>
           </DropdownMenuItem>
+          {/* Bookmarks are hidden for now — bring this back with the bookmark feature.
           <DropdownMenuItem asChild className="px-2 py-2">
             <Link href="/bookmarks">
               <Bookmark className="size-4" /> Saved problems
             </Link>
           </DropdownMenuItem>
+          */}
           <DropdownMenuItem asChild className="px-2 py-2">
             <Link href="/notifications">
               <Bell className="size-4" /> Notifications

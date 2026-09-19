@@ -67,12 +67,13 @@ export default async function HomePage({
                   {activeCategory ? (
                     <>Problems in <span className="text-brand">{activeCategory.name}</span></>
                   ) : (
-                    <>Problems worth <span className="text-brand">solving.</span></>
+                    <>The <span className="text-brand">problems</span> directory</>
                   )}
                 </h1>
                 <p className="mt-2 max-w-[18rem] text-xs leading-relaxed text-muted-foreground">
                   Real problems, shared by the people living with them.
                 </p>
+                <GithubBadge className="mt-3 -ml-1" />
               </div>
             </div>
           </section>

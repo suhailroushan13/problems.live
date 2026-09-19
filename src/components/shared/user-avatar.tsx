@@ -2,6 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
 const SIZES = {
+  "2xs": "size-4 text-[9px]",
   xs: "size-5 text-[10px]",
   sm: "size-6 text-[11px]",
   md: "size-8 text-xs",
