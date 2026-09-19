@@ -3,6 +3,10 @@ import { globalSearch } from "@/lib/data/search";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
 
+// Outer backstop: bounds what one stuck request can cost if an
+// inner timeout is ever missed or raised.
+export const maxDuration = 15;
+
 export const dynamic = "force-dynamic";
 
 /** Backs the ⌘K command palette. Anonymous visitors are limited by IP. */

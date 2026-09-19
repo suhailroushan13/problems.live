@@ -5,6 +5,10 @@ import {
   type AvatarStyle,
 } from "@/lib/avatar";
 
+// Outer backstop: bounds what one stuck request can cost if an
+// inner timeout is ever missed or raised.
+export const maxDuration = 15;
+
 export const runtime = "nodejs";
 
 const ONE_YEAR = 60 * 60 * 24 * 365;

@@ -6,6 +6,10 @@ import { Problem, ProblemClick } from "@/models";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { toObjectId } from "@/lib/utils/sanitize-query";
 
+// Outer backstop: bounds what one stuck request can cost if an
+// inner timeout is ever missed or raised.
+export const maxDuration = 15;
+
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 

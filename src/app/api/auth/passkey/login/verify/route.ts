@@ -5,6 +5,10 @@ import { connectToDatabase } from "@/lib/db/mongoose";
 import { Passkey, User } from "@/models";
 import { env } from "@/lib/env";
 import { PASSKEY_CHALLENGE_COOKIE, passkeyConfig, safePasskeyNext } from "@/lib/auth/passkeys";
+
+// Outer backstop: bounds what one stuck request can cost if an
+// inner timeout is ever missed or raised.
+export const maxDuration = 15;
 export const dynamic = "force-dynamic";
 export async function POST(request: NextRequest) {
   try {

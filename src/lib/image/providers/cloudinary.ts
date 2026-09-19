@@ -33,7 +33,9 @@ export class CloudinaryImageProvider implements ImageProvider {
 
     const response = await fetch(
       `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-      { method: "POST", body }
+      // Uploads are user-initiated and retryable; hanging on a slow Cloudinary
+      // is more expensive than failing and letting the user try again.
+      { method: "POST", body, signal: AbortSignal.timeout(20000) }
     );
 
     if (!response.ok) {

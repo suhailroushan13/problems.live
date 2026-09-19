@@ -62,6 +62,9 @@ export async function exchangeCodeForProfile(params: {
       code_verifier: params.codeVerifier,
     }),
     cache: "no-store",
+    // A stalled token exchange holds the OAuth callback open for the whole
+    // platform limit; the caller would rather surface a login error fast.
+    signal: AbortSignal.timeout(10000),
   });
 
   const data = (await response.json()) as GoogleTokenResponse;

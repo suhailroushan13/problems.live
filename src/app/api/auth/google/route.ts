@@ -3,6 +3,10 @@ import { createHash, randomBytes } from "node:crypto";
 import { buildAuthorizationUrl } from "@/lib/auth/google";
 import { env } from "@/lib/env";
 
+// Outer backstop: bounds what one stuck request can cost if an
+// inner timeout is ever missed or raised.
+export const maxDuration = 15;
+
 export const dynamic = "force-dynamic";
 
 const STATE_COOKIE = "pl_oauth_state";

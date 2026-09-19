@@ -28,6 +28,7 @@ export class VercelBlobImageProvider implements ImageProvider {
           "x-add-random-suffix": "0",
           "x-cache-control-max-age": "31536000",
         },
+        signal: AbortSignal.timeout(20000),
         body: file,
       }
     );
