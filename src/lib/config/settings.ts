@@ -40,6 +40,7 @@ export const SETTING_DEFAULTS = {
   rateLimitSearch: [60, 60],
   rateLimitUpload: [30, 3600],
   rateLimitUsernameCheck: [30, 60],
+  rateLimitWaitlistJoin: [3, 3600],
 } as const;
 
 export type SettingKey = keyof typeof SETTING_DEFAULTS;

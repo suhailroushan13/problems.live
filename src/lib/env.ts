@@ -39,6 +39,9 @@ export const env = {
   get authSecret() {
     return required("AUTH_SECRET");
   },
+  get turnstileSecretKey() {
+    return required("TURNSTILE_SECRET_KEY");
+  },
   get appUrl() {
     const raw =
       process.env.NEXT_PUBLIC_APP_URL ||

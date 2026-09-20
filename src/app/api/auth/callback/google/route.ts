@@ -6,7 +6,7 @@ import { provisionUserFromGoogle } from "@/lib/auth/provision";
 import { createSessionToken, SESSION_COOKIE } from "@/lib/auth/session";
 import { env } from "@/lib/env";
 import { connectToDatabase } from "@/lib/db/mongoose";
-import { User, WaitlistEntry } from "@/models";
+import { User } from "@/models";
 
 // Outer backstop: bounds what one stuck request can cost if an
 // inner timeout is ever missed or raised.
@@ -38,8 +38,27 @@ function adminFailure(reason: string): NextResponse {
   );
 }
 
-function waitlistFailure(): NextResponse {
-  return NextResponse.redirect(`${env.appUrl}/wait-list?access=pending`);
+const PENDING_PROFILE_COOKIE = "pl_pending_profile";
+
+/**
+ * Carries the name/email this person just proved ownership of over to the
+ * waitlist form, so they don't have to retype what Google already gave us.
+ * A short-lived, httpOnly cookie — never a query string — since it's PII.
+ */
+function noAccessFailure(profile: { name: string; email: string }): NextResponse {
+  const response = NextResponse.redirect(`${env.appUrl}/wait-list?access=pending`);
+  response.cookies.set(
+    PENDING_PROFILE_COOKIE,
+    JSON.stringify({ name: profile.name, email: profile.email }),
+    {
+      httpOnly: true,
+      secure: env.isProduction,
+      sameSite: "lax",
+      path: "/wait-list",
+      maxAge: 300,
+    },
+  );
+  return response;
 }
 
 function clearOAuthCookies(response: NextResponse): NextResponse {
@@ -93,17 +112,13 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Existing accounts keep access. First-time sign-ins require either an
-    // explicit waitlist approval for the same verified Google email, or a
-    // pending invite (email or personal link) that matches where they're
-    // headed — a legitimate invite is its own approval.
+    // Existing accounts keep access. First-time sign-ins require a pending
+    // invite (email or personal link) that matches where they're headed —
+    // access is invite-only, granted directly by an admin or by someone
+    // spending one of their own invite credits.
     if (!existingUser && !env.adminEmails.includes(profile.email)) {
-      const approved = await WaitlistEntry.exists({
-        email: profile.email.toLowerCase(),
-        status: "approved",
-      });
-      const invited = approved ? true : await hasInviteAccess(next, profile.email);
-      if (!approved && !invited) return clearOAuthCookies(waitlistFailure());
+      const invited = await hasInviteAccess(next, profile.email);
+      if (!invited) return clearOAuthCookies(noAccessFailure(profile));
     }
 
     const user = await provisionUserFromGoogle(profile);

@@ -1,94 +1,63 @@
 "use server";
 
-import { createHash } from "node:crypto";
 import { headers } from "next/headers";
-import { connectToDatabase } from "@/lib/db/mongoose";
 import { DomainError, isDuplicateKeyError, okVoid, toActionError } from "@/lib/action-helpers";
-import { sendWaitlistAdminNotification, sendWaitlistConfirmation } from "@/lib/services/email";
-import { waitlistSchema } from "@/lib/validation/schemas";
-import { RateLimit, WaitlistEntry } from "@/models";
+import { connectToDatabase } from "@/lib/db/mongoose";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { waitlistJoinSchema } from "@/lib/validation/schemas";
+import { verifyRenderProof } from "@/lib/utils/waitlist-proof";
+import { verifyTurnstileToken } from "@/lib/services/turnstile";
+import { WaitlistSignup } from "@/models";
 import type { ActionResult } from "@/types";
 
-const WAITLIST_IP_LIMIT = 3;
-const WAITLIST_IP_WINDOW_MS = 60_000;
-const EXISTING_REQUEST_MESSAGE = "You’re already on the waitlist. Thanks for your double interest!";
+const JOINED_MESSAGE = "You're on the list. We'll email you when an invite becomes available.";
 
-async function enforceWaitlistIpLimit(): Promise<void> {
-  const requestHeaders = await headers();
-  const forwardedFor = requestHeaders.get("x-forwarded-for");
-  const ip = forwardedFor?.split(",")[0]?.trim() || requestHeaders.get("x-real-ip") || "unknown";
-  const ipHash = createHash("sha256").update(ip).digest("hex");
-  const windowStart = Math.floor(Date.now() / WAITLIST_IP_WINDOW_MS) * WAITLIST_IP_WINDOW_MS;
-  const expiresAt = new Date(windowStart + WAITLIST_IP_WINDOW_MS);
-  const key = `waitlist:ip:${ipHash}:${windowStart}`;
-
-  const result = await RateLimit.findOneAndUpdate(
-    { key },
-    { $inc: { count: 1 }, $setOnInsert: { expiresAt } },
-    { upsert: true, returnDocument: "after", setDefaultsOnInsert: true },
-  ).lean().exec();
-
-  if ((result?.count ?? 1) > WAITLIST_IP_LIMIT) {
-    throw new DomainError(
-      "Too many waitlist requests from this connection. Please try again in a minute.",
-      "rate_limited",
-    );
-  }
-}
-
+/**
+ * Public and unauthenticated — this is the whole point of the waitlist. It
+ * only records a lead; it never grants access, so it needs no session.
+ *
+ * Bot resistance is layered, cheapest first:
+ *  1. `company` honeypot and the signed render-proof are free local checks.
+ *     Both fail silently with the normal success message — there's nothing
+ *     for a script to learn from and tune against.
+ *  2. Cloudflare Turnstile — the one check a real visitor can trip by
+ *     accident (an expired widget, a slow network), so it fails loudly with
+ *     a real error the person can act on by retrying.
+ *  3. Per-IP rate limit, checked only once the above pass, so a flood of bot
+ *     traffic never touches the database or the limiter.
+ */
 export async function joinWaitlist(raw: unknown): Promise<ActionResult> {
   try {
-    const input = waitlistSchema.parse(raw);
-    await connectToDatabase();
-    await enforceWaitlistIpLimit();
+    const input = waitlistJoinSchema.parse(raw);
 
-    const existing = await WaitlistEntry.findOne(
-      { email: input.email },
-      { _id: 1, name: 1, confirmationSentAt: 1 },
-    )
-      .lean()
-      .exec();
-    if (existing) {
-      if (!existing.confirmationSentAt) {
-        try {
-          await sendWaitlistConfirmation({ name: existing.name, email: input.email });
-          await WaitlistEntry.updateOne(
-            { _id: existing._id },
-            { $set: { confirmationSentAt: new Date() } },
-          ).exec();
-        } catch (error) {
-          console.error("[waitlist] confirmation email retry failed", error);
-        }
-      }
-      return okVoid(EXISTING_REQUEST_MESSAGE);
+    if (input.company.trim().length > 0 || !verifyRenderProof(input.issuedAt, input.token)) {
+      return okVoid(JOINED_MESSAGE);
     }
 
+    const headerList = await headers();
+    const identifier = headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "anonymous";
+
+    const verified = await verifyTurnstileToken(
+      input.turnstileToken,
+      identifier !== "anonymous" ? identifier : undefined,
+    );
+    if (!verified) {
+      throw new DomainError("Verification failed. Please try again.");
+    }
+
+    await enforceRateLimit("waitlist:join", identifier);
+    await connectToDatabase();
+
     try {
-      await WaitlistEntry.create(input);
+      await WaitlistSignup.create({ name: input.name, email: input.email });
     } catch (error) {
       if (isDuplicateKeyError(error)) {
-        return okVoid(EXISTING_REQUEST_MESSAGE);
+        return okVoid("You're already on the list — we'll email you when an invite becomes available.");
       }
       throw error;
     }
-    try {
-      await sendWaitlistConfirmation(input);
-      await WaitlistEntry.updateOne(
-        { email: input.email },
-        { $set: { confirmationSentAt: new Date() } },
-      ).exec();
-    } catch (error) {
-      // Do not make a successful waitlist request look unsuccessful when the
-      // mail provider has a temporary problem. It can be safely resent later.
-      console.error("[waitlist] confirmation email failed", error);
-    }
-    try {
-      await sendWaitlistAdminNotification(input);
-    } catch (error) {
-      console.error("[waitlist] admin notification email failed", error);
-    }
 
-    return okVoid("We received your request and will inform you soon.");
+    return okVoid(JOINED_MESSAGE);
   } catch (error) {
     return toActionError(error);
   }

@@ -15,7 +15,8 @@ export type RateLimitAction =
   | "upload"
   | "category:suggest"
   | "username:check"
-  | "username:generate";
+  | "username:generate"
+  | "waitlist:join";
 
 const SETTING_BY_ACTION = {
   "problem:create": "rateLimitProblemCreate",
@@ -30,6 +31,7 @@ const SETTING_BY_ACTION = {
   "category:suggest": "rateLimitReportCreate",
   "username:check": "rateLimitUsernameCheck",
   "username:generate": "rateLimitUsernameCheck",
+  "waitlist:join": "rateLimitWaitlistJoin",
 } as const;
 
 export interface RateLimitResult {

@@ -106,6 +106,11 @@ const COPY: Record<SettingKey, { label: string; description: string }> = {
     description:
       "Format: max, window seconds. Guards the live check while typing a new username.",
   },
+  rateLimitWaitlistJoin: {
+    label: "Rate limit · waitlist signups",
+    description:
+      "Format: max, window seconds. Guards the public waitlist form on /wait-list.",
+  },
 };
 
 export default async function AdminSettingsPage() {

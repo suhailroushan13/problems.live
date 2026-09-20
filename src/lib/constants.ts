@@ -5,6 +5,13 @@
 export const GITHUB_REPO_URL =
   "https://github.com/suhailroushan13/problems.live";
 
+/** The only person who invites new users — see /wait-list. */
+export const ACCESS_CONTACT_X_HANDLE = "0xsuhailroushan";
+export const ACCESS_CONTACT_X_URL = `https://x.com/${ACCESS_CONTACT_X_HANDLE}`;
+
+/** Public by design — embedded in the page markup for every visitor. The matching secret key lives server-side only, in `env.turnstileSecretKey`. */
+export const TURNSTILE_SITE_KEY = "0x4AAAAAAE97j-v1ey2T8gkh";
+
 export const PROBLEM_STATUSES = [
   "open",
   "needs_collaborators",
@@ -433,8 +440,3 @@ export const RESERVED_USERNAMES = new Set([
 export function isReservedUsername(username: string): boolean {
   return RESERVED_USERNAMES.has(username.trim().toLowerCase());
 }
-
-/** Set in localStorage by /approved/[token] once a waitlist approval link is
- * confirmed. Gates the Post a Problem button — see site-header.tsx and
- * mobile-menu.tsx. */
-export const WAITLIST_APPROVED_STORAGE_KEY = "problems.live:waitlist-approved:v1";
