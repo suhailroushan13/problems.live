@@ -54,12 +54,34 @@ and verifies its token again on the server.
 ### Run locally
 
 ```bash
-git clone https://github.com/suhailroushan13/problems.live.git
+git clone git@github.com:suhailroushan13/problems.live.git
 cd problems.live
-npm install
-cp .env.example .env.local
+touch .env.local
+```
 
-# Fill in the required values in .env.local, then:
+Paste the following into `.env.local`, then replace every `<...>` placeholder
+with credentials from your own local-development accounts. Do not use, share,
+or commit production credentials.
+
+```dotenv
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net
+MONGODB_DB=problems_live
+GOOGLE_CLIENT_ID=<google-oauth-client-id>
+GOOGLE_CLIENT_SECRET=<google-oauth-client-secret>
+AUTH_SECRET=<generate-with-openssl-rand--base64-48>
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+ADMIN_EMAILS=<your-admin-email@example.com>
+IMAGE_PROVIDER=local
+TURNSTILE_SECRET_KEY=<turnstile-secret-key>
+MODERATION_PROVIDER=rules
+SMTP_USER=<smtp-username>
+SMTP_PASSWORD=<smtp-password-or-app-password>
+```
+
+Then install dependencies and start the development server:
+
+```bash
+npm install
 npm run dev
 ```
 

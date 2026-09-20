@@ -5,13 +5,12 @@ import { env } from "@/lib/env";
 /**
  * A lightweight "proof of render" for the public waitlist form. The page
  * issues a signed (issuedAt, token) pair at render time; a real visitor can
- * only submit one they actually received from us, and only after enough time
- * has passed to plausibly type a name and email. A script that posts
- * straight to the action without loading the page has no valid token at
- * all, and one that replays a fetched token still can't beat the minimum
- * fill time.
+ * only submit one they actually received from us. A script that posts straight
+ * to the action without loading the page has no valid token at all. The proof
+ * deliberately does not impose a minimum form-fill time: password managers and
+ * browser autofill are legitimate and must not receive a false success state.
  */
-const MIN_FILL_MS = 3_000;
+const MAX_PROOF_AGE_MS = 24 * 60 * 60 * 1000;
 
 function sign(issuedAt: number): string {
   return createHmac("sha256", env.authSecret).update(String(issuedAt)).digest("hex");
@@ -32,5 +31,5 @@ export function verifyRenderProof(issuedAt: number, token: string): boolean {
   }
 
   const elapsed = Date.now() - issuedAt;
-  return elapsed >= MIN_FILL_MS && elapsed < 24 * 60 * 60 * 1000;
+  return elapsed >= 0 && elapsed < MAX_PROOF_AGE_MS;
 }

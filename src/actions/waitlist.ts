@@ -17,9 +17,9 @@ const JOINED_MESSAGE = "We’ll email you when an invite becomes available.";
  * only records a lead; it never grants access, so it needs no session.
  *
  * Bot resistance is layered, cheapest first:
- *  1. `company` honeypot and the signed render-proof are free local checks.
- *     Both fail silently with the normal success message — there's nothing
- *     for a script to learn from and tune against.
+ *  1. `company` is a honeypot and fails silently, so scripts cannot learn its
+ *     presence. The signed render-proof fails loudly: returning success before
+ *     a database write would leave a real person believing they had joined.
  *  2. Cloudflare Turnstile — the one check a real visitor can trip by
  *     accident (an expired widget, a slow network), so it fails loudly with
  *     a real error the person can act on by retrying.
@@ -30,8 +30,11 @@ export async function joinWaitlist(raw: unknown): Promise<ActionResult> {
   try {
     const input = waitlistJoinSchema.parse(raw);
 
-    if (input.company.trim().length > 0 || !verifyRenderProof(input.issuedAt, input.token)) {
+    if (input.company.trim().length > 0) {
       return okVoid(JOINED_MESSAGE);
+    }
+    if (!verifyRenderProof(input.issuedAt, input.token)) {
+      throw new DomainError("This form has expired. Refresh the page and try again.");
     }
 
     const headerList = await headers();
