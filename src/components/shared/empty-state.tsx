@@ -13,7 +13,7 @@ export function EmptyState({
   secondaryAction,
   className,
 }: {
-  title: string;
+  title?: string;
   description?: string;
   action?: { label: string; href: string };
   secondaryAction?: { label: string; href: string };
@@ -21,7 +21,7 @@ export function EmptyState({
 }) {
   return (
     <div className={cn("py-16 text-center sm:py-20", className)}>
-      <p className="text-lg font-medium text-foreground">{title}</p>
+      {title ? <p className="text-lg font-medium text-foreground">{title}</p> : null}
 
       {description ? (
         <p className="mx-auto mt-2 max-w-sm text-[0.9375rem] leading-relaxed text-muted-foreground">

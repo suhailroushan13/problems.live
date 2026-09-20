@@ -6,9 +6,8 @@ export function normalizeWhitespace(input: string): string {
 /**
  * Capitalizes the first letter of each space-separated word, lowercasing the
  * rest — the default casing for a name at the point it first enters the
- * system (waitlist join, invite, Google sign-in). Only applied at those
- * entry points; a person's own later edit to their name is stored exactly
- * as they typed it.
+ * system (invite, Google sign-in). Only applied at those entry points; a
+ * person's own later edit to their name is stored exactly as they typed it.
  */
 export function toTitleCase(input: string): string {
   return input

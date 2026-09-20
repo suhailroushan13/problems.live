@@ -12,7 +12,6 @@ import { ProblemActions } from "./problem-actions";
 import { ProblemLink } from "./problem-link";
 import { StatusDot } from "./status-dot";
 import { useValidation } from "./validate-button";
-import { useWaitlistApproved } from "@/hooks/use-waitlist-approved";
 import { formatCount } from "@/lib/utils/format";
 import { timeAgo } from "@/lib/utils/time";
 import { cn } from "@/lib/utils";
@@ -36,7 +35,6 @@ function VoteRail({ count, active, pending, toggle, dense = false }: { count: nu
 /** A scannable problem row that makes validation, discussion and contribution explicit. */
 export function ProblemCard({ problem, isAuthenticated, isModerator }: { problem: ProblemDTO; isAuthenticated: boolean; isModerator: boolean }) {
   const router = useRouter();
-  const approved = useWaitlistApproved();
   const { count, active, pending, toggle } = useValidation(problem.id, problem.validationCount, problem.hasValidated, isAuthenticated);
 
   function recordOpen() {
@@ -44,12 +42,8 @@ export function ProblemCard({ problem, isAuthenticated, isModerator }: { problem
     if (navigator.sendBeacon) navigator.sendBeacon(url);
     else void fetch(url, { method: "POST", credentials: "same-origin", keepalive: true });
   }
-  /** Gate for every path into the problem: not on the waitlist → /wait-list, not signed in → /login, otherwise proceed. */
+  /** Gate for every path into the problem: not signed in → /login, otherwise proceed. */
   function guardNavigation(destination: string): boolean {
-    if (!approved) {
-      router.push("/wait-list");
-      return false;
-    }
     if (!isAuthenticated) {
       router.push(`/login?next=${encodeURIComponent(destination)}`);
       return false;

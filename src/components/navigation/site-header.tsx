@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "./logo";
 import { LivePill } from "./live-pill";
 import { UserMenu } from "./user-menu";
-import { useWaitlistApproved } from "@/hooks/use-waitlist-approved";
 import type { SessionUser } from "@/lib/auth/current-user";
 
 /** No visible container — a comfortable hit area, not a decorative circle. */
@@ -22,14 +21,9 @@ export function SiteHeader({
   unreadCount: number;
 }) {
   const pathname = usePathname();
-  const approved = useWaitlistApproved();
   const isPosting = pathname === "/problems/new";
   const isAuthenticating = pathname === "/login";
-  const postHref = !approved
-    ? "/wait-list"
-    : user
-      ? "/problems/new"
-      : "/api/auth/google?next=%2Fproblems%2Fnew";
+  const postHref = user ? "/problems/new" : "/api/auth/google?next=%2Fproblems%2Fnew";
   const postLabel = "Post a Problem";
 
   if (isPosting) {

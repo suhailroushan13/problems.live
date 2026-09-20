@@ -201,10 +201,11 @@ export default async function HomePage({
               secondaryAction={{ label: "Clear filters", href: "/" }}
             />
           ) : (
+            // Title ("No problems yet.") hidden on purpose — keep the
+            // description and CTA visible.
             <EmptyState
-              title="No problems yet."
               description="Be the first person to share a problem worth solving."
-              action={{ label: "Join the waitlist", href: "/wait-list" }}
+              action={{ label: "Request access", href: "/wait-list" }}
             />
           )}
         </div>

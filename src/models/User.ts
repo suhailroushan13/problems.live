@@ -57,10 +57,6 @@ export interface IUser {
   problemCredits: number;
   inviteCredits: number;
   invitedBy?: Types.ObjectId | null;
-  /** Hash of the token sent in the waitlist approval email. The client-side
-   * "approved" gate is confirmed by matching this on the /approved/[token]
-   * page — see src/actions/admin.ts approveWaitlistEntry(). */
-  waitlistApprovalTokenHash?: string | null;
   stats: UserStats;
   status: "active" | "suspended";
   suspendedUntil?: Date | null;
@@ -123,7 +119,6 @@ const UserSchema = new Schema<IUser>(
     problemCredits: { type: Number, default: 10 },
     inviteCredits: { type: Number, default: 0, min: 0 },
     invitedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
-    waitlistApprovalTokenHash: { type: String, default: null, index: true },
     stats: {
       problems: { type: Number, default: 0 },
       solutions: { type: Number, default: 0 },

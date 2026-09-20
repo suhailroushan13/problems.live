@@ -150,7 +150,7 @@ export function UserMenu({
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild className="px-2 py-2">
-            <Link href="/invites"><UserPlus className="size-4" /> Invites <span className="ml-auto text-xs text-muted-foreground">{user.inviteCredits}</span></Link>
+            <Link href="/invites"><UserPlus className="size-4" /> Invites <span className="ml-auto text-xs text-muted-foreground">{user.isAdmin ? "Unlimited" : user.inviteCredits}</span></Link>
           </DropdownMenuItem>
 
           <div className="flex items-center justify-between rounded-md px-2 py-2 text-sm">

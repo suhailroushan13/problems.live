@@ -8,10 +8,9 @@ const EMAIL_INVITE_PATH = /^\/invite\/([A-Za-z0-9_-]{20,128})$/;
 const LINK_INVITE_PATH = /^\/invite\/link\/([^/]+)\/([^/]+)$/;
 
 /**
- * A pending, unclaimed invite grants the same sign-in access as a waitlist
- * approval — otherwise someone with a legitimate invite link would still be
- * bounced to /wait-list on their first Google sign-in. Only reachable via a
- * `next` path shaped like an invite URL; anything else returns false.
+ * The only path onto problems.live: a pending, unclaimed invite. Only
+ * reachable via a `next` path shaped like an invite URL; anything else
+ * returns false, which bounces the sign-in to /wait-list.
  */
 export async function hasInviteAccess(next: string, email: string): Promise<boolean> {
   const emailMatch = next.match(EMAIL_INVITE_PATH);
