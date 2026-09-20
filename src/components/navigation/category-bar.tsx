@@ -51,8 +51,8 @@ export function CategoryBar({
 
   return (
     <div className={cn(wide ? "page-wide" : "page", className)}>
-      <div className="relative">
-      <div className="flex -mr-4 items-center gap-2 overflow-x-auto pr-8 no-scrollbar sm:mr-0 sm:gap-1 sm:rounded-full sm:bg-sunken sm:px-2 sm:py-2 sm:pr-8">
+      <div className="relative -mr-4 sm:mr-0">
+      <div className="flex items-center gap-2 overflow-x-auto pr-10 no-scrollbar sm:gap-1 sm:rounded-full sm:bg-sunken sm:px-2 sm:py-2 sm:pr-10">
         <Link
           href={hrefFor(undefined)}
           scroll={false}
@@ -105,7 +105,7 @@ export function CategoryBar({
           Explore
         </Link>
       </div>
-      <span className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-background via-background/90 to-transparent sm:rounded-r-full sm:from-sunken sm:via-sunken/90" aria-hidden="true" />
+      <span className="pointer-events-none absolute inset-y-0 right-0 w-9 bg-gradient-to-l from-background via-background/80 to-transparent sm:rounded-r-full sm:from-sunken sm:via-sunken/80" aria-hidden="true" />
       </div>
     </div>
   );

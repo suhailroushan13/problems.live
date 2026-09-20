@@ -1,19 +1,16 @@
 "use server";
 
-import { createHash, randomBytes } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
-import { DomainError, isDuplicateKeyError, okVoid, toActionError } from "@/lib/action-helpers";
+import { DomainError, isDuplicateKeyError, ok, okVoid, toActionError } from "@/lib/action-helpers";
 import { requireUser } from "@/lib/auth/current-user";
 import { connectToDatabase } from "@/lib/db/mongoose";
 import { env } from "@/lib/env";
 import { sendInvitationEmail } from "@/lib/services/email";
-import { inviteSchema } from "@/lib/validation/schemas";
+import { hashInviteToken as tokenHash } from "@/lib/utils/invite-token";
+import { inviteLinkCodeSchema, inviteSchema, usernameSchema } from "@/lib/validation/schemas";
 import { Invite, User } from "@/models";
 import type { ActionResult } from "@/types";
-
-function tokenHash(token: string): string {
-  return createHash("sha256").update(token).digest("hex");
-}
 
 export async function sendInvite(raw: unknown): Promise<ActionResult> {
   try {
@@ -33,6 +30,7 @@ export async function sendInvite(raw: unknown): Promise<ActionResult> {
     try {
       await Invite.create({
         ...input,
+        type: "email",
         tokenHash: tokenHash(token),
         inviterId: inviter.id,
       });
@@ -67,6 +65,79 @@ export async function acceptInvite(token: string): Promise<ActionResult> {
     if (!invite) throw new DomainError("This invitation is unavailable or belongs to another email address.", "forbidden");
     // `strict: false` also makes this safe during a hot reload where Mongoose
     // still holds the previous User schema without invitation fields.
+    await User.updateOne(
+      { _id: user.id },
+      { $set: { inviteCredits: 5, invitedBy: invite.inviterId ?? null } },
+      { strict: false },
+    ).exec();
+    revalidatePath("/invites");
+    return okVoid("Invitation accepted. You now have 5 invitations to share.");
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+/**
+ * A personal, shareable, single-use link: `/invite/link/{username}/{code}`.
+ * Unlike `sendInvite`, it isn't tied to a specific email address — anyone
+ * with the link can claim it, once.
+ */
+export async function createInviteLink(): Promise<ActionResult<{ url: string }>> {
+  try {
+    const inviter = await requireUser();
+    await connectToDatabase();
+    if (inviter.inviteCredits < 1) {
+      throw new DomainError("You have no invitations remaining.", "forbidden");
+    }
+
+    const code = randomBytes(8).toString("base64url");
+    await Invite.create({
+      type: "link",
+      tokenHash: tokenHash(code),
+      inviterId: inviter.id,
+      inviterUsername: inviter.username,
+    });
+    await User.updateOne(
+      { _id: inviter.id },
+      { $inc: { inviteCredits: -1 } },
+      { strict: false },
+    ).exec();
+    revalidatePath("/invites");
+    return ok(
+      { url: `${env.appUrl}/invite/link/${inviter.username}/${code}` },
+      "Invite link created. Copy it now — it won’t be shown again.",
+    );
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+export async function acceptInviteLink(username: string, code: string): Promise<ActionResult> {
+  try {
+    const user = await requireUser();
+    const safeUsername = usernameSchema.parse(username);
+    const safeCode = inviteLinkCodeSchema.parse(code);
+    await connectToDatabase();
+
+    const invite = await Invite.findOne({
+      tokenHash: tokenHash(safeCode),
+      type: "link",
+      inviterUsername: safeUsername,
+    }).lean().exec();
+    if (!invite || invite.status !== "pending") {
+      throw new DomainError("This invitation link is unavailable or has already been used.", "forbidden");
+    }
+    if (invite.inviterId && String(invite.inviterId) === user.id) {
+      throw new DomainError("You can’t accept your own invite link.");
+    }
+
+    const claimed = await Invite.findOneAndUpdate(
+      { _id: invite._id, status: "pending" },
+      { $set: { status: "accepted", claimedBy: user.id, claimedAt: new Date() } },
+      { new: true },
+    ).lean().exec();
+    if (!claimed) throw new DomainError("This invitation link is unavailable or has already been used.", "forbidden");
+
     await User.updateOne(
       { _id: user.id },
       { $set: { inviteCredits: 5, invitedBy: invite.inviterId ?? null } },

@@ -53,16 +53,19 @@ export function LivePill({ className }: { className?: string }) {
       aria-label={label}
       title={label}
       className={cn(
-        "home-landing__stats group inline-flex h-6 min-w-0 items-center gap-1 rounded-full border border-hairline bg-elevated px-2 text-xs leading-none font-normal whitespace-nowrap text-foreground shadow-xs transition-colors hover:border-rule hover:bg-sunken",
+        "home-landing__stats group inline-flex h-6 min-w-0 items-center gap-1 rounded-full border border-hairline bg-elevated px-2 text-xs leading-none font-normal whitespace-nowrap text-foreground shadow-xs transition-colors hover:border-rule hover:bg-sunken sm:h-7 sm:px-3",
         className
       )}
     >
-      <span className="home-landing__stats-dot relative flex size-1.5" aria-hidden="true">
-        <span className="absolute -inset-px inline-flex animate-ping rounded-full bg-success/40 [animation-duration:2.4s]" />
-        <span className="relative inline-flex size-1.5 rounded-full bg-success" />
+      <span className="inline-flex items-center gap-1.5">
+        <span className="home-landing__stats-dot relative flex size-1.5" aria-hidden="true">
+          <span className="absolute -inset-px inline-flex animate-ping rounded-full bg-success/40 [animation-duration:2.4s]" />
+          <span className="relative inline-flex size-1.5 rounded-full bg-success" />
+        </span>
+        <span className="num font-[family-name:var(--font-inter)]">{formatCount(livePeople)}</span>
+        <span className="text-[0.625rem] font-semibold tracking-wide text-muted-foreground uppercase">live</span>
       </span>
-      <span className="num font-[family-name:var(--font-inter)]">{formatCount(livePeople)}</span>
-      <span className="home-landing__stats-divider text-muted-foreground" aria-hidden="true">|</span>
+      <span className="home-landing__stats-divider h-3.5 w-px shrink-0 bg-hairline" aria-hidden="true" />
       <span className="home-landing__stats-total inline-flex items-center gap-1 num font-[family-name:var(--font-inter)] text-muted-foreground">
         <Users className="size-3" aria-hidden="true" />
         {formatCount(stats?.totalVisits ?? 0)}

@@ -97,9 +97,10 @@ export function ProblemCard({ problem, isAuthenticated, isModerator }: { problem
       >
         {problem.title}
       </ProblemLink>
-      {problem.excerpt ? <p className="mt-1 line-clamp-1 text-[0.8125rem] text-muted-foreground/70 sm:text-base">{problem.excerpt}</p> : null}
+      {problem.excerpt ? <p className="mt-1 line-clamp-1 text-[0.8125rem] text-muted-foreground/85 sm:text-base">{problem.excerpt}</p> : null}
 
-      <div className="mt-3 flex items-center gap-2 text-[0.8125rem] font-semibold text-muted-foreground sm:text-sm">
+      <div className="mt-3.5 flex items-center gap-1.5 text-[0.8125rem] font-semibold text-muted-foreground sm:text-sm">
+        {/* Primary engagement — the only actions with a visible border/fill, so they read first. */}
         <VoteRail count={count} active={active} pending={pending} toggle={toggle} dense />
         <Link
           href={`/problems/${problem.slug}#discussion`}
@@ -109,49 +110,52 @@ export function ProblemCard({ problem, isAuthenticated, isModerator }: { problem
           }}
           aria-label={`${formatCount(problem.commentCount)} comments`}
           title="Comments"
-          className="tap flex h-8 min-h-8! shrink-0 items-center gap-1 rounded-lg border border-hairline bg-sunken px-2 transition-colors hover:bg-background hover:text-foreground"
+          className="tap flex h-8 min-h-8! shrink-0 items-center gap-1 rounded-lg border border-hairline bg-sunken px-2 transition-colors hover:border-rule hover:bg-background hover:text-foreground"
         >
           <MessageCircle className="size-3.5" aria-hidden="true" />
           {formatCount(problem.commentCount)}
         </Link>
-        <BookmarkButton
-          problemId={problem.id}
-          initialCount={problem.bookmarkCount}
-          initialActive={problem.hasBookmarked}
-          isAuthenticated={isAuthenticated}
-          showCount={false}
-          className="size-8 min-h-8! shrink-0 rounded-lg border border-hairline bg-sunken hover:bg-background"
-        />
-        <button type="button" onClick={handleShare} aria-label="Share problem" title="Share" className="tap flex size-8 min-h-8! shrink-0 items-center justify-center rounded-lg border border-hairline bg-sunken transition-colors hover:bg-background hover:text-foreground">
-          <Share2 className="size-3.5" />
-        </button>
-        <span title={`${formatCount(problem.clickCount)} ${problem.clickCount === 1 ? "click" : "clicks"}`} className="num sm:hidden flex h-8 min-h-8! shrink-0 items-center gap-1 rounded-lg border border-hairline bg-sunken px-2 text-muted-foreground/70">
+        <span
+          title={`${formatCount(problem.clickCount)} ${problem.clickCount === 1 ? "click" : "clicks"}`}
+          className="num ml-1 inline-flex shrink-0 items-center gap-1 text-muted-foreground/60"
+        >
           <MousePointerClick className="size-3.5" aria-hidden="true" />
           {formatCount(problem.clickCount)}
         </span>
-        <ProblemActions
-          problemId={problem.id}
-          slug={problem.slug}
-          status={problem.status}
-          isOwn={problem.isOwn}
-          isModerator={isModerator}
-          isAuthenticated={isAuthenticated}
-          triggerClassName="sm:hidden size-8 min-h-8! shrink-0 rounded-lg border border-hairline bg-sunken text-muted-foreground/70 hover:bg-background hover:text-foreground"
-        />
-        <span title={`${formatCount(problem.clickCount)} ${problem.clickCount === 1 ? "click" : "clicks"}`} className="num hidden sm:flex h-8 min-h-8! shrink-0 items-center gap-1 rounded-lg border border-hairline bg-sunken px-2 text-muted-foreground/70">
-          <MousePointerClick className="size-3.5" aria-hidden="true" />
-          {formatCount(problem.clickCount)}
-        </span>
-        <ProblemActions
-          problemId={problem.id}
-          slug={problem.slug}
-          status={problem.status}
-          isOwn={problem.isOwn}
-          isModerator={isModerator}
-          isAuthenticated={isAuthenticated}
-          variant="report"
-          triggerClassName="hidden sm:flex size-8 min-h-8! shrink-0 rounded-lg border border-hairline bg-sunken text-muted-foreground/70 hover:bg-background hover:text-foreground"
-        />
+
+        {/* Secondary — quiet by default, no border/fill until hovered or active. */}
+        <div className="ml-auto flex shrink-0 items-center gap-0.5">
+          <BookmarkButton
+            problemId={problem.id}
+            initialCount={problem.bookmarkCount}
+            initialActive={problem.hasBookmarked}
+            isAuthenticated={isAuthenticated}
+            showCount={false}
+            className="size-8 min-h-8! shrink-0 rounded-lg text-muted-foreground/60 hover:bg-sunken hover:text-foreground"
+          />
+          <button type="button" onClick={handleShare} aria-label="Share problem" title="Share" className="tap flex size-8 min-h-8! shrink-0 items-center justify-center rounded-lg text-muted-foreground/60 transition-colors hover:bg-sunken hover:text-foreground">
+            <Share2 className="size-3.5" />
+          </button>
+          <ProblemActions
+            problemId={problem.id}
+            slug={problem.slug}
+            status={problem.status}
+            isOwn={problem.isOwn}
+            isModerator={isModerator}
+            isAuthenticated={isAuthenticated}
+            triggerClassName="sm:hidden size-8 min-h-8! shrink-0 rounded-lg text-muted-foreground/60 hover:bg-sunken hover:text-foreground"
+          />
+          <ProblemActions
+            problemId={problem.id}
+            slug={problem.slug}
+            status={problem.status}
+            isOwn={problem.isOwn}
+            isModerator={isModerator}
+            isAuthenticated={isAuthenticated}
+            variant="report"
+            triggerClassName="hidden sm:flex size-8 min-h-8! shrink-0 rounded-lg text-muted-foreground/60 hover:bg-sunken hover:text-foreground"
+          />
+        </div>
       </div>
     </article>
   );

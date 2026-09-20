@@ -105,12 +105,12 @@ export default async function HomePage({
       ) : null}
 
       {/* Problems directory ---------------------------------------------- */}
-      <div className={cn(isLoggedIn ? "pb-28 pt-3 sm:pb-16 sm:pt-10" : "pb-6 sm:pb-16")}>
+      <div className={cn(isLoggedIn ? "pb-28 pt-3 sm:pb-16 sm:pt-8" : "pb-6 sm:pb-16")}>
         <div className="page mt-2 sm:mt-2">
-          <p className="mb-3 hidden items-baseline gap-1.5 text-[0.8125rem] font-medium text-muted-foreground sm:flex sm:text-sm">
+          <p className="mb-2.5 hidden items-baseline gap-1.5 text-[0.8125rem] font-medium text-muted-foreground sm:flex sm:text-sm">
             <NumberTicker
               value={result.total}
-              className="num font-bold text-brand"
+              className="num text-[1.0625rem] leading-none font-extrabold tracking-[-0.01em] text-brand sm:text-lg"
             />
             <span>
               {result.total === 1
@@ -181,11 +181,14 @@ export default async function HomePage({
                 })}
               </div>
 
-              <div className="mt-3 hidden flex-wrap items-center justify-between gap-3 sm:flex">
+              <div className="mt-3 hidden flex-wrap items-baseline justify-between gap-3 sm:flex">
                 <p className="text-xs text-muted-foreground">
                   Showing {formatCount(isLoggedIn ? rangeStart : Math.min(4, result.items.length))}{isLoggedIn ? `–${formatCount(rangeEnd)}` : ""} of{" "}
                   {formatCount(result.total)} problems
                 </p>
+                {isLoggedIn && !isFiltered && result.total > 0 && result.total <= 3 ? (
+                  <p className="text-right text-[0.6875rem] text-muted-foreground/60">More problems are being added every day.</p>
+                ) : null}
               </div>
 
               {isLoggedIn ? <div className="hidden sm:block"><PaginationBar page={result.page} totalPages={result.totalPages} /></div> : null}

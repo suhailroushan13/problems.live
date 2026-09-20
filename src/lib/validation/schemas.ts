@@ -301,6 +301,12 @@ export const inviteSchema = z.object({
   email: z.string().trim().toLowerCase().email("Enter a valid email address.").max(254),
 });
 
+/** The short code in a personal invite link, e.g. `/invite/link/{username}/{code}`. */
+export const inviteLinkCodeSchema = z
+  .string()
+  .trim()
+  .regex(/^[A-Za-z0-9_-]{8,20}$/, "This invitation link is invalid.");
+
 export const adminSettingSchema = z.object({
   key: z.string().min(1).max(60),
   value: z.string().min(1).max(200),

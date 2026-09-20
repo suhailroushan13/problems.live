@@ -50,7 +50,7 @@ export function SiteHeader({
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background">
-      <div className="flex h-14 items-center px-4 sm:h-16 sm:px-6 lg:px-8">
+      <div className="flex h-14 items-center px-4 sm:h-[3.75rem] sm:px-6 lg:px-8">
         <Logo compact className="tap shrink-0" />
 
         <div className="ml-auto flex items-center gap-1 sm:gap-6">

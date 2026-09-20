@@ -107,7 +107,7 @@ export function ProblemsToolbar({
   return (
     <div className={className}>
       <div className="sm:hidden">
-        <InputGroup className="h-12 rounded-xl border-hairline bg-elevated shadow-none">
+        <InputGroup className="h-12 rounded-xl border-hairline bg-elevated shadow-none transition-colors hover:border-rule">
           <InputGroupAddon className="pl-3">
             <Search
               className="size-4 text-muted-foreground"
@@ -230,7 +230,7 @@ export function ProblemsToolbar({
       </div>
 
       <div className="hidden sm:flex sm:flex-col sm:gap-3 lg:flex-row lg:items-center">
-        <InputGroup className="h-11 flex-1 border-hairline bg-elevated shadow-none">
+        <InputGroup className="h-11 flex-1 border-hairline bg-elevated shadow-none transition-colors hover:border-rule">
           <InputGroupAddon>
             <Search className="text-muted-foreground" aria-hidden="true" />
           </InputGroupAddon>
@@ -303,7 +303,7 @@ function ViewToggle({
   return (
     <div
       className={cn(
-        "inline-flex h-11 items-center rounded-md border border-hairline bg-elevated p-1",
+        "inline-flex h-11 items-center rounded-md border border-hairline bg-elevated p-1 transition-colors hover:border-rule",
         !compact && "lg:w-[5.75rem]",
       )}
       aria-label="Problem view"
@@ -360,7 +360,7 @@ function ToolbarSelect({
       <SelectTrigger
         aria-label={ariaLabel}
         className={cn(
-          "h-11! w-full border-hairline bg-elevated text-sm shadow-none",
+          "h-11! w-full border-hairline bg-elevated text-sm shadow-none transition-colors hover:border-rule",
           className,
         )}
       >

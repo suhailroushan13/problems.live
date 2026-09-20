@@ -10,10 +10,12 @@ import {
   Smartphone,
   Trash2,
   UserRound,
+  Volume2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AccountPreferencesButton, DeleteAccountButton } from "@/components/forms/account-settings-actions";
 import { PasskeySetupButton } from "@/components/auth/passkey-buttons";
+import { SoundMuteToggle } from "@/components/settings/sound-mute-toggle";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { ACCOUNT_GENDER_LABELS } from "@/lib/constants";
 import { connectToDatabase } from "@/lib/db/mongoose";
@@ -154,6 +156,16 @@ export default async function SettingsPage() {
             label="Default location"
             value={locationLabel(user.defaultLocation)}
             description="Prefills posts; you can change it each time."
+          />
+        </SettingsCard>
+
+        <SettingsCard title="Interface" eyebrow="SOUND">
+          <SettingRow
+            icon={Volume2}
+            label="Click sounds"
+            value="Taps, toggles, and menu sounds"
+            description="Turn off to mute all interface click sounds."
+            action={<SoundMuteToggle />}
           />
         </SettingsCard>
 

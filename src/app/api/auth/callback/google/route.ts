@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 import { exchangeCodeForProfile } from "@/lib/auth/google";
+import { hasInviteAccess } from "@/lib/auth/invite-access";
 import { provisionUserFromGoogle } from "@/lib/auth/provision";
 import { createSessionToken, SESSION_COOKIE } from "@/lib/auth/session";
 import { env } from "@/lib/env";
@@ -92,14 +93,17 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Existing accounts keep access. First-time sign-ins require an explicit
-    // waitlist approval for the same verified Google email.
+    // Existing accounts keep access. First-time sign-ins require either an
+    // explicit waitlist approval for the same verified Google email, or a
+    // pending invite (email or personal link) that matches where they're
+    // headed — a legitimate invite is its own approval.
     if (!existingUser && !env.adminEmails.includes(profile.email)) {
-      const approval = await WaitlistEntry.exists({
+      const approved = await WaitlistEntry.exists({
         email: profile.email.toLowerCase(),
         status: "approved",
       });
-      if (!approval) return clearOAuthCookies(waitlistFailure());
+      const invited = approved ? true : await hasInviteAccess(next, profile.email);
+      if (!approved && !invited) return clearOAuthCookies(waitlistFailure());
     }
 
     const user = await provisionUserFromGoogle(profile);
