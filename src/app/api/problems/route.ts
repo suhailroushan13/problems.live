@@ -4,6 +4,10 @@ import { listProblems } from "@/lib/data/problems";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { problemFiltersSchema } from "@/lib/validation/schemas";
 
+// Outer backstop: bounds what one stuck request can cost if an
+// inner timeout is ever missed or raised.
+export const maxDuration = 15;
+
 export const dynamic = "force-dynamic";
 
 /** Paginated feed data for the mobile infinite scroller. */

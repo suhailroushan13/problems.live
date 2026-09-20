@@ -64,6 +64,11 @@ export async function sendWaitlistConfirmation(params: {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: { user: env.smtpUser, pass: env.smtpPassword },
+      // Nodemailer waits indefinitely by default, and an unreachable SMTP host
+      // is billed as wall-clock time on a serverless instance.
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
     });
     const sent = await transporter.sendMail({
       from: `problems.live <${env.smtpUser}>`,

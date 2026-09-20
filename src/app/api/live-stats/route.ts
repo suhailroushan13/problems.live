@@ -3,6 +3,10 @@ import { NextResponse, type NextRequest } from "next/server";
 import { connectToDatabase } from "@/lib/db/mongoose";
 import { SiteVisit } from "@/models";
 
+// Outer backstop: bounds what one stuck request can cost if an
+// inner timeout is ever missed or raised.
+export const maxDuration = 15;
+
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 

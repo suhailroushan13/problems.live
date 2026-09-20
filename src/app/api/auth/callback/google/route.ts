@@ -7,6 +7,10 @@ import { env } from "@/lib/env";
 import { connectToDatabase } from "@/lib/db/mongoose";
 import { User, WaitlistEntry } from "@/models";
 
+// Outer backstop: bounds what one stuck request can cost if an
+// inner timeout is ever missed or raised.
+export const maxDuration = 15;
+
 export const dynamic = "force-dynamic";
 
 const STATE_COOKIE = "pl_oauth_state";

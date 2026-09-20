@@ -1,5 +1,9 @@
 import { env, APP_NAME } from "@/lib/env";
 
+// Outer backstop: bounds what one stuck request can cost if an
+// inner timeout is ever missed or raised.
+export const maxDuration = 15;
+
 /**
  * llms.txt (llmstxt.org) — a plain-text map of the site for language models,
  * the same job robots.txt/sitemap.xml do for crawlers and search engines.

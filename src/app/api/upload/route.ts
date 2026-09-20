@@ -4,6 +4,10 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { ImageValidationError, uploadImages } from "@/lib/image";
 import { MAX_IMAGES_PER_POST } from "@/lib/constants";
 
+// Outer backstop: bounds what one stuck request can cost if an
+// inner timeout is ever missed or raised.
+export const maxDuration = 30;
+
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
