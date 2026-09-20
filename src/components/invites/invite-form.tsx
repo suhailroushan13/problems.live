@@ -29,6 +29,6 @@ export function InviteForm({ credits, admin = false }: { credits: number; admin?
   return <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
     <div><Label htmlFor="invite-name">Name</Label><Input id="invite-name" name="name" className="mt-2" required /></div>
     <div><Label htmlFor="invite-email">Email</Label><Input id="invite-email" name="email" type="email" className="mt-2" required /></div>
-    <div className="sm:col-span-2 flex items-center justify-between gap-3"><p className="text-xs text-muted-foreground">{admin ? `${credits} admin invitation${credits === 1 ? "" : "s"} remaining.` : `${credits} invitation${credits === 1 ? "" : "s"} remaining.`}</p><Button type="submit" disabled={pending}>{pending ? <Loader2 className="animate-spin" /> : <Send />}{pending ? "Sending…" : sent ? "Send another" : "Send invitation"}</Button></div>
+    <div className="sm:col-span-2 flex items-center justify-between gap-3"><p className="text-xs text-muted-foreground">{admin ? "Unlimited invitations." : `${credits} invitation${credits === 1 ? "" : "s"} remaining.`}</p><Button type="submit" disabled={pending}>{pending ? <Loader2 className="animate-spin" /> : <Send />}{pending ? "Sending…" : sent ? "Send another" : "Send invitation"}</Button></div>
   </form>;
 }

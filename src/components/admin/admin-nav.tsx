@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { BellRing, ClipboardList, ChevronLeft, ChevronRight, FileText, FolderTree, Gauge, Inbox, Send, Settings, ShieldCheck, Users } from "lucide-react";
+import { BellRing, ChevronLeft, ChevronRight, ClipboardList, FileText, FolderTree, Gauge, Inbox, Send, Settings, ShieldCheck, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function AdminNav({
@@ -11,18 +11,26 @@ export function AdminNav({
   pendingReports,
   pendingModeration,
   pendingCategories,
+  pendingWaitlist,
 }: {
   isAdmin: boolean;
   pendingReports: number;
   pendingModeration: number;
   pendingCategories: number;
+  pendingWaitlist: number;
 }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
 
   const links = [
-    { href: "/admin/waitlist", label: "Waitlist", icon: ClipboardList, badge: 0, adminOnly: true },
     { href: "/admin/users", label: "Users", icon: Users, badge: 0, adminOnly: true },
+    {
+      href: "/admin/waiting-list",
+      label: "Waiting list",
+      icon: ClipboardList,
+      badge: pendingWaitlist,
+      adminOnly: true,
+    },
     { href: "/admin/invites", label: "Invite", icon: Send, badge: 0, adminOnly: true },
     { href: "/admin", label: "Overview", icon: Gauge, badge: 0, adminOnly: false },
     {
@@ -69,13 +77,13 @@ export function AdminNav({
             href={link.href}
             aria-current={active ? "page" : undefined}
             title={collapsed ? link.label : undefined}
-            className={cn("relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-[0.8125rem] font-medium whitespace-nowrap transition-colors",
+            className={cn("group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-[0.8125rem] font-medium whitespace-nowrap transition-colors",
               active
-                ? "text-foreground"
-                : "text-muted-foreground hover:text-foreground"
+                ? "bg-brand-muted text-foreground font-semibold"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
           >
-            <link.icon className="size-4 shrink-0" />
+            <link.icon className={cn("size-4 shrink-0 transition-colors", active ? "text-brand" : "text-muted-foreground group-hover:text-foreground")} />
             {!collapsed ? link.label : null}
             {link.badge > 0 ? (
               <span className={cn("num rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold text-brand-foreground", collapsed && "absolute top-1 right-1")}>

@@ -1,7 +1,21 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { MousePointer2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { MousePointer2, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { deleteAllInvites } from "@/actions/admin";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export type TraceNode = {
   id: string;
@@ -12,8 +26,25 @@ export type TraceNode = {
 };
 
 export function InvitationTraceCanvas({ nodes, edges }: { nodes: TraceNode[]; edges: Array<{ from: string; to: string }> }) {
+  const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [selected, setSelected] = useState<TraceNode | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pending, startTransition] = useTransition();
+
+  function confirmDeleteAll() {
+    startTransition(async () => {
+      const result = await deleteAllInvites();
+      if (!result.ok) {
+        toast.error(result.error ?? "That didn't work.");
+        return;
+      }
+      toast.success(result.message ?? "Invitations deleted.");
+      setConfirmOpen(false);
+      setSelected(null);
+      router.refresh();
+    });
+  }
   const layout = useMemo(() => {
     const incoming = new Set(edges.map((edge) => edge.to));
     const children = new Map<string, string[]>();
@@ -89,5 +120,55 @@ export function InvitationTraceCanvas({ nodes, edges }: { nodes: TraceNode[]; ed
   }, [edges, layout, nodes, selected]);
 
   if (nodes.length === 0) return <div className="flex h-80 items-center justify-center rounded-2xl border border-dashed border-hairline text-sm text-muted-foreground">Your invitation map will appear here once you send an invite.</div>;
-  return <section className="overflow-hidden rounded-2xl border border-hairline bg-card"><div className="flex items-center justify-between border-b border-hairline px-5 py-4"><div><p className="font-semibold">Invitation trace</p><p className="mt-1 text-xs text-muted-foreground">Lines show who brought whom into the network.</p></div><MousePointer2 className="size-4 text-muted-foreground" /></div><canvas ref={canvasRef} className="h-[520px] w-full cursor-crosshair" aria-label="Invitation trace map" />{selected ? <div className="border-t border-hairline px-5 py-3 text-sm"><span className="font-semibold">{selected.label}</span><span className="ml-2 text-muted-foreground">{selected.email} · {selected.pending ? "Invitation pending" : `${selected.credits ?? 0} invites remaining`}</span></div> : null}</section>;
+  return (
+    <>
+      <section className="overflow-hidden rounded-2xl border border-hairline bg-card">
+        <div className="flex items-center justify-between gap-3 border-b border-hairline px-5 py-4">
+          <div>
+            <p className="font-semibold">Invitation trace</p>
+            <p className="mt-1 text-xs text-muted-foreground">Lines show who brought whom into the network.</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+              onClick={() => setConfirmOpen(true)}
+              disabled={pending}
+            >
+              <Trash2 className="size-3.5" />
+              Delete all invitations
+            </Button>
+            <MousePointer2 className="size-4 shrink-0 text-muted-foreground" />
+          </div>
+        </div>
+        <canvas ref={canvasRef} className="h-[520px] w-full cursor-crosshair" aria-label="Invitation trace map" />
+        {selected ? (
+          <div className="border-t border-hairline px-5 py-3 text-sm">
+            <span className="font-semibold">{selected.label}</span>
+            <span className="ml-2 text-muted-foreground">{selected.email} · {selected.pending ? "Invitation pending" : `${selected.credits ?? 0} invites remaining`}</span>
+          </div>
+        ) : null}
+      </section>
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete every invitation?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently deletes all invite records — sent, pending, and accepted. Accounts
+              created from past invites are not affected. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" disabled={pending} onClick={(event) => { event.preventDefault(); confirmDeleteAll(); }}>
+              {pending ? "Deleting…" : "Delete all"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
 }

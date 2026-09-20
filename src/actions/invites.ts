@@ -7,7 +7,7 @@ import { requireUser } from "@/lib/auth/current-user";
 import { connectToDatabase } from "@/lib/db/mongoose";
 import { env } from "@/lib/env";
 import { sendInvitationEmail } from "@/lib/services/email";
-import { hashInviteToken as tokenHash } from "@/lib/utils/invite-token";
+import { googleAuthUrlForInvite, hashInviteToken as tokenHash } from "@/lib/utils/invite-token";
 import { inviteLinkCodeSchema, inviteSchema, usernameSchema } from "@/lib/validation/schemas";
 import { Invite, User } from "@/models";
 import type { ActionResult } from "@/types";
@@ -17,7 +17,7 @@ export async function sendInvite(raw: unknown): Promise<ActionResult> {
     const inviter = await requireUser();
     const input = inviteSchema.parse(raw);
     await connectToDatabase();
-    if (inviter.inviteCredits < 1) {
+    if (!inviter.isAdmin && inviter.inviteCredits < 1) {
       throw new DomainError("You have no invitations remaining.", "forbidden");
     }
     if (input.email === inviter.email) throw new DomainError("You can’t invite your own email address.");
@@ -38,12 +38,14 @@ export async function sendInvite(raw: unknown): Promise<ActionResult> {
       if (isDuplicateKeyError(error)) throw new DomainError("This email already has a pending invitation.");
       throw error;
     }
-    await User.updateOne(
-      { _id: inviter.id },
-      { $inc: { inviteCredits: -1 } },
-      { strict: false },
-    ).exec();
-    await sendInvitationEmail({ name: input.name, email: input.email, inviteUrl: `${env.appUrl}/invite/${token}` });
+    if (!inviter.isAdmin) {
+      await User.updateOne(
+        { _id: inviter.id },
+        { $inc: { inviteCredits: -1 } },
+        { strict: false },
+      ).exec();
+    }
+    await sendInvitationEmail({ name: input.name, email: input.email, inviteUrl: googleAuthUrlForInvite(token) });
     revalidatePath("/admin/invites");
     revalidatePath("/invites");
     return okVoid("Invitation sent.");
@@ -86,7 +88,7 @@ export async function createInviteLink(): Promise<ActionResult<{ url: string }>>
   try {
     const inviter = await requireUser();
     await connectToDatabase();
-    if (inviter.inviteCredits < 1) {
+    if (!inviter.isAdmin && inviter.inviteCredits < 1) {
       throw new DomainError("You have no invitations remaining.", "forbidden");
     }
 
@@ -97,11 +99,13 @@ export async function createInviteLink(): Promise<ActionResult<{ url: string }>>
       inviterId: inviter.id,
       inviterUsername: inviter.username,
     });
-    await User.updateOne(
-      { _id: inviter.id },
-      { $inc: { inviteCredits: -1 } },
-      { strict: false },
-    ).exec();
+    if (!inviter.isAdmin) {
+      await User.updateOne(
+        { _id: inviter.id },
+        { $inc: { inviteCredits: -1 } },
+        { strict: false },
+      ).exec();
+    }
     revalidatePath("/invites");
     return ok(
       { url: `${env.appUrl}/invite/link/${inviter.username}/${code}` },

@@ -30,10 +30,11 @@ export default async function AdminLayout({
         pendingReports={stats.reportsPending}
         pendingModeration={stats.moderationPending}
         pendingCategories={stats.categoriesPending}
+        pendingWaitlist={stats.waitlistPending}
       />
 
       <main className="min-w-0 flex-1 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
-        <header className="mb-8"><p className="label text-brand">{user.isAdmin ? "Administration" : "Moderation"}</p><h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Control room</h1></header>
+        <header className="mb-6"><p className="label text-brand">{user.isAdmin ? "Administration" : "Moderation"}</p><h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">Control room</h1></header>
         {children}
       </main>
     </div>

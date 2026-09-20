@@ -22,7 +22,15 @@ export default async function AdminUsersPage({
 
   return (
     <>
-      <AdminUserSearch defaultValue={search ?? ""} />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <AdminUserSearch defaultValue={search ?? ""} />
+        {users.length > 0 ? (
+          <p className="text-xs text-muted-foreground">
+            Showing <span className="num font-medium text-foreground">{users.length}</span> of{" "}
+            <span className="num font-medium text-foreground">{users.length}</span> users
+          </p>
+        ) : null}
+      </div>
 
       {users.length === 0 ? (
         <EmptyState
@@ -31,7 +39,7 @@ export default async function AdminUsersPage({
           className="mt-6"
         />
       ) : (
-        <div className="mt-6">
+        <div className="mt-4">
           <AdminUsersTable users={users} viewerId={viewer?.id ?? null} />
         </div>
       )}

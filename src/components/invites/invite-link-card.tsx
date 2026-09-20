@@ -7,7 +7,7 @@ import { createInviteLink } from "@/actions/invites";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-export function InviteLinkCard({ credits }: { credits: number }) {
+export function InviteLinkCard({ credits, admin = false }: { credits: number; admin?: boolean }) {
   const [pending, startTransition] = useTransition();
   const [url, setUrl] = useState<string | null>(null);
 
@@ -34,7 +34,7 @@ export function InviteLinkCard({ credits }: { credits: number }) {
       .catch(() => toast.error("Couldn't copy the link."));
   }
 
-  if (credits === 0 && !url) {
+  if (!admin && credits === 0 && !url) {
     return <p className="text-sm text-muted-foreground">You&apos;ve used all five invitations.</p>;
   }
 
@@ -54,7 +54,7 @@ export function InviteLinkCard({ credits }: { credits: number }) {
         </>
       ) : (
         <div className="flex items-center justify-between gap-3">
-          <p className="text-xs text-muted-foreground">{credits} invitation{credits === 1 ? "" : "s"} remaining.</p>
+          <p className="text-xs text-muted-foreground">{admin ? "Unlimited invitations." : `${credits} invitation${credits === 1 ? "" : "s"} remaining.`}</p>
           <Button type="button" onClick={generate} disabled={pending}>
             {pending ? <Loader2 className="animate-spin" /> : <Link2 />}
             {pending ? "Creating…" : "Create invite link"}

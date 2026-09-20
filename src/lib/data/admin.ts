@@ -12,6 +12,7 @@ import {
   Solution,
   SolutionVote,
   User,
+  WaitlistSignup,
   type ICategory,
   type IComment,
   type IProblem,
@@ -19,9 +20,10 @@ import {
   type IReport,
   type ISolution,
   type IUser,
+  type IWaitlistSignup,
 } from "@/models";
 import { findReportTarget } from "@/lib/db/content";
-import { excerpt } from "@/lib/utils/text";
+import { escapeRegex, excerpt } from "@/lib/utils/text";
 import { locationLabel } from "@/lib/data/serialize";
 import { toObjectId } from "@/lib/utils/sanitize-query";
 import type { ModerationStatus } from "@/lib/constants";
@@ -291,9 +293,14 @@ export async function listAdminUsers(
 ): Promise<AdminUser[]> {
   await connectToDatabase();
 
+  const trimmed = search?.trim();
+  // Email has no text index, so a query that looks like one gets a regex
+  // match instead of falling through to the name/username $text search.
   const filter =
-    search && search.trim().length >= 2
-      ? { $text: { $search: search.trim() } }
+    trimmed && trimmed.length >= 2
+      ? trimmed.includes("@")
+        ? { email: { $regex: escapeRegex(trimmed), $options: "i" } }
+        : { $text: { $search: trimmed } }
       : {};
 
   const docs = await User.find(filter)
@@ -627,4 +634,40 @@ export async function getAdminUserDetail(
       reportsFiled,
     },
   };
+}
+
+export interface AdminWaitlistSignup {
+  id: string;
+  name: string;
+  email: string;
+  status: IWaitlistSignup["status"];
+  createdAt: string;
+  respondedAt: string | null;
+}
+
+const WAITLIST_STATUS_ORDER: Record<IWaitlistSignup["status"], number> = {
+  pending: 0,
+  approved: 1,
+  rejected: 2,
+};
+
+export async function listWaitlistSignups(limit = 100): Promise<AdminWaitlistSignup[]> {
+  await connectToDatabase();
+
+  const docs = await WaitlistSignup.find({})
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .lean<IWaitlistSignup[]>()
+    .exec();
+
+  return docs
+    .map((doc) => ({
+      id: String(doc._id),
+      name: doc.name,
+      email: doc.email,
+      status: doc.status,
+      createdAt: new Date(doc.createdAt).toISOString(),
+      respondedAt: doc.respondedAt ? new Date(doc.respondedAt).toISOString() : null,
+    }))
+    .sort((a, b) => WAITLIST_STATUS_ORDER[a.status] - WAITLIST_STATUS_ORDER[b.status]);
 }

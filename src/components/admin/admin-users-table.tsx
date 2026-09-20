@@ -30,7 +30,17 @@ import { UserActions } from "@/components/admin/user-actions";
 import { bulkDeleteUsers } from "@/actions/admin";
 import type { AdminUser } from "@/lib/data/admin";
 import { formatCount } from "@/lib/utils/format";
-import { formatDateTimeWithSeconds } from "@/lib/utils/time";
+import { formatDate, formatDateTimeWithSeconds } from "@/lib/utils/time";
+import { cn } from "@/lib/utils";
+
+/** Right-aligned stat cell. Zero reads as neutral, not an error state. */
+function StatValue({ value }: { value: number }) {
+  return (
+    <span className={cn("num text-sm font-semibold", value === 0 ? "text-muted-foreground/50" : "text-foreground")}>
+      {formatCount(value)}
+    </span>
+  );
+}
 
 export function AdminUsersTable({
   users,
@@ -109,8 +119,8 @@ export function AdminUsersTable({
 
       <div className="overflow-x-auto rounded-xl border border-hairline">
         <Table>
-          <TableHeader>
-            <TableRow>
+          <TableHeader className="bg-tint">
+            <TableRow className="hover:bg-transparent">
               <TableHead className="w-10">
                 <Checkbox
                   checked={allSelected}
@@ -119,16 +129,16 @@ export function AdminUsersTable({
                   aria-label="Select all deletable users"
                 />
               </TableHead>
-              <TableHead className="w-10">#</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Username</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead className="text-right">Score</TableHead>
-              <TableHead className="text-right">Problems</TableHead>
-              <TableHead className="text-right">Solutions</TableHead>
-              <TableHead>Joined</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="w-10 text-center">#</TableHead>
+              <TableHead className="min-w-[11rem]">Name</TableHead>
+              <TableHead className="min-w-[8rem]">Username</TableHead>
+              <TableHead className="min-w-[13rem]">Email</TableHead>
+              <TableHead className="w-[5.5rem]">Role</TableHead>
+              <TableHead className="w-20 text-right">Score</TableHead>
+              <TableHead className="w-20 text-right">Problems</TableHead>
+              <TableHead className="w-20 text-right">Solutions</TableHead>
+              <TableHead className="w-[9.5rem]">Joined</TableHead>
+              <TableHead className="w-[6.5rem] text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -155,7 +165,7 @@ export function AdminUsersTable({
                       }
                     />
                   </TableCell>
-                  <TableCell className="num text-muted-foreground">
+                  <TableCell className="num text-center text-muted-foreground">
                     {index + 1}
                   </TableCell>
                   <TableCell>
@@ -165,23 +175,34 @@ export function AdminUsersTable({
                         username={user.username}
                         avatar={user.avatar}
                         size="sm"
+                        className="border border-hairline"
                       />
-                      <span className="block max-w-[14rem] truncate text-sm font-medium text-foreground">
+                      <span className="block max-w-[12rem] truncate text-sm font-semibold text-foreground">
                         {user.name}
                       </span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-sm whitespace-nowrap text-muted-foreground">
-                    @{user.username}
+                  <TableCell>
+                    <span className="block max-w-[9rem] truncate text-sm text-foreground/70">
+                      @{user.username}
+                    </span>
                   </TableCell>
-                  <TableCell className="max-w-[16rem] truncate text-sm text-muted-foreground">
-                    {user.email}
+                  <TableCell>
+                    <span
+                      title={user.email}
+                      className="block max-w-[14rem] truncate text-sm text-muted-foreground"
+                    >
+                      {user.email}
+                    </span>
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap items-center gap-1.5">
                       <Badge
-                        variant={user.role === "user" ? "outline" : "secondary"}
-                        className="capitalize"
+                        variant="outline"
+                        className={cn(
+                          "capitalize",
+                          user.role === "admin" && "border-warning/25 bg-warning-subtle text-warning"
+                        )}
                       >
                         {user.role}
                       </Badge>
@@ -190,17 +211,20 @@ export function AdminUsersTable({
                       ) : null}
                     </div>
                   </TableCell>
-                  <TableCell className="num text-right">
-                    {formatCount(user.reputation)}
+                  <TableCell className="text-right">
+                    <StatValue value={user.reputation} />
                   </TableCell>
-                  <TableCell className="num text-right">
-                    {formatCount(user.problems)}
+                  <TableCell className="text-right">
+                    <StatValue value={user.problems} />
                   </TableCell>
-                  <TableCell className="num text-right">
-                    {formatCount(user.solutions)}
+                  <TableCell className="text-right">
+                    <StatValue value={user.solutions} />
                   </TableCell>
-                  <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
-                    {formatDateTimeWithSeconds(user.createdAt)}
+                  <TableCell
+                    title={formatDateTimeWithSeconds(user.createdAt)}
+                    className="text-sm whitespace-nowrap text-muted-foreground"
+                  >
+                    {formatDate(user.createdAt)}
                   </TableCell>
                   <TableCell onClick={(event) => event.stopPropagation()}>
                     <div className="flex justify-end">

@@ -8,6 +8,7 @@ import {
   Report,
   Solution,
   User,
+  WaitlistSignup,
 } from "@/models";
 
 export interface PlatformStats {
@@ -44,6 +45,7 @@ export interface AdminStats {
   commentsToday: number;
   newUsersToday: number;
   categoriesPending: number;
+  waitlistPending: number;
 }
 
 export async function getAdminStats(): Promise<AdminStats> {
@@ -65,6 +67,7 @@ export async function getAdminStats(): Promise<AdminStats> {
     commentsToday,
     newUsersToday,
     categoriesPending,
+    waitlistPending,
   ] = await Promise.all([
     User.estimatedDocumentCount().exec(),
     Problem.countDocuments({ moderationStatus: { $ne: "removed" } }).exec(),
@@ -78,6 +81,7 @@ export async function getAdminStats(): Promise<AdminStats> {
     Comment.countDocuments({ createdAt: { $gte: startOfToday } }).exec(),
     User.countDocuments({ createdAt: { $gte: startOfToday } }).exec(),
     Category.countDocuments({ status: "pending" }).exec(),
+    WaitlistSignup.countDocuments({ status: "pending" }).exec(),
   ]);
 
   return {
@@ -91,5 +95,6 @@ export async function getAdminStats(): Promise<AdminStats> {
     commentsToday,
     newUsersToday,
     categoriesPending,
+    waitlistPending,
   };
 }
