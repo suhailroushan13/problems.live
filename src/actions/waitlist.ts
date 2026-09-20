@@ -1,16 +1,16 @@
 "use server";
 
 import { headers } from "next/headers";
-import { DomainError, isDuplicateKeyError, okVoid, toActionError } from "@/lib/action-helpers";
+import { DomainError, fail, isDuplicateKeyError, okVoid, toActionError } from "@/lib/action-helpers";
 import { connectToDatabase } from "@/lib/db/mongoose";
-import { enforceRateLimit } from "@/lib/rate-limit";
+import { enforceRateLimit, RateLimitError } from "@/lib/rate-limit";
 import { waitlistJoinSchema } from "@/lib/validation/schemas";
 import { verifyRenderProof } from "@/lib/utils/waitlist-proof";
 import { verifyTurnstileToken } from "@/lib/services/turnstile";
-import { WaitlistSignup } from "@/models";
+import { User, WaitlistSignup } from "@/models";
 import type { ActionResult } from "@/types";
 
-const JOINED_MESSAGE = "You're on the list. We'll email you when an invite becomes available.";
+const JOINED_MESSAGE = "We’ll email you when an invite becomes available.";
 
 /**
  * Public and unauthenticated — this is the whole point of the waitlist. It
@@ -45,16 +45,44 @@ export async function joinWaitlist(raw: unknown): Promise<ActionResult> {
       throw new DomainError("Verification failed. Please try again.");
     }
 
-    await enforceRateLimit("waitlist:join", identifier);
-    await connectToDatabase();
+    try {
+      await enforceRateLimit("waitlist:join", identifier);
+      await connectToDatabase();
+    } catch (error) {
+      if (error instanceof RateLimitError) throw error;
+      console.error("[waitlist] database or rate-limit infrastructure failed", error);
+      return fail("We couldn’t join you to the waitlist right now. Please try again.");
+    }
+
+    let existingUser: unknown;
+    let existingSignup: { status: "pending" | "approved" | "rejected" } | null;
+    try {
+      [existingUser, existingSignup] = await Promise.all([
+        User.exists({ email: input.email }),
+        WaitlistSignup.findOne({ email: input.email }).select("status").lean().exec(),
+      ]);
+    } catch (error) {
+      console.error("[waitlist] lookup failed", error);
+      return fail("We couldn’t join you to the waitlist right now. Please try again.");
+    }
+    if (existingUser) {
+      throw new DomainError("You already have access to problems.live.");
+    }
+    if (existingSignup?.status === "pending") {
+      return okVoid("Your access request is already pending.");
+    }
+    if (existingSignup?.status === "approved") {
+      return okVoid("Your invitation is already being prepared. Please check your email soon.");
+    }
 
     try {
       await WaitlistSignup.create({ name: input.name, email: input.email });
     } catch (error) {
       if (isDuplicateKeyError(error)) {
-        return okVoid("You're already on the list — we'll email you when an invite becomes available.");
+        return okVoid("Your access request is already pending.");
       }
-      throw error;
+      console.error("[waitlist] signup creation failed", error);
+      return fail("We couldn’t join you to the waitlist right now. Please try again.");
     }
 
     return okVoid(JOINED_MESSAGE);

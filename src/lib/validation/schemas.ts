@@ -305,7 +305,7 @@ export const waitlistJoinSchema = inviteSchema.extend({
   company: z.string().max(200).optional().default(""),
   issuedAt: z.coerce.number(),
   token: z.string().min(1).max(128),
-  turnstileToken: z.string().min(1, "Please complete the verification check."),
+  turnstileToken: z.string().min(1, "Please complete the verification."),
 });
 
 /** The short code in a personal invite link, e.g. `/invite/link/{username}/{code}`. */

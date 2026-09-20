@@ -42,9 +42,11 @@ export function WaitlistCard({
 }) {
   const [pending, startTransition] = useTransition();
   const [done, setDone] = useState(false);
+  const [confirmation, setConfirmation] = useState("We’ll email you when an invite becomes available.");
   const [turnstileToken, setTurnstileToken] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
+  const submittingRef = useRef(false);
 
   // Cloudflare's script only auto-detects `.cf-turnstile` elements present at
   // load time — a widget removed and re-added later (submitting a second
@@ -74,29 +76,52 @@ export function WaitlistCard({
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submittingRef.current) return;
     const form = new FormData(event.currentTarget);
+    const name = String(form.get("name") ?? "").trim();
+    const email = String(form.get("email") ?? "").trim();
+
+    if (!name) {
+      toast.error("Please enter your name.");
+      return;
+    }
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+      toast.error("Please enter a valid email.");
+      return;
+    }
+    if (!turnstileToken) {
+      toast.error("Please complete the verification.");
+      return;
+    }
+
+    submittingRef.current = true;
     startTransition(async () => {
-      const result = await joinWaitlist({
-        name: form.get("name"),
-        email: form.get("email"),
-        company: form.get("company"),
-        issuedAt: form.get("issuedAt"),
-        token: form.get("token"),
-        turnstileToken,
-      });
-      if (!result.ok) {
-        toast.error(result.error);
+      try {
+        const result = await joinWaitlist({
+          name,
+          email,
+          company: form.get("company"),
+          issuedAt: form.get("issuedAt"),
+          token: form.get("token"),
+          turnstileToken,
+        });
+        if (!result.ok) {
+          toast.error(result.error);
+          setTurnstileToken("");
+          if (widgetIdRef.current) window.turnstile?.reset(widgetIdRef.current);
+          return;
+        }
+        setConfirmation(result.message ?? "We’ll email you when an invite becomes available.");
+        setDone(true);
+      } catch (error) {
+        console.error("[waitlist] submission failed", error);
+        toast.error("We couldn’t join you to the waitlist right now. Please try again.");
         setTurnstileToken("");
         if (widgetIdRef.current) window.turnstile?.reset(widgetIdRef.current);
-        return;
+      } finally {
+        submittingRef.current = false;
       }
-      setDone(true);
     });
-  }
-
-  function submitAnother() {
-    setTurnstileToken("");
-    setDone(false);
   }
 
   if (done) {
@@ -106,15 +131,8 @@ export function WaitlistCard({
         <div>
           <p className="text-sm font-semibold text-foreground">You&apos;re on the list.</p>
           <p className="mt-0.5 text-sm leading-6 text-muted-foreground">
-            We&apos;ll email you when an invite becomes available.
+            {confirmation}
           </p>
-          <button
-            type="button"
-            onClick={submitAnother}
-            className="mt-2 text-xs font-medium text-brand hover:underline"
-          >
-            Submit another
-          </button>
         </div>
       </div>
     );
@@ -127,7 +145,7 @@ export function WaitlistCard({
         strategy="afterInteractive"
         onLoad={renderWidget}
       />
-      <form onSubmit={submit} className="mt-5 space-y-3">
+      <form onSubmit={submit} noValidate className="mt-5 space-y-3">
         <input type="hidden" name="issuedAt" value={issuedAt} />
         <input type="hidden" name="token" value={token} />
         {/* Honeypot — invisible and unlabeled for real visitors and screen readers; a bot that autofills every field trips it. */}

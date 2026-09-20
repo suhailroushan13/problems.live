@@ -19,22 +19,25 @@ export async function verifyTurnstileToken(
 ): Promise<boolean> {
   if (!token) return false;
 
-  const body = new URLSearchParams({
-    secret: env.turnstileSecretKey,
-    response: token,
-  });
-  if (remoteIp) body.set("remoteip", remoteIp);
-
   try {
+    const body = new URLSearchParams({
+      secret: env.turnstileSecretKey,
+      response: token,
+    });
+    if (remoteIp) body.set("remoteip", remoteIp);
+
     const response = await fetch(SITEVERIFY_URL, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body,
     });
-    if (!response.ok) return false;
+    if (!response.ok) {
+      console.error("[turnstile] verification request failed", { status: response.status });
+      return false;
+    }
     const data = (await response.json()) as SiteverifyResponse;
     if (!data.success) {
-      console.warn("[turnstile] verification failed", data["error-codes"]);
+      console.error("[turnstile] verification failed", data["error-codes"]);
     }
     return data.success === true;
   } catch (error) {
