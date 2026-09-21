@@ -79,6 +79,42 @@ export async function joinWaitlist(raw: unknown): Promise<ActionResult> {
       return okVoid("Your invitation is already being prepared. Please check your email soon.");
     }
 
+    // A previously rejected applicant is allowed to reapply — reactivate
+    // their existing record instead of inserting a second one, which the
+    // unique email index would reject anyway.
+    if (existingSignup?.status === "rejected") {
+      let result;
+      try {
+        result = await WaitlistSignup.updateOne(
+          { email: input.email, status: "rejected" },
+          {
+            $set: {
+              name: input.name,
+              status: "pending",
+              respondedAt: null,
+              respondedBy: null,
+              createdAt: new Date(),
+            },
+          },
+        ).exec();
+      } catch (error) {
+        console.error("[waitlist] reapply update failed", error);
+        return fail("We couldn’t join you to the waitlist right now. Please try again.");
+      }
+
+      if (result.matchedCount === 0) {
+        // Someone else already reactivated or approved this record between
+        // our read and this write.
+        return okVoid("Your access request is already pending.");
+      }
+
+      sendWaitlistSignupNotification({ name: input.name, email: input.email }).catch((error) => {
+        console.error("[waitlist] admin notification failed", error);
+      });
+
+      return okVoid(JOINED_MESSAGE);
+    }
+
     try {
       await WaitlistSignup.create({ name: input.name, email: input.email });
     } catch (error) {
