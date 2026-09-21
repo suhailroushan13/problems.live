@@ -116,3 +116,75 @@ export async function sendInvitationEmail(params: {
     throw error;
   }
 }
+
+/**
+ * Notifies every admin (`ADMIN_EMAILS`) that someone joined the waitlist, so
+ * they don't have to keep the admin panel open to know when to review it.
+ * Sent one email per admin so `EmailLog.recipient` stays a single address.
+ */
+export async function sendWaitlistSignupNotification(params: {
+  name: string;
+  email: string;
+}): Promise<void> {
+  if (env.adminEmails.length === 0) return;
+
+  const name = escapeHtml(params.name);
+  const signupEmail = escapeHtml(params.email);
+  const reviewUrl = `${env.appUrl}/admin/waiting-list`;
+  const subject = `New waitlist signup: ${params.name}`;
+  const text = `${params.name} (${params.email}) just joined the problems.live waitlist.\n\nReview and approve: ${reviewUrl}`;
+  const html = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>${subject}</title>
+  </head>
+  <body style="margin:0;padding:0;background:#eff6ff;color:#0f172a;font-family:Arial,Helvetica,sans-serif">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;background:#eff6ff">
+      <tr>
+        <td align="center" style="padding:40px 16px">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:480px;margin:0 auto;border:1px solid #bfdbfe;border-radius:16px;background:#ffffff;overflow:hidden">
+            <tr>
+              <td style="padding:28px 32px 8px;color:#1d4ed8;font-size:17px;font-weight:700;letter-spacing:-0.4px">problems<span style="color:#0f172a">.live</span></td>
+            </tr>
+            <tr>
+              <td style="padding:8px 32px 24px">
+                <p style="margin:0;color:#0f172a;font-size:16px;line-height:26px"><strong>${name}</strong> (${signupEmail}) just joined the waitlist.</p>
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0 0">
+                  <tr>
+                    <td align="center" bgcolor="#2563eb" style="border-radius:8px">
+                      <a href="${reviewUrl}" style="display:inline-block;padding:12px 20px;border:1px solid #2563eb;border-radius:8px;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none">Review waiting list &rarr;</a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
+
+  await Promise.all(
+    env.adminEmails.map(async (adminEmail) => {
+      const log = await EmailLog.create({ recipient: adminEmail, subject, text, html, status: "failed" });
+      try {
+        const transporter = nodemailer.createTransport({ service: "gmail", auth: { user: env.smtpUser, pass: env.smtpPassword } });
+        const sent = await transporter.sendMail({
+          from: `problems.live <${env.smtpUser}>`,
+          to: adminEmail,
+          subject,
+          text,
+          html,
+        });
+        await EmailLog.updateOne({ _id: log._id }, { $set: { status: "sent", providerMessageId: sent.messageId } }).exec();
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown email delivery error";
+        await EmailLog.updateOne({ _id: log._id }, { $set: { errorMessage: errorMessage.slice(0, 2_000) } }).exec();
+        console.error("[waitlist] admin notification email failed", { adminEmail, error });
+      }
+    }),
+  );
+}

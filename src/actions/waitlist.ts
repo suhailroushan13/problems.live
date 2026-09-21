@@ -7,6 +7,7 @@ import { enforceRateLimit, RateLimitError } from "@/lib/rate-limit";
 import { waitlistJoinSchema } from "@/lib/validation/schemas";
 import { verifyRenderProof } from "@/lib/utils/waitlist-proof";
 import { verifyTurnstileToken } from "@/lib/services/turnstile";
+import { sendWaitlistSignupNotification } from "@/lib/services/email";
 import { User, WaitlistSignup } from "@/models";
 import type { ActionResult } from "@/types";
 
@@ -17,7 +18,7 @@ const JOINED_MESSAGE = "We’ll email you when an invite becomes available.";
  * only records a lead; it never grants access, so it needs no session.
  *
  * Bot resistance is layered, cheapest first:
- *  1. `company` is a honeypot and fails silently, so scripts cannot learn its
+ *  1. `hpCheck` is a honeypot and fails silently, so scripts cannot learn its
  *     presence. The signed render-proof fails loudly: returning success before
  *     a database write would leave a real person believing they had joined.
  *  2. Cloudflare Turnstile — the one check a real visitor can trip by
@@ -30,7 +31,7 @@ export async function joinWaitlist(raw: unknown): Promise<ActionResult> {
   try {
     const input = waitlistJoinSchema.parse(raw);
 
-    if (input.company.trim().length > 0) {
+    if (input.hpCheck.trim().length > 0) {
       return okVoid(JOINED_MESSAGE);
     }
     if (!verifyRenderProof(input.issuedAt, input.token)) {
@@ -87,6 +88,11 @@ export async function joinWaitlist(raw: unknown): Promise<ActionResult> {
       console.error("[waitlist] signup creation failed", error);
       return fail("We couldn’t join you to the waitlist right now. Please try again.");
     }
+
+    // Best-effort — a notification failure must not undo a successful signup.
+    sendWaitlistSignupNotification({ name: input.name, email: input.email }).catch((error) => {
+      console.error("[waitlist] admin notification failed", error);
+    });
 
     return okVoid(JOINED_MESSAGE);
   } catch (error) {

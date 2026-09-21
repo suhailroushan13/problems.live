@@ -100,7 +100,7 @@ export function WaitlistCard({
         const result = await joinWaitlist({
           name,
           email,
-          company: form.get("company"),
+          hpCheck: form.get("hp_check"),
           issuedAt: form.get("issuedAt"),
           token: form.get("token"),
           turnstileToken,
@@ -148,12 +148,15 @@ export function WaitlistCard({
       <form onSubmit={submit} noValidate className="mt-5 space-y-3">
         <input type="hidden" name="issuedAt" value={issuedAt} />
         <input type="hidden" name="token" value={token} />
-        {/* Honeypot — invisible and unlabeled for real visitors and screen readers; a bot that autofills every field trips it. */}
+        {/* Honeypot — invisible and unlabeled for real visitors and screen readers; a bot that autofills every field trips it.
+            Named away from any recognized autofill field (not "company"/"organization"/etc) — those names get silently
+            filled by a real visitor's saved browser autofill profile even while off-screen, which used to cause real
+            signups to be swallowed as if they were bots. */}
         <div
           aria-hidden="true"
           style={{ position: "absolute", left: "-9999px", top: "auto", width: 1, height: 1, overflow: "hidden" }}
         >
-          <input type="text" name="company" tabIndex={-1} autoComplete="off" />
+          <input type="text" name="hp_check" tabIndex={-1} autoComplete="off" data-1p-ignore="true" data-lpignore="true" />
         </div>
         <div>
           <Label htmlFor="waitlist-name">Name</Label>

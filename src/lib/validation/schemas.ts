@@ -297,12 +297,12 @@ export const inviteSchema = z.object({
 });
 
 /**
- * `company` is a honeypot — real visitors never see or fill it. `issuedAt`/
+ * `hpCheck` is a honeypot — real visitors never see or fill it. `issuedAt`/
  * `token` are the anti-bot render proof from `waitlist-proof.ts`.
  * `turnstileToken` is the Cloudflare Turnstile response, re-checked server-side.
  */
 export const waitlistJoinSchema = inviteSchema.extend({
-  company: z.string().max(200).optional().default(""),
+  hpCheck: z.string().max(200).optional().default(""),
   issuedAt: z.coerce.number(),
   token: z.string().min(1).max(128),
   turnstileToken: z.string().min(1, "Please complete the verification."),
