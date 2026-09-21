@@ -1174,24 +1174,58 @@ export async function updatePlatformSetting(
 /**
  * Wipes every Invite record. Users created through past invites are
  * untouched — this only clears the invitation trail, not the accounts it led to.
+ *
+ * An approved WaitlistSignup always has a live Invite behind it — wiping every
+ * Invite would otherwise strand anyone who was approved but hadn't redeemed
+ * theirs yet, with no way back into the queue. Reset those signups to
+ * "pending" in the same operation so they reappear for re-approval.
  */
 export async function deleteAllInvites(): Promise<ActionResult<{ deletedCount: number }>> {
   try {
     const admin = await requireAdmin();
     await connectToDatabase();
 
+    const strandedApprovals = await WaitlistSignup.find(
+      { status: "approved" },
+      { email: 1 },
+    ).lean().exec();
+    const strandedEmails = strandedApprovals
+      .map((signup) => signup.email)
+      .filter(Boolean);
+    const unclaimedEmails = strandedEmails.length
+      ? (
+          await User.find({ email: { $in: strandedEmails } }, { email: 1 }).lean().exec()
+        ).reduce((claimed, user) => {
+          claimed.delete(user.email);
+          return claimed;
+        }, new Set(strandedEmails))
+      : new Set<string>();
+
     const { deletedCount } = await Invite.deleteMany({}).exec();
+
+    let requeuedCount = 0;
+    if (unclaimedEmails.size > 0) {
+      const result = await WaitlistSignup.updateMany(
+        { email: { $in: Array.from(unclaimedEmails) }, status: "approved" },
+        { $set: { status: "pending", respondedAt: null, respondedBy: null } },
+      ).exec();
+      requeuedCount = result.modifiedCount;
+    }
 
     await audit({
       actorId: admin.id,
       action: "invite.delete_all",
       targetType: "invite",
-      meta: { deletedCount },
+      meta: { deletedCount, requeuedCount },
     });
 
     revalidatePath("/admin/invites");
     revalidatePath("/invites");
-    return ok({ deletedCount }, `Deleted ${deletedCount} invitation${deletedCount === 1 ? "" : "s"}.`);
+    revalidatePath("/admin/waiting-list");
+    const suffix = requeuedCount > 0
+      ? ` ${requeuedCount} approved signup${requeuedCount === 1 ? "" : "s"} with no account yet ${requeuedCount === 1 ? "was" : "were"} moved back to pending.`
+      : "";
+    return ok({ deletedCount }, `Deleted ${deletedCount} invitation${deletedCount === 1 ? "" : "s"}.${suffix}`);
   } catch (error) {
     return toActionError(error);
   }

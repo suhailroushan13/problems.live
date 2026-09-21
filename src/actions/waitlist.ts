@@ -7,7 +7,7 @@ import { enforceRateLimit, RateLimitError } from "@/lib/rate-limit";
 import { waitlistJoinSchema } from "@/lib/validation/schemas";
 import { verifyRenderProof } from "@/lib/utils/waitlist-proof";
 import { sendWaitlistSignupNotification } from "@/lib/services/email";
-import { User, WaitlistSignup } from "@/models";
+import { Invite, User, WaitlistSignup } from "@/models";
 import type { ActionResult } from "@/types";
 
 const JOINED_MESSAGE = "We’ll email you when an invite becomes available.";
@@ -63,18 +63,29 @@ export async function joinWaitlist(raw: unknown): Promise<ActionResult> {
     if (existingSignup?.status === "pending") {
       return okVoid("Your access request is already pending.");
     }
+
     if (existingSignup?.status === "approved") {
-      return okVoid("Your invitation is already being prepared. Please check your email soon.");
+      // "Approved" should mean a live, unclaimed Invite is on its way to
+      // them (approveWaitlistSignup always creates one before marking the
+      // signup approved). But that Invite can vanish later — bulk-cleared
+      // via the admin "delete all invites" tool, most notably — leaving an
+      // approved signup with nothing behind it. Fall through to reactivation
+      // in that case instead of telling them to keep waiting forever.
+      const hasLiveInvite = await Invite.exists({ email: input.email, status: "pending" });
+      if (hasLiveInvite) {
+        return okVoid("Your invitation is already being prepared. Please check your email soon.");
+      }
     }
 
-    // A previously rejected applicant is allowed to reapply — reactivate
-    // their existing record instead of inserting a second one, which the
-    // unique email index would reject anyway.
-    if (existingSignup?.status === "rejected") {
+    // A previously rejected applicant, or an approved one whose invite no
+    // longer exists, is allowed to reapply — reactivate the existing record
+    // instead of inserting a second one, which the unique email index would
+    // reject anyway.
+    if (existingSignup?.status === "rejected" || existingSignup?.status === "approved") {
       let result;
       try {
         result = await WaitlistSignup.updateOne(
-          { email: input.email, status: "rejected" },
+          { email: input.email, status: existingSignup.status },
           {
             $set: {
               name: input.name,
@@ -91,8 +102,8 @@ export async function joinWaitlist(raw: unknown): Promise<ActionResult> {
       }
 
       if (result.matchedCount === 0) {
-        // Someone else already reactivated or approved this record between
-        // our read and this write.
+        // Someone else already reactivated, re-approved, or otherwise
+        // changed this record between our read and this write.
         return okVoid("Your access request is already pending.");
       }
 
