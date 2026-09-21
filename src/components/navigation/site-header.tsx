@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Bell, Plus } from "lucide-react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Logo } from "./logo";
@@ -26,10 +26,14 @@ export function SiteHeader({
   liveStats: LiveVisitorStats | null;
 }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const isPosting = pathname === "/problems/new";
   const isAuthenticating = pathname === "/login";
+  const isMachineLanding = !user && pathname === "/" && searchParams.get("machine") === "1";
   const postHref = user ? "/problems/new" : "/api/auth/google?next=%2Fproblems%2Fnew";
   const postLabel = "Post a Problem";
+
+  if (isMachineLanding) return null;
 
   if (isPosting) {
     return (

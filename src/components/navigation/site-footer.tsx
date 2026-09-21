@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Logo } from "./logo";
 import { MobileSiteFooter } from "./mobile-site-footer";
+import { DirectoryViewToggle } from "@/components/problems/directory-view-toggle";
 import { version as APP_VERSION } from "../../../package.json";
 
 const EXPLORE_LINKS = [
@@ -34,7 +35,9 @@ const ASK_LINKS = [
 
 export function SiteFooter() {
   const pathname = usePathname();
-  if (pathname === "/login") return null;
+  const searchParams = useSearchParams();
+  const isMachineLanding = pathname === "/" && searchParams.get("machine") === "1";
+  if (pathname === "/login" || isMachineLanding) return null;
 
   return (
     <footer className="mt-12 border-t border-hairline sm:mt-24">
@@ -68,7 +71,7 @@ export function SiteFooter() {
         >
           <FooterWordmark />
         </Link>
-        {pathname === "/" ? <DirectoryViewToggle /> : null}
+        {pathname === "/" ? <div className="page -mt-3 flex justify-center pb-7 sm:-mt-6 sm:pb-10"><DirectoryViewToggle /></div> : null}
 
         <nav aria-label="Ask an AI" className="page flex flex-wrap justify-center gap-x-2 gap-y-1 border-t border-hairline py-4 text-xs text-muted-foreground">
           {ASK_LINKS.map((link, index) => (
@@ -101,69 +104,6 @@ export function SiteFooter() {
         </div>
       </div>
     </footer>
-  );
-}
-
-/**
- * The alternate machine-readable directory is a landing-page affordance.
- * Its URL state keeps the selected representation shareable and lets the
- * server render the appropriate directory without exposing it in the app.
- */
-function DirectoryViewToggle() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const machineView = searchParams.get("machine") === "1";
-
-  const setView = (view: "human" | "machine") => {
-    const next = new URLSearchParams(searchParams.toString());
-    if (view === "machine") {
-      next.set("machine", "1");
-    } else {
-      next.delete("machine");
-    }
-    const query = next.toString();
-    router.replace(query ? `/?${query}` : "/", { scroll: false });
-  };
-
-  return (
-    <div className="page -mt-3 flex justify-center pb-7 sm:-mt-6 sm:pb-10">
-      <div
-        role="tablist"
-        aria-label="Problems directory format"
-        className="inline-flex items-center rounded-full border border-hairline bg-elevated p-1"
-      >
-        <DirectoryViewOption label="Human" active={!machineView} onClick={() => setView("human")} />
-        <DirectoryViewOption label="Machine" active={machineView} onClick={() => setView("machine")} />
-      </div>
-    </div>
-  );
-}
-
-function DirectoryViewOption({
-  label,
-  active,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={active}
-      onClick={onClick}
-      className={`tap flex h-9 items-center gap-2 rounded-full px-3.5 text-sm font-medium transition-colors ${
-        active ? "bg-sunken text-foreground" : "text-muted-foreground hover:text-foreground"
-      }`}
-    >
-      <span
-        aria-hidden="true"
-        className={`size-1.5 rounded-full ${active ? "bg-brand" : "bg-muted-foreground/50"}`}
-      />
-      {label}
-    </button>
   );
 }
 

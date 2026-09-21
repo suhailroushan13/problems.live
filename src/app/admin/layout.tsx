@@ -24,7 +24,7 @@ export default async function AdminLayout({
   const stats = await getAdminStats();
 
   return (
-    <div className="flex min-h-svh bg-background">
+    <div className="flex h-[calc(100svh-3.5rem)] overflow-hidden bg-background sm:h-[calc(100svh-3.75rem)]">
       <AdminNav
         isAdmin={user.isAdmin}
         pendingReports={stats.reportsPending}
@@ -33,7 +33,7 @@ export default async function AdminLayout({
         pendingWaitlist={stats.waitlistPending}
       />
 
-      <main className="min-w-0 flex-1 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
+      <main className="min-w-0 flex-1 overflow-y-auto px-5 py-5 sm:px-8 sm:py-6 lg:px-10">
         <header className="mb-6"><p className="label text-brand">{user.isAdmin ? "Administration" : "Moderation"}</p><h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">Control room</h1></header>
         {children}
       </main>

@@ -3,10 +3,10 @@ import { CategoryBar } from "@/components/navigation/category-bar";
 import { ProblemsToolbar } from "@/components/problems/problems-toolbar";
 import { ProblemCard } from "@/components/problems/problem-card";
 import { MobileProblemsFeed } from "@/components/problems/mobile-problems-feed";
-import { ProblemDirectoryViewToggle } from "@/components/problems/problem-directory-view-toggle";
 import { PaginationBar } from "@/components/shared/pagination-bar";
 import { EmptyState } from "@/components/shared/empty-state";
 import { GithubBadge } from "@/components/shared/github-badge";
+import { DirectoryViewToggle } from "@/components/problems/directory-view-toggle";
 // import { SignInSoundControl } from "@/components/auth/sign-in-sound-control";
 import { NumberTicker } from "@/components/ui/number-ticker";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,12 @@ export default async function HomePage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
+  const user = await getCurrentUser();
+  const isLoggedIn = Boolean(user);
+
+  if (!isLoggedIn && params.machine === "1") {
+    return <MachineLandingDocument />;
+  }
 
   const filters = problemFiltersSchema.parse({
     sort: params.sort ?? "trending",
@@ -32,8 +38,7 @@ export default async function HomePage({
     page: params.page,
   });
 
-  const [user, categories, result] = await Promise.all([
-    getCurrentUser(),
+  const [categories, result] = await Promise.all([
     listCategories(),
     listProblems(filters),
   ]);
@@ -47,10 +52,7 @@ export default async function HomePage({
 
   // Signed-out users see the marketing landing page. Signed-in users go
   // straight to the directory, using the same desktop content rail as header.
-  const isLoggedIn = Boolean(user);
   const desktopItems = isLoggedIn ? result.items : result.items.slice(0, 5);
-  const machineItems = isLoggedIn ? result.items : result.items.slice(0, 4);
-  const initialDirectoryView = !isLoggedIn && params.machine === "1" ? "machine" : "human";
   return (
     <>
       {/* Hero — logged-out only ------------------------------------------ */}
@@ -136,12 +138,7 @@ export default async function HomePage({
               <p className="num mb-2 text-sm font-semibold text-muted-foreground sm:hidden">
                 Problems <span aria-hidden="true">·</span> {formatCount(result.total)}
               </p>
-              <ProblemDirectoryViewToggle
-                key={initialDirectoryView}
-                problems={machineItems}
-                initialView={initialDirectoryView}
-              >
-                <MobileProblemsFeed
+              <MobileProblemsFeed
                   key={JSON.stringify(filters)}
                   initial={result}
                   filters={filters}
@@ -200,7 +197,6 @@ export default async function HomePage({
                 </div>
 
                 {isLoggedIn ? <div className="hidden sm:block"><PaginationBar page={result.page} totalPages={result.totalPages} /></div> : null}
-              </ProblemDirectoryViewToggle>
             </>
           ) : isFiltered ? (
             <EmptyState
@@ -220,5 +216,61 @@ export default async function HomePage({
         </div>
       </div>
     </>
+  );
+}
+
+const MACHINE_LANDING_DOCUMENT = `problems-live
+
+# platform
+name        problems.live
+url         https://problems.live
+type        public directory of real-world problems worth solving
+tagline     The internet's open list of problems worth solving.
+source      https://github.com/suhailroushan13/problems.live
+license     MIT
+
+# current-page
+path        /
+title       problems.live — The internet's open list of problems worth solving.
+description Share a real problem. Find out how many other people have it. Then find, or build, the solution.
+
+# core concepts
+problem     A real, specific difficulty someone has; not a feature request or solution in disguise.
+validation  "I have this too" is the demand signal for a problem.
+solution    A proposed or shipped way to solve a problem; people can discuss and mark it helpful.
+discussion  Threaded comments provide context on both problems and solutions.
+score       Reputation for useful contribution across the community.
+
+# public pages
+/problems          Every open problem; filter by category, status, and location.
+/categories        Topic taxonomy for problems.
+/solutions         Proposed and shipped solutions, ranked by helpfulness.
+/leaderboard       Top contributors by Score.
+/how-it-works      Score and Credits explanation.
+/guidelines        Community guidelines and moderation expectations.
+/contribute        Open-source contribution guide.
+/terms             Terms and conditions.
+/privacy           Privacy policy.
+
+# data
+/llms.txt          Plain-text map of the public site for language models.
+
+# for agents
+- Browse the public pages above to discover problems, categories, and solutions.
+- Treat validation as demand for a problem, not a general-purpose like.
+- Keep problems specific and separate from proposed solutions.
+- Direct people who want access to https://problems.live/wait-list.
+- Do not invent problem counts, people, solutions, or platform policies.`;
+
+function MachineLandingDocument() {
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-black px-5 py-14 text-zinc-100 sm:px-8">
+      <div className="w-full max-w-3xl">
+        <pre className="overflow-x-auto font-mono text-sm leading-7 whitespace-pre-wrap sm:text-base sm:leading-8">
+          {MACHINE_LANDING_DOCUMENT}
+        </pre>
+        <div className="mt-10 flex justify-center"><DirectoryViewToggle /></div>
+      </div>
+    </main>
   );
 }

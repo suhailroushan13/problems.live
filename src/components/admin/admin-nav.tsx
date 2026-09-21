@@ -59,7 +59,7 @@ export function AdminNav({
   ].filter((link) => isAdmin || !link.adminOnly);
 
   return (
-    <aside className={cn("sticky top-0 hidden h-svh shrink-0 border-r border-hairline bg-card px-3 py-5 transition-[width] duration-200 lg:flex lg:flex-col", collapsed ? "w-20" : "w-64")}>
+    <aside className={cn("sticky top-0 hidden h-full shrink-0 overflow-y-auto border-r border-hairline bg-card px-3 py-5 transition-[width] duration-200 lg:flex lg:flex-col", collapsed ? "w-20" : "w-64")}>
       <div className="mb-8 flex items-center justify-between px-2">
         {!collapsed ? <div><p className="label text-brand">problems.live</p><p className="mt-1 text-sm font-semibold">Control room</p></div> : <Inbox className="mx-auto size-5 text-brand" />}
         <button type="button" onClick={() => setCollapsed((value) => !value)} className="hidden rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground lg:inline-flex" aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}>{collapsed ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}</button>
