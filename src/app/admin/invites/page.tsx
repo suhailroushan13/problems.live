@@ -19,5 +19,19 @@ export default async function AdminInvitesPage() {
     if (!invite.claimedBy) nodes.push({ id: target, label: invite.name ?? `${invite.inviterUsername ?? "someone"}'s invite link`, email: invite.email ?? "", pending: true });
     return [{ from: `user:${invite.inviterId}`, to: target }];
   });
-  return <div><div className="max-w-2xl"><p className="label text-brand">Invitation desk</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">Send an invitation</h1><p className="mt-3 text-sm leading-6 text-muted-foreground">Invite someone by name and email. Accepted invites receive five invitations of their own.</p><section className="mt-7 rounded-2xl border border-hairline bg-card p-6"><InviteForm credits={user?.inviteCredits ?? 0} admin /></section></div><div className="mt-10"><InvitationTraceCanvas nodes={nodes} edges={edges} /></div></div>;
+  return <div className="max-w-[88rem]">
+    <section className="grid gap-8 border-b border-hairline pb-9 lg:grid-cols-[minmax(0,1fr)_27rem] lg:items-end">
+      <div>
+        <p className="label text-brand">Invitation desk</p>
+        <h2 className="mt-3 max-w-2xl text-3xl font-semibold tracking-[-0.035em] text-foreground sm:text-4xl">Grow the network with intent.</h2>
+        <p className="mt-4 max-w-xl text-sm leading-6 text-muted-foreground">Every accepted invitation creates a visible line of trust. Send a personal invitation, then follow the community it builds.</p>
+      </div>
+      <section className="rounded-2xl border border-brand-border bg-brand-muted/45 p-5 shadow-[0_12px_32px_rgb(37_99_235/0.08)]">
+        <p className="text-sm font-semibold text-foreground">Send an invitation</p>
+        <p className="mt-1 text-xs leading-5 text-muted-foreground">A personal note, a single connection at a time.</p>
+        <div className="mt-4"><InviteForm credits={user?.inviteCredits ?? 0} admin /></div>
+      </section>
+    </section>
+    <div className="mt-8"><InvitationTraceCanvas nodes={nodes} edges={edges} /></div>
+  </div>;
 }

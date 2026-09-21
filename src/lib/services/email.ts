@@ -120,16 +120,14 @@ export async function sendInvitationEmail(params: {
 }
 
 /**
- * Notifies every admin (`ADMIN_EMAILS`) that someone joined the waitlist, so
- * they don't have to keep the admin panel open to know when to review it.
+ * Notifies the waitlist owner and every configured admin when someone joins,
+ * so they don't have to keep the admin panel open to know when to review it.
  * Sent one email per admin so `EmailLog.recipient` stays a single address.
  */
 export async function sendWaitlistSignupNotification(params: {
   name: string;
   email: string;
 }): Promise<void> {
-  if (env.adminEmails.length === 0) return;
-
   const name = escapeHtml(params.name);
   const signupEmail = escapeHtml(params.email);
   const reviewUrl = `${env.appUrl}/admin/waiting-list`;
@@ -170,7 +168,7 @@ export async function sendWaitlistSignupNotification(params: {
 </html>`;
 
   await Promise.all(
-    env.adminEmails.map(async (adminEmail) => {
+    env.waitlistNotificationEmails.map(async (adminEmail) => {
       const log = await EmailLog.create({ recipient: adminEmail, subject, text, html, status: "failed" });
       try {
         const transporter = nodemailer.createTransport({ service: "gmail", auth: { user: env.smtpUser, pass: env.smtpPassword } });

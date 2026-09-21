@@ -14,7 +14,6 @@ import { PostImages } from "@/components/shared/post-images";
 import { ProblemMini } from "@/components/problems/problem-item";
 import { ValidationPanel } from "@/components/problems/validate-button";
 import { ProblemActions } from "@/components/problems/problem-actions";
-import { ProblemViewToggle } from "@/components/problems/problem-view-toggle";
 import { SolutionsSection } from "@/components/solutions/solutions-section";
 import { CommentThread } from "@/components/comments/comment-thread";
 import { getCurrentUser } from "@/lib/auth/current-user";
@@ -135,8 +134,6 @@ export default async function ProblemPage({ params }: PageProps) {
         ).items.filter((item) => item.id !== problem.id).slice(0, 3)
       : [];
 
-  const permalink = `${env.appUrl}/problems/${problem.slug}`;
-
   return (
     <>
       <script
@@ -179,7 +176,6 @@ export default async function ProblemPage({ params }: PageProps) {
           </Alert>
         ) : null}
 
-        <ProblemViewToggle problem={problem} permalink={permalink}>
         <header className="mt-5">
           <div className="flex items-start justify-between gap-4">
             <div className="flex min-w-0 items-center gap-3 text-sm text-muted-foreground">
@@ -298,7 +294,6 @@ export default async function ProblemPage({ params }: PageProps) {
                 </ul>
               </div>
         ) : null}
-        </ProblemViewToggle>
       </article>
     </>
   );

@@ -8,7 +8,9 @@ import { cn } from "@/lib/utils";
 import { Logo } from "./logo";
 import { LivePill } from "./live-pill";
 import { UserMenu } from "./user-menu";
+import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import type { SessionUser } from "@/lib/auth/current-user";
+import type { LiveVisitorStats } from "@/lib/data/stats";
 
 /** No visible container — a comfortable hit area, not a decorative circle. */
 const ICON_BUTTON_CLASS =
@@ -17,9 +19,11 @@ const ICON_BUTTON_CLASS =
 export function SiteHeader({
   user,
   unreadCount,
+  liveStats,
 }: {
   user: SessionUser | null;
   unreadCount: number;
+  liveStats: LiveVisitorStats | null;
 }) {
   const pathname = usePathname();
   const isPosting = pathname === "/problems/new";
@@ -32,9 +36,13 @@ export function SiteHeader({
       <header className="sticky top-0 z-50 border-b border-hairline bg-background/95 backdrop-blur-md">
         <div className="flex h-15 items-center gap-4 px-4 sm:h-16 sm:px-6 lg:px-8">
           <Logo />
+          <AnimatedThemeToggler
+            className={cn(ICON_BUTTON_CLASS, "ml-auto hidden lg:inline-flex")}
+            aria-label="Toggle dark mode"
+          />
           <Link
             href="/problems"
-            className="ml-auto text-sm text-muted-foreground transition-colors hover:text-foreground"
+            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             ← Back to problems
           </Link>
@@ -49,7 +57,11 @@ export function SiteHeader({
         <Logo compact className="tap shrink-0" />
 
         <div className="ml-auto flex items-center gap-1 sm:gap-6">
-          <LivePill className="hidden md:inline-flex" />
+          <LivePill className="hidden md:inline-flex" initialStats={liveStats} />
+          <AnimatedThemeToggler
+            className={cn(ICON_BUTTON_CLASS, "hidden lg:inline-flex")}
+            aria-label="Toggle dark mode"
+          />
           {!isAuthenticating ? <Button asChild className="hidden shrink-0 gap-1.5 sm:inline-flex">
             <Link href={postHref} title={postLabel}>
               {user ? <Plus className="size-4" aria-hidden="true" /> : null}

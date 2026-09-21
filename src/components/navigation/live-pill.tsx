@@ -11,8 +11,14 @@ type LiveStats = { totalVisits: number; livePeople: number };
 const HEARTBEAT_MS = 30_000;
 
 /** A compact, durable view of the people currently exploring the directory. */
-export function LivePill({ className }: { className?: string }) {
-  const [stats, setStats] = useState<LiveStats | null>(null);
+export function LivePill({
+  className,
+  initialStats,
+}: {
+  className?: string;
+  initialStats: LiveStats | null;
+}) {
+  const [stats, setStats] = useState<LiveStats | null>(initialStats);
 
   const refreshStats = useCallback(async () => {
     try {
@@ -42,9 +48,8 @@ export function LivePill({ className }: { className?: string }) {
     };
   }, [refreshStats]);
 
-  const livePeople = stats?.livePeople ?? 0;
   const label = stats
-    ? `${stats.totalVisits.toLocaleString()} total visits. ${livePeople.toLocaleString()} people live now.`
+    ? `${stats.totalVisits.toLocaleString()} total visits. ${stats.livePeople.toLocaleString()} people live now.`
     : "Loading live visitor statistics.";
 
   return (
@@ -62,13 +67,15 @@ export function LivePill({ className }: { className?: string }) {
           <span className="absolute -inset-px inline-flex animate-ping rounded-full bg-success/40 [animation-duration:2.4s]" />
           <span className="relative inline-flex size-1.5 rounded-full bg-success" />
         </span>
-        <span className="num font-[family-name:var(--font-inter)]">{formatCount(livePeople)}</span>
+        <span className="num font-[family-name:var(--font-inter)]">
+          {stats ? formatCount(stats.livePeople) : "—"}
+        </span>
         <span className="text-[0.625rem] font-semibold tracking-wide text-muted-foreground uppercase">live</span>
       </span>
       <span className="home-landing__stats-divider h-3.5 w-px shrink-0 bg-hairline" aria-hidden="true" />
       <span className="home-landing__stats-total inline-flex items-center gap-1 num font-[family-name:var(--font-inter)] text-muted-foreground">
         <Users className="size-3" aria-hidden="true" />
-        {formatCount(stats?.totalVisits ?? 0)}
+        {stats ? formatCount(stats.totalVisits) : "—"}
       </span>
     </Link>
   );

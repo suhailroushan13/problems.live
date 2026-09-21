@@ -7,6 +7,7 @@ import {
   ProblemValidation,
   Report,
   Solution,
+  SiteVisit,
   User,
   WaitlistSignup,
 } from "@/models";
@@ -16,6 +17,37 @@ export interface PlatformStats {
   validations: number;
   solutions: number;
   solved: number;
+}
+
+export interface LiveVisitorStats {
+  totalVisits: number;
+  livePeople: number;
+}
+
+const LIVE_VISITOR_WINDOW_MS = 75_000;
+
+/**
+ * A read-only snapshot for the header's first render. Presence is refreshed
+ * by the browser after hydration, but this prevents the visitor counts from
+ * briefly rendering as zero while that request is in flight.
+ */
+export async function getLiveVisitorStats(): Promise<LiveVisitorStats | null> {
+  try {
+    await connectToDatabase();
+    const now = new Date();
+    const [totalVisits, livePeople] = await Promise.all([
+      SiteVisit.countDocuments({}).exec(),
+      SiteVisit.countDocuments({
+        lastSeenAt: { $gte: new Date(now.getTime() - LIVE_VISITOR_WINDOW_MS) },
+      }).exec(),
+    ]);
+
+    return { totalVisits, livePeople };
+  } catch (error) {
+    // The header must remain usable if visitor telemetry is temporarily down.
+    console.error("[live-stats] failed to read initial visitor statistics", error);
+    return null;
+  }
 }
 
 export async function getPlatformStats(): Promise<PlatformStats> {

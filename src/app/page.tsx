@@ -3,6 +3,7 @@ import { CategoryBar } from "@/components/navigation/category-bar";
 import { ProblemsToolbar } from "@/components/problems/problems-toolbar";
 import { ProblemCard } from "@/components/problems/problem-card";
 import { MobileProblemsFeed } from "@/components/problems/mobile-problems-feed";
+import { ProblemDirectoryViewToggle } from "@/components/problems/problem-directory-view-toggle";
 import { PaginationBar } from "@/components/shared/pagination-bar";
 import { EmptyState } from "@/components/shared/empty-state";
 import { GithubBadge } from "@/components/shared/github-badge";
@@ -48,6 +49,7 @@ export default async function HomePage({
   // straight to the directory, using the same desktop content rail as header.
   const isLoggedIn = Boolean(user);
   const desktopItems = isLoggedIn ? result.items : result.items.slice(0, 5);
+  const machineItems = isLoggedIn ? result.items : result.items.slice(0, 4);
   return (
     <>
       {/* Hero — logged-out only ------------------------------------------ */}
@@ -133,21 +135,22 @@ export default async function HomePage({
               <p className="num mb-2 text-sm font-semibold text-muted-foreground sm:hidden">
                 Problems <span aria-hidden="true">·</span> {formatCount(result.total)}
               </p>
-              <MobileProblemsFeed
-                key={JSON.stringify(filters)}
-                initial={result}
-                filters={filters}
-                isAuthenticated={Boolean(user)}
-                isModerator={Boolean(user?.isModerator)}
-              />
-              <div
-                className={cn(
-                  isCardView
-                    ? "hidden gap-3 sm:grid lg:grid-cols-2"
-                    : "hidden space-y-3 sm:block",
-                )}
-              >
-                {desktopItems.map((problem, index) => {
+              <ProblemDirectoryViewToggle problems={machineItems}>
+                <MobileProblemsFeed
+                  key={JSON.stringify(filters)}
+                  initial={result}
+                  filters={filters}
+                  isAuthenticated={Boolean(user)}
+                  isModerator={Boolean(user?.isModerator)}
+                />
+                <div
+                  className={cn(
+                    isCardView
+                      ? "hidden gap-3 sm:grid lg:grid-cols-2"
+                      : "hidden space-y-3 sm:block",
+                  )}
+                >
+                  {desktopItems.map((problem, index) => {
                   const isSignInPreview = !isLoggedIn && index === 4;
 
                   if (isSignInPreview) {
@@ -178,20 +181,21 @@ export default async function HomePage({
                       isModerator={Boolean(user?.isModerator)}
                     />
                   );
-                })}
-              </div>
+                  })}
+                </div>
 
-              <div className="mt-3 hidden flex-wrap items-baseline justify-between gap-3 sm:flex">
-                <p className="text-xs text-muted-foreground">
-                  Showing {formatCount(isLoggedIn ? rangeStart : Math.min(4, result.items.length))}{isLoggedIn ? `–${formatCount(rangeEnd)}` : ""} of{" "}
-                  {formatCount(result.total)} problems
-                </p>
-                {isLoggedIn && !isFiltered && result.total > 0 && result.total <= 3 ? (
-                  <p className="text-right text-[0.6875rem] text-muted-foreground/60">More problems are being added every day.</p>
-                ) : null}
-              </div>
+                <div className="mt-3 hidden flex-wrap items-baseline justify-between gap-3 sm:flex">
+                  <p className="text-xs text-muted-foreground">
+                    Showing {formatCount(isLoggedIn ? rangeStart : Math.min(4, result.items.length))}{isLoggedIn ? `–${formatCount(rangeEnd)}` : ""} of{" "}
+                    {formatCount(result.total)} problems
+                  </p>
+                  {isLoggedIn && !isFiltered && result.total > 0 && result.total <= 3 ? (
+                    <p className="text-right text-[0.6875rem] text-muted-foreground/60">More problems are being added every day.</p>
+                  ) : null}
+                </div>
 
-              {isLoggedIn ? <div className="hidden sm:block"><PaginationBar page={result.page} totalPages={result.totalPages} /></div> : null}
+                {isLoggedIn ? <div className="hidden sm:block"><PaginationBar page={result.page} totalPages={result.totalPages} /></div> : null}
+              </ProblemDirectoryViewToggle>
             </>
           ) : isFiltered ? (
             <EmptyState

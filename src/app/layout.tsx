@@ -10,6 +10,7 @@ import { PageBackButton } from "@/components/navigation/page-back-button";
 import { AuthErrorToast } from "@/components/navigation/auth-error-toast";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { countUnreadNotifications } from "@/lib/data/notifications";
+import { getLiveVisitorStats } from "@/lib/data/stats";
 import { env, APP_NAME, APP_TAGLINE } from "@/lib/env";
 import "./globals.css";
 
@@ -90,9 +91,10 @@ const SCROLL_RESET_ON_RELOAD_SCRIPT = `(function(){try{var n=performance.getEntr
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const [user, unreadCount] = await Promise.all([
+  const [user, unreadCount, liveStats] = await Promise.all([
     getCurrentUser(),
     countUnreadNotifications(),
+    getLiveVisitorStats(),
   ]);
 
   return (
@@ -113,7 +115,7 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: SCROLL_RESET_ON_RELOAD_SCRIPT }}
         />
         <SoundEffects>
-          <SiteHeader user={user} unreadCount={unreadCount} />
+          <SiteHeader user={user} unreadCount={unreadCount} liveStats={liveStats} />
           <div className="flex-1">
             <PageBackButton />
             {children}

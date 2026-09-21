@@ -24,7 +24,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { signOut } from "@/actions/auth";
 import { formatCount } from "@/lib/utils/format";
@@ -153,13 +152,6 @@ export function UserMenu({
             <Link href="/invites"><UserPlus className="size-4" /> Invites <span className="ml-auto text-xs text-muted-foreground">{user.isAdmin ? "Unlimited" : user.inviteCredits}</span></Link>
           </DropdownMenuItem>
 
-          <div className="flex items-center justify-between rounded-md px-2 py-2 text-sm">
-            <span className="text-foreground">Dark mode</span>
-            <AnimatedThemeToggler
-              className="inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/25 [&_svg]:size-4"
-              aria-label="Toggle dark mode"
-            />
-          </div>
         </DropdownMenuGroup>
 
         {user.isAdmin ? (

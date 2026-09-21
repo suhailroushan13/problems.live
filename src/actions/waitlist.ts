@@ -13,6 +13,19 @@ import type { ActionResult } from "@/types";
 const JOINED_MESSAGE = "We’ll email you when an invite becomes available.";
 
 /**
+ * A successful signup is still retained when mail is temporarily unavailable,
+ * but await delivery so the serverless request cannot finish before the
+ * notification has had a chance to send.
+ */
+async function notifyWaitlistSignup(name: string, email: string): Promise<void> {
+  try {
+    await sendWaitlistSignupNotification({ name, email });
+  } catch (error) {
+    console.error("[waitlist] admin notification failed", error);
+  }
+}
+
+/**
  * Public and unauthenticated — this is the whole point of the waitlist. It
  * only records a lead; it never grants access, so it needs no session.
  *
@@ -107,9 +120,7 @@ export async function joinWaitlist(raw: unknown): Promise<ActionResult> {
         return okVoid("Your access request is already pending.");
       }
 
-      sendWaitlistSignupNotification({ name: input.name, email: input.email }).catch((error) => {
-        console.error("[waitlist] admin notification failed", error);
-      });
+      await notifyWaitlistSignup(input.name, input.email);
 
       return okVoid(JOINED_MESSAGE);
     }
@@ -124,10 +135,7 @@ export async function joinWaitlist(raw: unknown): Promise<ActionResult> {
       return fail("We couldn’t join you to the waitlist right now. Please try again.");
     }
 
-    // Best-effort — a notification failure must not undo a successful signup.
-    sendWaitlistSignupNotification({ name: input.name, email: input.email }).catch((error) => {
-      console.error("[waitlist] admin notification failed", error);
-    });
+    await notifyWaitlistSignup(input.name, input.email);
 
     return okVoid(JOINED_MESSAGE);
   } catch (error) {
