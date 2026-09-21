@@ -28,7 +28,7 @@ import {
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { UserActions } from "@/components/admin/user-actions";
 import { bulkDeleteUsers } from "@/actions/admin";
-import type { AdminUser } from "@/lib/data/admin";
+import type { AdminUserRow } from "@/lib/data/admin";
 import { formatCount } from "@/lib/utils/format";
 import { formatDate, formatDateTimeWithSeconds } from "@/lib/utils/time";
 import { cn } from "@/lib/utils";
@@ -46,7 +46,7 @@ export function AdminUsersTable({
   users,
   viewerId,
 }: {
-  users: AdminUser[];
+  users: AdminUserRow[];
   viewerId: string | null;
 }) {
   const router = useRouter();
@@ -57,7 +57,7 @@ export function AdminUsersTable({
   const selectableIds = useMemo(
     () =>
       users
-        .filter((user) => user.id !== viewerId && user.role !== "admin")
+        .filter((user) => !user.pending && user.id !== viewerId && user.role !== "admin")
         .map((user) => user.id),
     [users, viewerId]
   );
@@ -143,6 +143,51 @@ export function AdminUsersTable({
           </TableHeader>
           <TableBody>
             {users.map((user, index) => {
+              if (user.pending) {
+                return (
+                  <TableRow key={`pending:${user.id}`} className="bg-tint/40">
+                    <TableCell />
+                    <TableCell className="num text-center text-muted-foreground">
+                      {index + 1}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2.5">
+                        <UserAvatar name={user.name} size="sm" className="border border-hairline opacity-70" />
+                        <span className="block max-w-[12rem] truncate text-sm font-semibold text-muted-foreground">
+                          {user.name}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm text-muted-foreground">—</span>
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        title={user.email}
+                        className="block max-w-[14rem] truncate text-sm text-muted-foreground"
+                      >
+                        {user.email}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="border-brand/25 bg-brand-muted text-brand">
+                        Pending
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right text-sm text-muted-foreground">—</TableCell>
+                    <TableCell className="text-right text-sm text-muted-foreground">—</TableCell>
+                    <TableCell className="text-right text-sm text-muted-foreground">—</TableCell>
+                    <TableCell
+                      title={`Invited ${formatDateTimeWithSeconds(user.createdAt)}`}
+                      className="text-sm whitespace-nowrap text-muted-foreground"
+                    >
+                      Invited {formatDate(user.createdAt)}
+                    </TableCell>
+                    <TableCell />
+                  </TableRow>
+                );
+              }
+
               const isSelf = user.id === viewerId;
               const isProtected = isSelf || user.role === "admin";
 

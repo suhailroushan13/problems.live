@@ -5,6 +5,7 @@ import {
   Comment,
   CommentAward,
   CommentVote,
+  Invite,
   Problem,
   ProblemBookmark,
   ProblemValidation,
@@ -15,6 +16,7 @@ import {
   WaitlistSignup,
   type ICategory,
   type IComment,
+  type IInvite,
   type IProblem,
   type IProblemBookmark,
   type IReport,
@@ -285,31 +287,52 @@ export interface AdminUser {
   solutions: number;
   suspendedUntil: string | null;
   createdAt: string;
+  pending?: false;
 }
+
+/**
+ * A single-recipient invite — most often one just created by approving a
+ * waitlist signup — that hasn't been redeemed into a real account yet.
+ * Surfaced alongside real users so approving someone is immediately visible
+ * here, without pretending they have an account before they've signed in.
+ */
+export interface AdminPendingInvite {
+  id: string;
+  name: string;
+  email: string;
+  createdAt: string;
+  pending: true;
+}
+
+export type AdminUserRow = AdminUser | AdminPendingInvite;
 
 export async function listAdminUsers(
   search?: string,
   limit = 50
-): Promise<AdminUser[]> {
+): Promise<AdminUserRow[]> {
   await connectToDatabase();
 
   const trimmed = search?.trim();
+  const searching = Boolean(trimmed && trimmed.length >= 2);
+  const looksLikeEmail = Boolean(trimmed?.includes("@"));
   // Email has no text index, so a query that looks like one gets a regex
   // match instead of falling through to the name/username $text search.
-  const filter =
-    trimmed && trimmed.length >= 2
-      ? trimmed.includes("@")
-        ? { email: { $regex: escapeRegex(trimmed), $options: "i" } }
-        : { $text: { $search: trimmed } }
-      : {};
+  const userFilter = searching
+    ? looksLikeEmail
+      ? { email: { $regex: escapeRegex(trimmed!), $options: "i" } }
+      : { $text: { $search: trimmed! } }
+    : {};
+  const inviteFilter: Record<string, unknown> = { type: "email", status: "pending" };
+  if (searching) {
+    inviteFilter[looksLikeEmail ? "email" : "name"] = { $regex: escapeRegex(trimmed!), $options: "i" };
+  }
 
-  const docs = await User.find(filter)
-    .sort({ createdAt: -1 })
-    .limit(limit)
-    .lean<IUser[]>()
-    .exec();
+  const [users, invites] = await Promise.all([
+    User.find(userFilter).sort({ createdAt: -1 }).limit(limit).lean<IUser[]>().exec(),
+    Invite.find(inviteFilter).sort({ createdAt: -1 }).limit(limit).lean<(IInvite & { _id: Types.ObjectId })[]>().exec(),
+  ]);
 
-  return docs.map((doc) => ({
+  const userRows: AdminUserRow[] = users.map((doc) => ({
     id: String(doc._id),
     name: doc.name,
     username: doc.username,
@@ -325,6 +348,18 @@ export async function listAdminUsers(
       : null,
     createdAt: new Date(doc.createdAt).toISOString(),
   }));
+
+  const pendingRows: AdminUserRow[] = invites.map((invite) => ({
+    id: String(invite._id),
+    name: invite.name || invite.email || "Invited",
+    email: invite.email ?? "",
+    createdAt: new Date(invite.createdAt).toISOString(),
+    pending: true,
+  }));
+
+  return [...userRows, ...pendingRows]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, limit);
 }
 
 export interface AdminProblem {
