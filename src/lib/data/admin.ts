@@ -640,34 +640,26 @@ export interface AdminWaitlistSignup {
   id: string;
   name: string;
   email: string;
-  status: IWaitlistSignup["status"];
   createdAt: string;
-  respondedAt: string | null;
 }
 
-const WAITLIST_STATUS_ORDER: Record<IWaitlistSignup["status"], number> = {
-  pending: 0,
-  approved: 1,
-  rejected: 2,
-};
-
+/**
+ * Only ever pending signups — once an admin approves or rejects one it
+ * should disappear from this list, not linger at the bottom forever.
+ */
 export async function listWaitlistSignups(limit = 100): Promise<AdminWaitlistSignup[]> {
   await connectToDatabase();
 
-  const docs = await WaitlistSignup.find({})
+  const docs = await WaitlistSignup.find({ status: "pending" })
     .sort({ createdAt: -1 })
     .limit(limit)
     .lean<IWaitlistSignup[]>()
     .exec();
 
-  return docs
-    .map((doc) => ({
-      id: String(doc._id),
-      name: doc.name,
-      email: doc.email,
-      status: doc.status,
-      createdAt: new Date(doc.createdAt).toISOString(),
-      respondedAt: doc.respondedAt ? new Date(doc.respondedAt).toISOString() : null,
-    }))
-    .sort((a, b) => WAITLIST_STATUS_ORDER[a.status] - WAITLIST_STATUS_ORDER[b.status]);
+  return docs.map((doc) => ({
+    id: String(doc._id),
+    name: doc.name,
+    email: doc.email,
+    createdAt: new Date(doc.createdAt).toISOString(),
+  }));
 }

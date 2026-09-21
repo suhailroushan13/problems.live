@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -14,16 +13,8 @@ import { WaitlistSignupActions } from "@/components/admin/waitlist-signup-action
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { listWaitlistSignups } from "@/lib/data/admin";
 import { formatDateTimeWithSeconds } from "@/lib/utils/time";
-import { cn } from "@/lib/utils";
-import type { WaitlistSignupStatus } from "@/models";
 
 export const metadata: Metadata = { title: "Waiting list" };
-
-const STATUS_STYLES: Record<WaitlistSignupStatus, string> = {
-  pending: "",
-  approved: "border-success/25 bg-success-subtle text-success",
-  rejected: "border-destructive/20 bg-error-subtle text-destructive",
-};
 
 export default async function AdminWaitingListPage() {
   const user = await getCurrentUser();
@@ -34,8 +25,8 @@ export default async function AdminWaitingListPage() {
   if (signups.length === 0) {
     return (
       <EmptyState
-        title="No signups yet."
-        description="People who join the waitlist from /wait-list will show up here."
+        title="No pending signups."
+        description="People who join the waitlist from /wait-list will show up here until you approve or reject them."
       />
     );
   }
@@ -48,7 +39,6 @@ export default async function AdminWaitingListPage() {
             <TableHead className="w-10 text-center">#</TableHead>
             <TableHead className="min-w-[11rem]">Name</TableHead>
             <TableHead className="min-w-[14rem]">Email</TableHead>
-            <TableHead className="w-[7rem]">Status</TableHead>
             <TableHead className="w-[9.5rem]">Submitted</TableHead>
             <TableHead className="w-[14rem] text-right">Actions</TableHead>
           </TableRow>
@@ -59,25 +49,11 @@ export default async function AdminWaitingListPage() {
               <TableCell className="num text-center text-muted-foreground">{index + 1}</TableCell>
               <TableCell className="text-sm font-semibold text-foreground">{signup.name}</TableCell>
               <TableCell className="text-sm text-muted-foreground">{signup.email}</TableCell>
-              <TableCell>
-                <Badge variant="outline" className={cn("capitalize", STATUS_STYLES[signup.status])}>
-                  {signup.status}
-                </Badge>
-              </TableCell>
-              <TableCell
-                title={signup.respondedAt ? `Responded ${formatDateTimeWithSeconds(signup.respondedAt)}` : undefined}
-                className="text-sm whitespace-nowrap text-muted-foreground"
-              >
+              <TableCell className="text-sm whitespace-nowrap text-muted-foreground">
                 {formatDateTimeWithSeconds(signup.createdAt)}
               </TableCell>
               <TableCell>
-                {signup.status === "pending" ? (
-                  <WaitlistSignupActions id={signup.id} />
-                ) : (
-                  <p className="text-right text-xs text-muted-foreground italic">
-                    {signup.status === "approved" ? "Invited" : "Rejected"}
-                  </p>
-                )}
+                <WaitlistSignupActions id={signup.id} />
               </TableCell>
             </TableRow>
           ))}
