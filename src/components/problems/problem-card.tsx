@@ -10,6 +10,7 @@ import { AnonymousAvatar, UserAvatar } from "@/components/shared/user-avatar";
 import { BookmarkButton } from "./bookmark-button";
 import { ProblemActions } from "./problem-actions";
 import { ProblemLink } from "./problem-link";
+import { PriorityBadge } from "./priority-badge";
 import { StatusDot } from "./status-dot";
 import { useValidation } from "./validate-button";
 import { formatCount } from "@/lib/utils/format";
@@ -79,6 +80,11 @@ export function ProblemCard({ problem, isAuthenticated, isModerator }: { problem
               <span className="hidden sm:inline">{problem.category.name}</span>
             </Link>
           ) : null}
+          <PriorityBadge
+            priority={problem.priority}
+            showNormal
+            className="h-6 gap-1 px-1.5 text-[0.6875rem] sm:h-7 sm:px-2 sm:text-xs"
+          />
           <StatusDot status={problem.status} className="px-1.5 py-0.5 text-[0.6875rem] sm:px-2 sm:py-1 sm:text-xs" />
         </div>
       </div>

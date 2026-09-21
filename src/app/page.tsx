@@ -50,6 +50,7 @@ export default async function HomePage({
   const isLoggedIn = Boolean(user);
   const desktopItems = isLoggedIn ? result.items : result.items.slice(0, 5);
   const machineItems = isLoggedIn ? result.items : result.items.slice(0, 4);
+  const initialDirectoryView = !isLoggedIn && params.machine === "1" ? "machine" : "human";
   return (
     <>
       {/* Hero — logged-out only ------------------------------------------ */}
@@ -135,7 +136,11 @@ export default async function HomePage({
               <p className="num mb-2 text-sm font-semibold text-muted-foreground sm:hidden">
                 Problems <span aria-hidden="true">·</span> {formatCount(result.total)}
               </p>
-              <ProblemDirectoryViewToggle problems={machineItems}>
+              <ProblemDirectoryViewToggle
+                key={initialDirectoryView}
+                problems={machineItems}
+                initialView={initialDirectoryView}
+              >
                 <MobileProblemsFeed
                   key={JSON.stringify(filters)}
                   initial={result}

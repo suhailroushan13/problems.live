@@ -12,6 +12,7 @@ import { AnonymousAvatar, UserAvatar } from "@/components/shared/user-avatar";
 import { MarkdownContent } from "@/components/shared/markdown-content";
 import { PostImages } from "@/components/shared/post-images";
 import { ProblemMini } from "@/components/problems/problem-item";
+import { PriorityBadge } from "@/components/problems/priority-badge";
 import { ValidationPanel } from "@/components/problems/validate-button";
 import { ProblemActions } from "@/components/problems/problem-actions";
 import { SolutionsSection } from "@/components/solutions/solutions-section";
@@ -145,7 +146,8 @@ export default async function ProblemPage({ params }: PageProps) {
         }}
       />
 
-      <article className="page py-5 pb-16 sm:py-10 lg:py-12">
+      <article className="page-wide py-4 pb-16 sm:py-7 lg:py-8">
+        <div className="mx-auto max-w-[68.75rem]">
         <Link
           href="/problems"
           className="tap inline-flex h-10 items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
@@ -176,7 +178,7 @@ export default async function ProblemPage({ params }: PageProps) {
           </Alert>
         ) : null}
 
-        <header className="mt-5">
+        <header className="mt-3 max-w-[52rem] sm:mt-5">
           <div className="flex items-start justify-between gap-4">
             <div className="flex min-w-0 items-center gap-3 text-sm text-muted-foreground">
               {problem.author ? (
@@ -215,22 +217,25 @@ export default async function ProblemPage({ params }: PageProps) {
                 </p>
               </div>
             </div>
-            <div className="-mr-2 -mt-1 shrink-0"><ProblemActions problemId={problem.id} slug={problem.slug} status={problem.status} isOwn={problem.isOwn} isModerator={Boolean(user?.isModerator)} isAuthenticated={Boolean(user)} /></div>
+            <div className="-mr-2 -mt-1 shrink-0"><ProblemActions problemId={problem.id} slug={problem.slug} status={problem.status} isOwn={problem.isOwn} isModerator={Boolean(user?.isModerator)} isAuthenticated={Boolean(user)} variant="header" /></div>
           </div>
 
-          <h1 className="text-balance mt-6 max-w-4xl text-[2rem] leading-[1.12] font-bold tracking-[-0.03em] text-foreground sm:text-display">
+          <h1 className="text-balance mt-6 text-[2rem] leading-[1.12] font-bold tracking-[-0.035em] text-foreground sm:text-[2.75rem] sm:leading-[1.08]">
             {problem.title}
           </h1>
         </header>
 
-        <section aria-labelledby="problem-details" className="mt-6 max-w-[48rem] sm:mt-7">
+        <section aria-labelledby="problem-details" className="mt-5 max-w-[52rem] sm:mt-6">
           <p id="problem-details" className="sr-only">Problem details</p>
-          <MarkdownContent className="text-[1.0625rem] leading-7 text-foreground/80 sm:text-lg sm:leading-8">
+          <MarkdownContent className="text-base leading-7 text-foreground/80 sm:text-[1.125rem] sm:leading-8">
                 {problem.description}
               </MarkdownContent>
-          {problem.category ? (
-            <Link href={`/categories/${problem.category.slug}`} className="mt-5 inline-flex rounded-full bg-sunken px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground">#{problem.category.slug}</Link>
-          ) : null}
+          <div className="mt-5 flex flex-wrap items-center gap-2">
+            {problem.category ? (
+              <Link href={`/categories/${problem.category.slug}`} className="inline-flex items-center gap-1.5 rounded-full border border-hairline bg-tint px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-brand-border hover:text-foreground"><CategoryIcon name={problem.category.icon} className="size-3 text-brand" />{problem.category.name}<span aria-hidden="true">·</span>#{problem.category.slug}</Link>
+            ) : null}
+            <PriorityBadge priority={problem.priority} showNormal className="h-7 px-2.5 text-xs" />
+          </div>
           {problem.images.length > 0 ? <PostImages images={problem.images} className="mt-6" /> : null}
           {problem.status === "solved" && problem.solvedAt ? (
                 <div className="mt-7 flex items-start gap-3 rounded-lg border border-status-solved/20 bg-status-solved/8 px-4 py-3.5">
@@ -252,17 +257,9 @@ export default async function ProblemPage({ params }: PageProps) {
           ) : null}
         </section>
 
-        <ValidationPanel
-          problemId={problem.id}
-          initialCount={problem.validationCount}
-          initialActive={problem.hasValidated}
-          isAuthenticated={Boolean(user)}
-          commentCount={problem.commentCount}
-          bookmarkCount={problem.bookmarkCount}
-          hasBookmarked={problem.hasBookmarked}
-        />
+        <div className="max-w-[52rem]"><ValidationPanel problemId={problem.id} initialCount={problem.validationCount} initialActive={problem.hasValidated} isAuthenticated={Boolean(user)} commentCount={problem.commentCount} bookmarkCount={problem.bookmarkCount} hasBookmarked={problem.hasBookmarked} /></div>
 
-        <div className="mt-10 border-t border-hairline pt-8 sm:mt-12 sm:pt-10">
+        <div className="mt-9 max-w-[52rem] border-t border-hairline pt-8 sm:mt-11 sm:pt-10">
               <SolutionsSection
                 problemId={problem.id}
                 problemTitle={problem.title}
@@ -273,7 +270,7 @@ export default async function ProblemPage({ params }: PageProps) {
               />
         </div>
 
-        <div className="mt-10 border-t border-hairline pt-8 sm:mt-12 sm:pt-10">
+        <div className="mt-9 max-w-[52rem] border-t border-hairline pt-8 sm:mt-11 sm:pt-10">
               <CommentThread
                 comments={comments}
                 problemId={problem.id}
@@ -283,7 +280,7 @@ export default async function ProblemPage({ params }: PageProps) {
         </div>
 
         {relatedProblems.length > 0 ? (
-              <div className="mt-10 border-t border-hairline pt-8 sm:mt-12 sm:pt-10">
+              <div className="mt-9 max-w-[52rem] border-t border-hairline pt-8 sm:mt-11 sm:pt-10">
                 <h2 className="label mb-5 text-muted-foreground">
                   Related problems
                 </h2>
@@ -294,6 +291,7 @@ export default async function ProblemPage({ params }: PageProps) {
                 </ul>
               </div>
         ) : null}
+        </div>
       </article>
     </>
   );

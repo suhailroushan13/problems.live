@@ -1,12 +1,15 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import confetti from "canvas-confetti";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { joinWaitlist } from "@/actions/waitlist";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
+const JOINED_CONFIRMATION = "We’ll email you when an invite becomes available.";
 
 export function WaitlistCard({
   issuedAt,
@@ -21,8 +24,29 @@ export function WaitlistCard({
 }) {
   const [pending, startTransition] = useTransition();
   const [done, setDone] = useState(false);
-  const [confirmation, setConfirmation] = useState("We’ll email you when an invite becomes available.");
+  const [confirmation, setConfirmation] = useState(JOINED_CONFIRMATION);
   const submittingRef = useRef(false);
+
+  function celebrateJoin() {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    void confetti({
+      particleCount: 90,
+      spread: 68,
+      startVelocity: 34,
+      origin: { y: 0.68 },
+      colors: ["#2563eb", "#60a5fa", "#f59e0b", "#16a34a"],
+    });
+    window.setTimeout(() => {
+      void confetti({
+        particleCount: 45,
+        angle: 58,
+        spread: 55,
+        origin: { x: 0.08, y: 0.72 },
+        colors: ["#2563eb", "#93c5fd", "#f59e0b"],
+      });
+    }, 160);
+  }
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -54,8 +78,10 @@ export function WaitlistCard({
           toast.error(result.error);
           return;
         }
-        setConfirmation(result.message ?? "We’ll email you when an invite becomes available.");
+        const message = result.message ?? JOINED_CONFIRMATION;
+        setConfirmation(message);
         setDone(true);
+        if (message === JOINED_CONFIRMATION) celebrateJoin();
       } catch (error) {
         console.error("[waitlist] submission failed", error);
         toast.error("We couldn’t join you to the waitlist right now. Please try again.");

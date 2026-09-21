@@ -17,7 +17,7 @@ export default function ProblemsError({
   return (
     <div className="page flex min-h-[50vh] items-center justify-center pb-28 sm:pb-12">
       <div className="max-w-sm text-center">
-        <h1 className="text-h3 text-foreground">Couldn’t load problems</h1>
+        <h1 className="text-h3 text-foreground">Something went wrong loading this problem.</h1>
         <p className="mt-2 text-[0.9375rem] leading-relaxed text-muted-foreground">
           Check your connection and try again.
         </p>

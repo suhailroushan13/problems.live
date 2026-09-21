@@ -135,31 +135,30 @@ export function ValidationPanel({
   }
 
   return (
-    <div className="mt-8 flex flex-wrap items-center gap-2 border-y border-hairline py-3 sm:mt-10">
-      <span className="inline-flex h-10 items-center gap-1.5 rounded-md border border-hairline px-3 text-sm font-medium text-muted-foreground">
-        <Users className="size-4" aria-hidden="true" />
-        <span className="num text-foreground">{formatCount(count)}</span>
-        <span className="hidden min-[390px]:inline">{count === 1 ? "person relates" : "people relate"}</span>
-      </span>
+    <div className="mt-7 flex flex-wrap items-center gap-2 border-y border-hairline py-3.5 sm:mt-9">
       <button
         type="button"
         onClick={toggle}
         disabled={pending}
         aria-pressed={active}
         className={cn(
-          "tap inline-flex h-10 items-center justify-center gap-2 rounded-md px-4 text-sm font-semibold transition-colors disabled:opacity-60",
-          active ? "bg-brand-muted text-brand" : "bg-brand text-brand-foreground hover:bg-brand-hover active:bg-brand-active"
+          "tap inline-flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold transition-colors disabled:opacity-60 sm:w-auto sm:flex-none",
+          active ? "border border-brand-border bg-brand-muted text-brand" : "bg-brand text-brand-foreground hover:bg-brand-hover active:bg-brand-active"
         )}
       >
         {active ? <Check className="size-4" aria-hidden="true" /> : <Heart className="size-4" aria-hidden="true" />}
-        {active ? "You relate" : "I relate"}
+        I have this problem
       </button>
-      <Link href="#discussion" className="tap inline-flex h-10 items-center gap-1.5 rounded-md px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-sunken hover:text-foreground">
+      <span className="order-3 w-full px-1 text-sm text-muted-foreground sm:order-none sm:w-auto">
+        <span className="num font-semibold text-foreground">{formatCount(count)}</span>{" "}
+        {count === 1 ? "person has this problem" : "people have this problem"}
+      </span>
+      <Link href="#discussion" className="tap inline-flex h-11 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-sunken hover:text-foreground">
         <MessageCircle className="size-4" aria-hidden="true" />
-        <span className="num">{formatCount(commentCount)}</span><span className="hidden sm:inline">comments</span>
+        <span className="num">{formatCount(commentCount)}</span><span>comments</span>
       </Link>
-      <button type="button" onClick={() => void share()} className="tap ml-auto inline-flex size-10 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-sunken hover:text-foreground" aria-label="Share problem">
-        <Share2 className="size-[1.125rem]" aria-hidden="true" />
+      <button type="button" onClick={() => void share()} className="tap ml-auto inline-flex h-11 items-center justify-center gap-2 rounded-lg px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-sunken hover:text-foreground" aria-label="Share problem">
+        <Share2 className="size-4" aria-hidden="true" /><span>Share</span>
       </button>
       {/* Bookmarks are hidden for now — bring this back with the bookmark feature.
       <BookmarkButton

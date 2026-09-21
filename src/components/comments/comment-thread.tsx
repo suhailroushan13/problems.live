@@ -19,10 +19,11 @@ export function CommentThread({
 }) {
   return (
     <section id="discussion" className="scroll-mt-24">
-      <h2 className="text-xl font-bold tracking-[-0.02em] text-foreground">
+      <h2 className="text-h3 text-foreground">
         Discussion
       </h2>
-      <p className="num mt-1 mb-5 text-[0.8125rem] text-muted-foreground">
+      <p className="mt-1 text-[0.9375rem] text-muted-foreground">Talk about the problem and add context.</p>
+      <p className="num mt-2 mb-5 text-[0.8125rem] font-semibold text-muted-foreground">
         {formatCount(count)} {count === 1 ? "comment" : "comments"}
       </p>
 
@@ -31,7 +32,7 @@ export function CommentThread({
         solutionId={solutionId}
         user={user}
         placeholder="Write a comment…"
-        className="mb-2"
+        className="mb-2 rounded-xl border border-hairline bg-tint p-4 sm:p-5"
       />
 
       {comments.length > 0 ? (
@@ -45,8 +46,8 @@ export function CommentThread({
         </div>
       ) : (
         <div className="mt-5 text-[0.9375rem] leading-relaxed text-muted-foreground">
-          <p className="font-medium text-foreground">No comments yet.</p>
-          <p className="mt-1">If you have this problem, say what makes it hard for you. That context helps someone solve it.</p>
+          <p className="font-medium text-foreground">No discussion yet.</p>
+          <p className="mt-1">If you have this problem, share what makes it difficult for you. Your context can help someone understand and solve it.</p>
         </div>
       )}
     </section>

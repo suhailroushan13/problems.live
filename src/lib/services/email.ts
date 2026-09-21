@@ -140,25 +140,59 @@ export async function sendWaitlistSignupNotification(params: {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>${subject}</title>
   </head>
-  <body style="margin:0;padding:0;background:#eff6ff;color:#0f172a;font-family:Arial,Helvetica,sans-serif">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;background:#eff6ff">
+  <body style="margin:0;padding:0;background:#f8fafc;color:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">A new waitlist request is ready for your review.</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;background:#f8fafc">
       <tr>
-        <td align="center" style="padding:40px 16px">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:480px;margin:0 auto;border:1px solid #bfdbfe;border-radius:16px;background:#ffffff;overflow:hidden">
+        <td align="center" style="padding:48px 16px">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:540px;margin:0 auto">
             <tr>
-              <td style="padding:28px 32px 8px;color:#1d4ed8;font-size:17px;font-weight:700;letter-spacing:-0.4px">problems<span style="color:#0f172a">.live</span></td>
+              <td style="padding:0 4px 18px;color:#0f172a;font-size:15px;font-weight:700;letter-spacing:-0.3px">problems<span style="color:#2563eb">.live</span></td>
             </tr>
             <tr>
-              <td style="padding:8px 32px 24px">
-                <p style="margin:0;color:#0f172a;font-size:16px;line-height:26px"><strong>${name}</strong> (${signupEmail}) just joined the waitlist.</p>
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0 0">
+              <td style="overflow:hidden;border:1px solid #e2e8f0;border-radius:14px;background:#ffffff">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                   <tr>
-                    <td align="center" bgcolor="#2563eb" style="border-radius:8px">
-                      <a href="${reviewUrl}" style="display:inline-block;padding:12px 20px;border:1px solid #2563eb;border-radius:8px;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none">Review waiting list &rarr;</a>
+                    <td style="height:5px;background:#2563eb;font-size:0;line-height:0">&nbsp;</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:32px 36px 0">
+                      <span style="display:inline-block;border-radius:999px;background:#eff6ff;padding:6px 10px;color:#1d4ed8;font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase">New access request</span>
+                      <h1 style="margin:16px 0 0;color:#0f172a;font-size:24px;font-weight:700;letter-spacing:-0.6px;line-height:31px">Someone wants to join.</h1>
+                      <p style="margin:10px 0 0;color:#64748b;font-size:15px;line-height:24px">Review this request in the waiting list and decide whether to send an invitation.</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:24px 36px 0">
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc">
+                        <tr>
+                          <td style="padding:16px 18px 6px;color:#64748b;font-size:11px;font-weight:700;letter-spacing:0.7px;text-transform:uppercase">Applicant</td>
+                        </tr>
+                        <tr>
+                          <td style="padding:0 18px 4px;color:#0f172a;font-size:17px;font-weight:700;line-height:24px">${name}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding:0 18px 16px;color:#475569;font-size:14px;line-height:21px">${signupEmail}</td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:28px 36px 34px">
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                          <td align="center" bgcolor="#2563eb" style="border-radius:7px">
+                            <a href="${reviewUrl}" style="display:inline-block;padding:12px 20px;border-radius:7px;color:#ffffff;font-size:14px;font-weight:700;line-height:20px;text-decoration:none">Review request&nbsp; →</a>
+                          </td>
+                        </tr>
+                      </table>
                     </td>
                   </tr>
                 </table>
               </td>
+            </tr>
+            <tr>
+              <td align="center" style="padding:18px 24px 0;color:#94a3b8;font-size:12px;line-height:18px">You received this because you administer problems.live.</td>
             </tr>
           </table>
         </td>

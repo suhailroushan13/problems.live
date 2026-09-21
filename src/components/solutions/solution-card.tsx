@@ -36,9 +36,8 @@ import type { SolutionDTO } from "@/types";
 
 /**
  * Solutions are first-class objects, not comments — they carry a title, an
- * author, a stage, their own vote count and their own discussion. Presented as
- * a divider-separated entry rather than a card, so a page of them reads as a
- * list rather than a wall of boxes.
+ * author, a stage, their own vote count and their own discussion. A restrained
+ * card keeps answers distinct from general discussion without becoming noisy.
  */
 export function SolutionCard({
   solution,
@@ -93,11 +92,18 @@ export function SolutionCard({
     <article
       id={`solution-${solution.id}`}
       className={cn(
-        "py-6",
-        solution.isAccepted && "-mx-4 rounded-xl bg-status-solved/[0.05] px-4 sm:-mx-5 sm:px-5",
+        "rounded-xl border border-hairline bg-elevated p-5 sm:p-6",
+        solution.isAccepted && "border-status-solved/25 bg-status-solved/[0.04]",
         className
       )}
     >
+      <AuthorLine
+        author={solution.author}
+        createdAt={solution.createdAt}
+        editedAt={solution.editedAt}
+        avatarSize="md"
+        className="mb-4"
+      />
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="text-[1.0625rem] leading-snug font-bold tracking-[-0.015em] text-foreground">
@@ -219,13 +225,6 @@ export function SolutionCard({
           ) : null}
         </div>
       </div>
-
-      <AuthorLine
-        author={solution.author}
-        createdAt={solution.createdAt}
-        editedAt={solution.editedAt}
-        className="mt-4"
-      />
 
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>

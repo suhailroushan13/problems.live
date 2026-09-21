@@ -5,9 +5,9 @@ export default function ProblemNotFound() {
   return (
     <div className="page py-24">
       <EmptyState
-        title="This problem isn't here."
-        description="It may have been deleted by its author, removed by a moderator, or the link might be wrong."
-        action={{ label: "Explore problems", href: "/problems" }}
+        title="Problem not found."
+        description="The problem may have been removed or the link may be incorrect."
+        action={{ label: "Back to problems", href: "/problems" }}
         secondaryAction={{ label: "Post a Problem", href: "/problems/new" }}
       />
     </div>

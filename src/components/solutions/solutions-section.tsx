@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Plus } from "lucide-react";
+import { Lightbulb, Plus } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/select";
 import { CommentForm } from "@/components/comments/comment-form";
 import { CommentItem } from "@/components/comments/comment-item";
-import { UserAvatar } from "@/components/shared/user-avatar";
 import { SolutionCard } from "./solution-card";
 import { SolutionDialog } from "./solution-dialog";
 import {
@@ -78,10 +77,11 @@ export function SolutionsSection({
     <section id="solutions" className="scroll-mt-24">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold tracking-[-0.02em] text-foreground">
+          <h2 className="text-h3 text-foreground">
             Solutions
           </h2>
-          <p className="num mt-1 text-[0.8125rem] text-muted-foreground">{formatCount(solutions.length)}</p>
+          <p className="mt-1 text-[0.9375rem] text-muted-foreground">People sharing ways to solve this problem</p>
+          <p className="num mt-2 text-[0.8125rem] font-semibold text-muted-foreground">{formatCount(solutions.length)} {solutions.length === 1 ? "solution" : "solutions"}</p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -109,23 +109,14 @@ export function SolutionsSection({
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={openComposer}
-        className="mt-5 flex w-full items-center gap-3 rounded-md border border-hairline px-3 py-3 text-left transition-colors hover:border-brand-border hover:bg-sunken focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        {user ? <UserAvatar name={user.name} username={user.username} avatar={user.avatar} size="md" /> : <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sunken text-muted-foreground"><Plus className="size-4" aria-hidden="true" /></span>}
-        <span className="min-w-0 flex-1">
-          <span className="block text-sm text-muted-foreground">Suggest a solution…</span>
-          <span className="mt-0.5 block text-xs text-muted-foreground">Share a product, idea, resource, or practical next step.</span>
-        </span>
-        <span className="hidden shrink-0 rounded-md bg-brand px-3 py-2 text-xs font-semibold text-brand-foreground sm:inline-flex">
-          + Suggest a solution
-        </span>
-      </button>
+      <div className="mt-6 flex flex-col gap-4 rounded-xl border border-hairline bg-tint px-4 py-4 sm:flex-row sm:items-center sm:px-5">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-muted text-brand"><Lightbulb className="size-5" aria-hidden="true" /></span>
+        <div className="min-w-0 flex-1"><p className="text-sm font-semibold text-foreground">Have a solution?</p><p className="mt-1 text-sm leading-5 text-muted-foreground">Share a product, idea, resource, or practical next step.</p></div>
+        <button type="button" onClick={openComposer} className="tap inline-flex h-11 w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-brand px-4 text-sm font-semibold text-brand-foreground transition-colors hover:bg-brand-hover active:bg-brand-active sm:w-auto"><Plus className="size-4" aria-hidden="true" /> Suggest a solution</button>
+      </div>
 
       {sorted.length > 0 ? (
-        <div className="divide-y divide-hairline">
+        <div className="mt-5 space-y-3">
           {sorted.map((solution) => {
             const thread = solutionComments[solution.id] ?? [];
             const isOpen = expanded === solution.id;
@@ -172,11 +163,11 @@ export function SolutionsSection({
           })}
         </div>
       ) : (
-        <div className="py-5">
+        <div className="py-6">
           <p className="text-[0.9375rem] font-medium text-foreground">
             No solutions yet.
           </p>
-          <p className="mt-1 text-[0.9375rem] leading-relaxed text-muted-foreground">Be the first to suggest a solution.</p>
+          <p className="mt-1 text-[0.9375rem] leading-relaxed text-muted-foreground">Be the first person to share a way to solve this problem.</p>
         </div>
       )}
 
