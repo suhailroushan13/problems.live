@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Bell, Plus } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Logo } from "./logo";
 import { LivePill } from "./live-pill";
 import { UserMenu } from "./user-menu";
@@ -61,6 +62,17 @@ export function SiteHeader({
 
           {user ? (
             <div className="flex items-center gap-1">
+              {!isAuthenticating ? (
+                <Link
+                  href={postHref}
+                  aria-label={postLabel}
+                  title={postLabel}
+                  className={cn(ICON_BUTTON_CLASS, "sm:hidden")}
+                >
+                  <Plus strokeWidth={1.8} aria-hidden="true" />
+                </Link>
+              ) : null}
+
               <Link
                 href="/notifications"
                 aria-label={
@@ -78,16 +90,16 @@ export function SiteHeader({
 
               <UserMenu user={user} unreadCount={unreadCount} />
             </div>
-          ) : null}
-
-          {!isAuthenticating ? <Button
-            asChild
-            className="shrink-0 sm:hidden"
-          >
-            <Link href={postHref}>
-              {postLabel}
-            </Link>
-          </Button> : null}
+          ) : (
+            !isAuthenticating ? <Button
+              asChild
+              className="shrink-0 sm:hidden"
+            >
+              <Link href={postHref}>
+                {postLabel}
+              </Link>
+            </Button> : null
+          )}
         </div>
       </div>
     </header>
