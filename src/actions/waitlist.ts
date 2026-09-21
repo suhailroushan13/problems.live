@@ -6,7 +6,6 @@ import { connectToDatabase } from "@/lib/db/mongoose";
 import { enforceRateLimit, RateLimitError } from "@/lib/rate-limit";
 import { waitlistJoinSchema } from "@/lib/validation/schemas";
 import { verifyRenderProof } from "@/lib/utils/waitlist-proof";
-import { verifyTurnstileToken } from "@/lib/services/turnstile";
 import { sendWaitlistSignupNotification } from "@/lib/services/email";
 import { User, WaitlistSignup } from "@/models";
 import type { ActionResult } from "@/types";
@@ -21,10 +20,7 @@ const JOINED_MESSAGE = "We’ll email you when an invite becomes available.";
  *  1. `hpCheck` is a honeypot and fails silently, so scripts cannot learn its
  *     presence. The signed render-proof fails loudly: returning success before
  *     a database write would leave a real person believing they had joined.
- *  2. Cloudflare Turnstile — the one check a real visitor can trip by
- *     accident (an expired widget, a slow network), so it fails loudly with
- *     a real error the person can act on by retrying.
- *  3. Per-IP rate limit, checked only once the above pass, so a flood of bot
+ *  2. Per-IP rate limit, checked only once the above pass, so a flood of bot
  *     traffic never touches the database or the limiter.
  */
 export async function joinWaitlist(raw: unknown): Promise<ActionResult> {
@@ -40,14 +36,6 @@ export async function joinWaitlist(raw: unknown): Promise<ActionResult> {
 
     const headerList = await headers();
     const identifier = headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "anonymous";
-
-    const verified = await verifyTurnstileToken(
-      input.turnstileToken,
-      identifier !== "anonymous" ? identifier : undefined,
-    );
-    if (!verified) {
-      throw new DomainError("Verification failed. Please try again.");
-    }
 
     try {
       await enforceRateLimit("waitlist:join", identifier);

@@ -9,9 +9,6 @@ export const GITHUB_REPO_URL =
 export const ACCESS_CONTACT_X_HANDLE = "0xsuhailroushan";
 export const ACCESS_CONTACT_X_URL = `https://x.com/${ACCESS_CONTACT_X_HANDLE}`;
 
-/** Public by design — embedded in the page markup for every visitor. The matching secret key lives server-side only, in `env.turnstileSecretKey`. */
-export const TURNSTILE_SITE_KEY = "0x4AAAAAAE97j-v1ey2T8gkh";
-
 export const PROBLEM_STATUSES = [
   "open",
   "needs_collaborators",

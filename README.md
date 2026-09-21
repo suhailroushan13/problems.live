@@ -27,8 +27,8 @@ The directory is public to browse. Creating an account requires an invitation:
 
 People without an invitation can join the waiting list at `/wait-list`. Admins
 review requests from `/admin/waiting-list` and can send an invitation directly.
-The waiting-list form requires Cloudflare Turnstile completion in the browser
-and verifies its token again on the server.
+The waiting-list form is protected by a honeypot field and a signed,
+time-bound render-proof token, both verified on the server.
 
 ## Tech stack
 
@@ -40,7 +40,7 @@ and verifies its token again on the server.
 | Authentication | Google OAuth 2.0 with PKCE and HTTP-only sessions |
 | UI | Tailwind CSS v4, shadcn/ui, Radix, Lucide |
 | Validation | Zod and Server Actions |
-| Bot protection | Cloudflare Turnstile |
+| Bot protection | Honeypot field and signed render-proof token |
 
 ## Quick start
 
@@ -49,7 +49,6 @@ and verifies its token again on the server.
 - Node.js 20.9 or newer
 - MongoDB 6 or newer, locally or through MongoDB Atlas
 - A Google OAuth web client
-- A Cloudflare Turnstile widget for the waiting list
 
 ### Run locally
 
@@ -72,7 +71,6 @@ AUTH_SECRET=<generate-with-openssl-rand--base64-48>
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ADMIN_EMAILS=<your-admin-email@example.com>
 IMAGE_PROVIDER=local
-TURNSTILE_SECRET_KEY=<turnstile-secret-key>
 MODERATION_PROVIDER=rules
 SMTP_USER=<smtp-username>
 SMTP_PASSWORD=<smtp-password-or-app-password>
@@ -108,7 +106,6 @@ secrets.
 | `GOOGLE_CLIENT_ID` | Yes | Google OAuth client ID |
 | `GOOGLE_CLIENT_SECRET` | Yes | Google OAuth client secret |
 | `AUTH_SECRET` | Yes | Session-signing secret; generate with `openssl rand -base64 48` |
-| `TURNSTILE_SECRET_KEY` | Yes | Secret paired with the public waiting-list Turnstile site key |
 | `NEXT_PUBLIC_APP_URL` | Yes | Canonical application URL, without a trailing slash |
 | `ADMIN_EMAILS` | No | Comma-separated emails promoted to admin on sign-in |
 | `SMTP_USER` / `SMTP_PASSWORD` | For email invites | SMTP credentials for invitation emails |
@@ -129,14 +126,6 @@ https://your-domain.example/api/auth/callback/google
 ```
 
 The production URI must match `NEXT_PUBLIC_APP_URL` exactly.
-
-### Cloudflare Turnstile
-
-Create a Turnstile widget for your local and production domains. Keep its
-**secret key** in `TURNSTILE_SECRET_KEY`; do not expose it through a
-`NEXT_PUBLIC_` variable. The public site key is intentionally embedded in the
-application for the `/wait-list` widget. Both keys must belong to the same
-Cloudflare widget.
 
 ## Database operations
 
@@ -219,11 +208,10 @@ For Vercel:
 1. Import the repository.
 2. Add the required environment variables for Production and Preview.
 3. Register the deployed Google OAuth callback URL.
-4. Add the matching `TURNSTILE_SECRET_KEY` for each environment.
-5. Use Vercel Blob or Cloudinary for uploads; `local` storage is only suitable
+4. Use Vercel Blob or Cloudinary for uploads; `local` storage is only suitable
    for development because serverless filesystems are ephemeral.
-6. Allow the deployment to connect to your MongoDB instance.
-7. Run `npm run db:indexes` against the production database after deploying
+5. Allow the deployment to connect to your MongoDB instance.
+6. Run `npm run db:indexes` against the production database after deploying
    index changes.
 
 ## Contributing
