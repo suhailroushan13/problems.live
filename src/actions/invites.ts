@@ -45,7 +45,7 @@ export async function sendInvite(raw: unknown): Promise<ActionResult> {
         { strict: false },
       ).exec();
     }
-    await sendInvitationEmail({ name: input.name, email: input.email, inviteUrl: googleAuthUrlForInvite(token) });
+    await sendInvitationEmail({ name: input.name, email: input.email, inviteToken: token, inviteUrl: googleAuthUrlForInvite(token) });
     revalidatePath("/admin/invites");
     revalidatePath("/invites");
     return okVoid("Invitation sent.");

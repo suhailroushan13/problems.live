@@ -86,6 +86,9 @@ export const env = {
     // underlying contiguous value.
     return required("SMTP_PASSWORD").replaceAll(" ", "");
   },
+  get legalMailingAddress() {
+    return required("LEGAL_MAILING_ADDRESS");
+  },
   get isProduction() {
     return process.env.NODE_ENV === "production";
   },

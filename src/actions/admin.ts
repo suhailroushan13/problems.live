@@ -1244,6 +1244,7 @@ export async function approveWaitlistSignup(rawId: string): Promise<ActionResult
     await sendInvitationEmail({
       name: signup.name,
       email: signup.email,
+      inviteToken: token,
       inviteUrl: googleAuthUrlForInvite(token),
     });
 

@@ -15,7 +15,7 @@ export interface IInvite {
    * without a join. */
   inviterUsername?: string;
   claimedBy?: Types.ObjectId | null;
-  status: "pending" | "accepted";
+  status: "pending" | "accepted" | "cancelled";
   claimedAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -30,7 +30,7 @@ const InviteSchema = new Schema<IInvite>(
     inviterId: { type: Schema.Types.ObjectId, ref: "User", default: null, index: true },
     inviterUsername: { type: String, lowercase: true, trim: true, index: true },
     claimedBy: { type: Schema.Types.ObjectId, ref: "User", default: null, index: true },
-    status: { type: String, enum: ["pending", "accepted"], default: "pending", index: true },
+    status: { type: String, enum: ["pending", "accepted", "cancelled"], default: "pending", index: true },
     claimedAt: { type: Date, default: null },
   },
   { timestamps: true },

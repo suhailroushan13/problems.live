@@ -16,3 +16,13 @@ export function hashInviteToken(token: string): string {
 export function googleAuthUrlForInvite(token: string): string {
   return `${env.appUrl}/api/auth/google?next=${encodeURIComponent(`/invite/${token}`)}`;
 }
+
+/** A recipient-controlled page which cancels a pending, email-specific invite. */
+export function invitationUnsubscribeUrl(token: string): string {
+  return `${env.appUrl}/unsubscribe/invitation/${token}`;
+}
+
+/** RFC 8058 one-click unsubscribe endpoint used by supporting inbox providers. */
+export function invitationUnsubscribeApiUrl(token: string): string {
+  return `${env.appUrl}/api/invites/unsubscribe?token=${encodeURIComponent(token)}`;
+}

@@ -76,6 +76,7 @@ TURNSTILE_SECRET_KEY=<turnstile-secret-key>
 MODERATION_PROVIDER=rules
 SMTP_USER=<smtp-username>
 SMTP_PASSWORD=<smtp-password-or-app-password>
+LEGAL_MAILING_ADDRESS=<legal-entity's-physical-mailing-address>
 ```
 
 Then install dependencies and start the development server:
@@ -111,6 +112,7 @@ secrets.
 | `NEXT_PUBLIC_APP_URL` | Yes | Canonical application URL, without a trailing slash |
 | `ADMIN_EMAILS` | No | Comma-separated emails promoted to admin on sign-in |
 | `SMTP_USER` / `SMTP_PASSWORD` | For email invites | SMTP credentials for invitation emails |
+| `LEGAL_MAILING_ADDRESS` | For email invites | Physical mailing address shown in the invitation-email footer |
 | `IMAGE_PROVIDER` | No | `local` (development), `vercel-blob`, or `cloudinary` |
 | `BLOB_READ_WRITE_TOKEN` | For Vercel Blob | Blob storage token |
 | `CLOUDINARY_CLOUD_NAME`, `_API_KEY`, `_API_SECRET` | For Cloudinary | Cloudinary credentials |
