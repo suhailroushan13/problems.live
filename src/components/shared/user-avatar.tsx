@@ -34,7 +34,16 @@ export function UserAvatar({
 
   return (
     <Avatar className={cn(SIZES[size], "shrink-0", className)}>
-      {avatar ? <AvatarImage src={avatar} alt="" /> : null}
+      {avatar ? (
+        <AvatarImage
+          src={avatar}
+          alt=""
+          // Google profile-photo URLs can reject cross-origin referrers.
+          // Send no referrer so the verified image is usable in every avatar
+          // surface without weakening the site-wide referrer policy.
+          referrerPolicy="no-referrer"
+        />
+      ) : null}
       <AvatarFallback className="bg-sunken font-medium text-muted-foreground">
         {initials || "?"}
       </AvatarFallback>

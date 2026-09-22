@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Dice5, Loader2, RefreshCw, Sparkles, X } from "lucide-react";
+import { ArrowRight, Check, Dice5, Loader2, RefreshCw, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -111,8 +111,9 @@ export function OnboardingForm({
         return;
       }
       toast.success(result.message ?? "Your profile is ready.");
-      router.replace(next);
-      router.refresh();
+      // A complete navigation guarantees the destination reads the freshly
+      // persisted onboarding state instead of a stale client router payload.
+      window.location.assign(next);
     });
   }
 
@@ -135,13 +136,18 @@ export function OnboardingForm({
   }
 
   return (
-    <form onSubmit={submit} className="space-y-6 md:grid md:grid-cols-2 md:gap-x-7 md:space-y-0">
-      <section>
-        <Label>Profile photo</Label>
-        <p className="mt-1 text-sm text-muted-foreground">
-          We picked an illustrated avatar for you.
-        </p>
-        <div className="mt-3">
+    <form onSubmit={submit} className="space-y-7 lg:space-y-5">
+      <section className="rounded-xl border border-hairline bg-tint p-4 sm:p-5 lg:p-3.5">
+        <div className="flex items-start gap-3">
+          <span className="num flex size-6 shrink-0 items-center justify-center rounded-full bg-brand text-[0.6875rem] font-bold text-brand-foreground">1</span>
+          <div>
+            <Label>Profile photo</Label>
+            <p className="mt-1 text-sm leading-5 text-muted-foreground">
+              {googleAvatarUrl ? "Your Google photo is ready. Choose it, or make it your own." : "Choose an illustrated avatar that feels like you."}
+            </p>
+          </div>
+        </div>
+        <div className="mt-4 sm:flex sm:items-center sm:justify-between sm:gap-5 lg:mt-3">
           <AvatarPicker
             name={name}
             username={username}
@@ -151,6 +157,7 @@ export function OnboardingForm({
             avatarSeed={avatarSeed}
             uploadedAvatarUrl={uploadedAvatarUrl}
             googleAvatarUrl={googleAvatarUrl}
+            showLabel
           />
           <Button
             type="button"
@@ -158,7 +165,7 @@ export function OnboardingForm({
             size="sm"
             onClick={randomizeAvatar}
             disabled={busy}
-            className="mt-3 w-full gap-1.5 sm:hidden"
+            className="mt-4 w-full gap-1.5 sm:mt-0 sm:w-auto"
           >
             {generating ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />}
             Randomize avatar
@@ -166,13 +173,14 @@ export function OnboardingForm({
         </div>
       </section>
 
-      <section className="border-t border-hairline pt-6 md:border-t-0 md:border-l md:pl-7 md:pt-0">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <div>
-            <Label htmlFor="onboard-username">Choose a username</Label>
-            <p className="mt-1 text-sm text-muted-foreground">
-              This is the name people see.
-            </p>
+      <section>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <span className="num flex size-6 shrink-0 items-center justify-center rounded-full bg-brand text-[0.6875rem] font-bold text-brand-foreground">2</span>
+            <div>
+              <Label htmlFor="onboard-username">Claim your username</Label>
+              <p className="mt-1 text-sm leading-5 text-muted-foreground">This becomes your public profile address.</p>
+            </div>
           </div>
           <Button
             type="button"
@@ -187,7 +195,7 @@ export function OnboardingForm({
           </Button>
         </div>
 
-        <div className="flex items-center gap-0">
+        <div className="mt-4 flex items-center gap-0">
           <span className="flex h-11 items-center rounded-l-lg border border-r-0 border-input bg-sunken px-3.5 text-sm text-muted-foreground">
             u/
           </span>
@@ -241,15 +249,18 @@ export function OnboardingForm({
         </p>
       </section>
 
-      <Button
-        type="submit"
-        size="lg"
-        disabled={busy || !usernameIsValid || usernameStatus.state !== "available"}
-        className="h-11 w-full gap-2 sm:w-auto md:col-span-2 md:mt-6"
-      >
-        {submitting ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
-        Complete setup
-      </Button>
+      <div className="flex flex-col-reverse gap-3 border-t border-hairline pt-5 sm:flex-row sm:items-center sm:justify-between lg:pt-4">
+        <p className="text-xs leading-5 text-muted-foreground">You can update your photo and profile details later.</p>
+        <Button
+          type="submit"
+          size="lg"
+          disabled={busy || !usernameIsValid || usernameStatus.state !== "available"}
+          className="h-11 w-full gap-2 sm:w-auto"
+        >
+          {submitting ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+          Complete setup <ArrowRight className="size-4" />
+        </Button>
+      </div>
     </form>
   );
 }

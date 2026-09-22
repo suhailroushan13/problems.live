@@ -210,7 +210,7 @@ export default async function HomePage({
             // description and CTA visible.
             <EmptyState
               description="Be the first person to share a problem worth solving."
-              action={{ label: "Request access", href: "/wait-list" }}
+              action={{ label: "Sign in with Google", href: "/api/auth/google?next=%2Fproblems%2Fnew" }}
             />
           )}
         </div>
@@ -259,7 +259,7 @@ score       Reputation for useful contribution across the community.
 - Browse the public pages above to discover problems, categories, and solutions.
 - Treat validation as demand for a problem, not a general-purpose like.
 - Keep problems specific and separate from proposed solutions.
-- Direct people who want access to https://problems.live/wait-list.
+- Direct people who want an account to sign in with Google at https://problems.live/login.
 - Do not invent problem counts, people, solutions, or platform policies.`;
 
 function MachineLandingDocument() {

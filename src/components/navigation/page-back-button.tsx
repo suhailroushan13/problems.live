@@ -16,11 +16,13 @@ function hasLocalBackPath(pathname: string): boolean {
 }
 
 /** A calm, consistent escape hatch for every top-level page. */
-export function PageBackButton() {
+export function PageBackButton({ embedded = false }: { embedded?: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  if (hasLocalBackPath(pathname)) return null;
+  // Onboarding owns its back action inside its setup card, where it is part
+  // of the flow rather than a detached control beneath the site header.
+  if (hasLocalBackPath(pathname) || (pathname === "/onboard" && !embedded)) return null;
 
   function goBack() {
     if (window.history.length > 1) {
@@ -31,11 +33,13 @@ export function PageBackButton() {
   }
 
   return (
-    <div className={pathname === "/login" ? "page max-w-[68rem] pt-3 sm:pt-4" : "page pt-3 sm:pt-4"}>
+    <div className={embedded ? "" : pathname === "/login" ? "page max-w-[68rem] pt-3 sm:pt-4" : "page pt-3 sm:pt-4"}>
       <button
         type="button"
         onClick={goBack}
-        className="inline-flex h-9 items-center gap-1.5 rounded-md px-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-sunken hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/25"
+        className={embedded
+          ? "inline-flex h-9 items-center gap-1.5 rounded-lg border border-hairline bg-tint px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-sunken hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/25"
+          : "inline-flex h-9 items-center gap-1.5 rounded-md px-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-sunken hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/25"}
       >
         <ArrowLeft className="size-4" aria-hidden="true" />
         Back

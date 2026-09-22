@@ -8,7 +8,7 @@ import { toObjectId } from "@/lib/utils/sanitize-query";
 
 export default async function InvitesPage() {
   const user = await getCurrentUser();
-  if (!user) redirect("/wait-list");
+  if (!user) redirect("/api/auth/google?next=%2Finvites");
   await connectToDatabase();
   const account = await User.findById(toObjectId(user.id), { inviteCredits: 1 }).lean().exec();
   const inviteCredits = account?.inviteCredits ?? 0;

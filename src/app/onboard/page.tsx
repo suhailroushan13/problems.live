@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { Check, ShieldCheck, Sparkles } from "lucide-react";
 import { OnboardingForm } from "@/components/forms/onboarding-form";
+import { PageBackButton } from "@/components/navigation/page-back-button";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { connectToDatabase } from "@/lib/db/mongoose";
 import { User } from "@/models";
@@ -27,6 +29,9 @@ export default async function OnboardPage({
   const destination = safeNext(next);
 
   if (!user) redirect(`/api/auth/google?next=${encodeURIComponent(`/onboard?next=${destination}`)}`);
+  // Admin accounts may have existed before onboarding was introduced; their
+  // correct landing place is the control dashboard, never setup.
+  if (user.isAdmin) redirect("/admin");
 
   await connectToDatabase();
   const [account, startingCredits] = await Promise.all([
@@ -46,39 +51,73 @@ export default async function OnboardPage({
   if (account?.onboardedAt ?? account?.dateOfBirth) redirect(destination);
 
   return (
-    <main className="page-wide flex min-h-[calc(100vh-16rem)] items-center py-8 sm:py-12 lg:min-h-[calc(100dvh-3.75rem)] lg:py-0">
-      <div className="grid w-full gap-8 lg:grid-cols-[minmax(0,0.85fr)_minmax(31rem,0.9fr)] lg:items-center lg:gap-14 xl:gap-20">
-        <section className="lg:py-10 lg:pr-8">
-          <p className="label text-brand">Account setup</p>
-          <h1 className="mt-3 max-w-xl text-[2rem] font-extrabold tracking-[-0.04em] text-foreground sm:text-[2.75rem]">
-            Choose how you appear here.
-          </h1>
-          <p className="mt-4 max-w-md text-[0.9375rem] leading-relaxed text-muted-foreground">
-            Your name and username are prefilled from your Google account. Change them if you&apos;d like.
-          </p>
-          <p className="mt-6 inline-flex rounded-full border border-brand/15 bg-brand-muted px-3 py-1.5 text-sm font-medium text-brand">
-            {startingCredits} Credits ready for your first problem
-          </p>
-        </section>
+    <main className="onboard-page relative isolate overflow-hidden bg-tint">
+      <div aria-hidden="true" className="absolute inset-x-0 top-0 -z-10 h-72 bg-gradient-to-b from-brand-muted to-transparent" />
+      <div className="page-wide flex min-h-[calc(100dvh-3.75rem)] items-center py-6 sm:py-10 lg:py-4">
+        <div className="grid w-full overflow-hidden rounded-2xl border border-hairline bg-elevated shadow-[0_18px_55px_rgb(15_23_42_/_0.08)] lg:grid-cols-[0.82fr_1.18fr]">
+          <section className="relative hidden overflow-hidden border-b border-hairline bg-foreground px-5 py-7 text-background sm:px-8 sm:py-9 lg:block lg:border-r lg:border-b-0 lg:px-10 lg:py-6 xl:px-14">
+            <span aria-hidden="true" className="pointer-events-none absolute -right-2 -bottom-16 select-none text-[12rem] leading-none font-black tracking-[-0.12em] text-background/5 sm:text-[16rem] lg:text-[19rem]">01</span>
+            <div className="relative flex h-full flex-col">
+              <p className="label text-brand-soft">Set up your account</p>
 
-        <section className="rounded-2xl border border-hairline bg-elevated p-6 sm:p-8 lg:p-7 xl:p-8">
-          <h2 className="text-lg font-semibold tracking-[-0.02em] text-foreground">Your public identity</h2>
-          <p className="mt-1 text-sm text-muted-foreground">You can change this later in settings.</p>
-          <div className="mt-6">
+              <div className="mt-7 lg:mt-auto lg:pb-6">
+                <h1 className="max-w-md text-[2.15rem] leading-[0.98] font-extrabold tracking-[-0.055em] sm:text-5xl lg:text-[3.5rem]">
+                  Make your first impression count.
+                </h1>
+                <p className="mt-5 max-w-sm text-sm leading-6 text-background/65 sm:text-[0.9375rem] sm:leading-7">
+                  Pick the name and photo people will recognise when you share a problem or help solve one.
+                </p>
+              </div>
+
+              <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:mt-0 lg:grid-cols-1 xl:grid-cols-2">
+                <div className="rounded-xl border border-background/10 bg-background/5 p-3.5 backdrop-blur-sm">
+                  <Sparkles className="size-4 text-brand-soft" aria-hidden="true" />
+                  <p className="mt-3 text-sm font-semibold">{startingCredits} credits ready</p>
+                  <p className="mt-1 text-xs leading-5 text-background/60">For sharing your first problem.</p>
+                </div>
+                <div className="rounded-xl border border-background/10 bg-background/5 p-3.5 backdrop-blur-sm">
+                  <ShieldCheck className="size-4 text-brand-soft" aria-hidden="true" />
+                  <p className="mt-3 text-sm font-semibold">Your choices stay yours</p>
+                  <p className="mt-1 text-xs leading-5 text-background/60">Edit your profile anytime in settings.</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="px-5 py-7 sm:px-8 sm:py-9 lg:px-10 lg:py-6 xl:px-14">
+            <div className="mx-auto max-w-xl">
+              <div className="mb-5 lg:mb-3">
+                <PageBackButton embedded />
+              </div>
+              <div className="flex items-start justify-between gap-4 border-b border-hairline pb-5 lg:pb-4">
+                <div>
+                  <p className="label text-brand">Your public identity</p>
+                  <h2 className="mt-2 text-2xl font-bold tracking-[-0.035em] text-foreground sm:text-[1.75rem]">A few details, then you&apos;re in.</h2>
+                  <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">Your Google name is a starting point. Make it feel like you.</p>
+                </div>
+                <span className="mt-1 hidden size-8 items-center justify-center rounded-full bg-success-subtle text-success sm:inline-flex">
+                  <Check className="size-4" aria-hidden="true" />
+                </span>
+              </div>
+              <div className="mt-7 lg:mt-5">
           <OnboardingForm
             initialUsername={user.username}
             next={destination}
             name={user.name}
-            avatar={account?.avatar ?? user.avatar}
-            avatarType={account?.avatarType}
+            // During first-run setup, surface the verified Google photo when
+            // available, even if an older provisional account has no avatar.
+            avatar={account?.googleAvatarUrl ?? account?.avatar ?? user.avatar}
+            avatarType={account?.googleAvatarUrl ? "google" : account?.avatarType}
             avatarStyle={account?.avatarStyle}
             avatarSeed={account?.avatarSeed}
             uploadedAvatarUrl={account?.avatarUrl}
             googleAvatarUrl={account?.googleAvatarUrl}
           />
-          </div>
+              </div>
+            </div>
         </section>
         </div>
+      </div>
     </main>
   );
 }

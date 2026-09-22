@@ -14,21 +14,13 @@ designed to turn isolated frustrations into visible, actionable opportunities.
 - Surface active work through trending and category views.
 - Keep quality high with moderation, reporting, rate limits, and duplicate
   detection.
-- Use invite-only accounts while the community grows deliberately.
+- Let anyone create an account with a verified Google identity.
 
 ## How access works
 
-The directory is public to browse. Creating an account requires an invitation:
-
-1. An admin can send an email invitation or create a single-use invite link.
-2. A person accepts the invite and signs in with the invited Google account.
-3. New members receive five invites to share. Admin accounts have unlimited
-   invites.
-
-People without an invitation can join the waiting list at `/wait-list`. Admins
-review requests from `/admin/waiting-list` and can send an invitation directly.
-The waiting-list form is protected by a honeypot field and a signed,
-time-bound render-proof token, both verified on the server.
+The directory is public to browse. Anyone can create an account by signing in
+with a Google account that has a verified email address. Invitation links still
+work when shared, but they are not required for access.
 
 ## Tech stack
 
@@ -40,7 +32,7 @@ time-bound render-proof token, both verified on the server.
 | Authentication | Google OAuth 2.0 with PKCE and HTTP-only sessions |
 | UI | Tailwind CSS v4, shadcn/ui, Radix, Lucide |
 | Validation | Zod and Server Actions |
-| Bot protection | Honeypot field and signed render-proof token |
+| Bot protection | Rate limits and server-side validation |
 
 ## Quick start
 

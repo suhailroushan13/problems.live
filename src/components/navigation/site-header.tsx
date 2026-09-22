@@ -28,6 +28,7 @@ export function SiteHeader({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const isPosting = pathname === "/problems/new";
+  const isOnboarding = pathname === "/onboard";
   const isAuthenticating = pathname === "/login";
   const isMachineLanding = !user && pathname === "/" && searchParams.get("machine") === "1";
   const postHref = user ? "/problems/new" : "/api/auth/google?next=%2Fproblems%2Fnew";
@@ -108,7 +109,9 @@ export function SiteHeader({
                 aria-label="Toggle dark mode"
               />
 
-              <UserMenu user={user} unreadCount={unreadCount} />
+              {/* Setup is intentionally distraction-free; account controls
+                  return as soon as the profile is complete. */}
+              {!isOnboarding ? <UserMenu user={user} unreadCount={unreadCount} /> : null}
             </div>
           ) : (
             !isAuthenticating ? <Button

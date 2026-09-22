@@ -48,7 +48,14 @@ export async function provisionUserFromGoogle(
     existing.emailVerified = profile.emailVerified;
     if (profile.picture) {
       existing.googleAvatarUrl = profile.picture;
-      if (existing.avatarType === "google" || !existing.avatarType) {
+      // An incomplete account has not chosen an identity yet, so use its
+      // Google photo. Once onboarding is complete, retain any deliberate
+      // generated or uploaded avatar choice.
+      if (
+        existing.avatarType === "google" ||
+        !existing.avatarType ||
+        !existing.onboardedAt
+      ) {
         existing.avatarType = "google";
         existing.avatar = profile.picture;
       }
@@ -71,6 +78,7 @@ export async function provisionUserFromGoogle(
   const startingCredits = await getSetting("startingProblemCredits");
   const username = await claimUsername(usernameFromEmail(profile.email));
   const avatarSeed = randomUUID();
+  const usesGoogleAvatar = Boolean(profile.picture);
 
   const created = await User.create({
     googleId: profile.googleId,
@@ -78,8 +86,13 @@ export async function provisionUserFromGoogle(
     emailVerified: profile.emailVerified,
     name: toTitleCase(profile.name),
     username,
-    avatar: generatedAvatarUrl(avatarSeed, "people"),
-    avatarType: "generated",
+    // Google has already supplied a profile image as part of the verified
+    // sign-in flow. Use it by default, while retaining a generated fallback
+    // for accounts that do not expose a Google picture.
+    avatar: usesGoogleAvatar
+      ? profile.picture
+      : generatedAvatarUrl(avatarSeed, "people"),
+    avatarType: usesGoogleAvatar ? "google" : "generated",
     avatarStyle: "people",
     avatarSeed,
     googleAvatarUrl: profile.picture,

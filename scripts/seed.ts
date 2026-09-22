@@ -351,6 +351,21 @@ async function main() {
   }
   await ProblemValidation.insertMany(validations, { ordered: false });
 
+  // Bookmarks are private, one-per-user relationships. Seed a small spread
+  // across the feed so both saved-problem views and public counters are real.
+  console.log("→ Creating bookmarks…");
+  const bookmarks = problems.flatMap((problem, index) =>
+    sample(
+      userDocs.filter((user) => String(user._id) !== String(problem.authorId)),
+      1 + (index % 3)
+    ).map((user) => ({
+      problemId: problem._id,
+      userId: user._id,
+      createdAt: daysAgo(Math.max(1, index + 1)),
+    }))
+  );
+  await ProblemBookmark.insertMany(bookmarks, { ordered: false });
+
   console.log("→ Creating solution votes…");
   const solutionVotes = [];
   for (const solution of solutions) {
@@ -374,11 +389,15 @@ async function main() {
       (s) => String(s.problemId) === String(problem._id)
     ).length;
     const commentCount = commentCountByProblem.get(String(problem._id)) ?? 0;
+    const bookmarkCount = bookmarks.filter(
+      (bookmark) => String(bookmark.problemId) === String(problem._id)
+    ).length;
 
     const counts = {
       validationCount: seed.validations,
       solutionCount,
       commentCount,
+      bookmarkCount,
     };
 
     await Problem.updateOne(
@@ -490,13 +509,14 @@ async function main() {
     );
   }
 
-  const [users, problemTotal, solutionTotal, commentTotal, validationTotal] =
+  const [users, problemTotal, solutionTotal, commentTotal, validationTotal, bookmarkTotal] =
     await Promise.all([
       User.countDocuments(),
       Problem.countDocuments(),
       Solution.countDocuments(),
       Comment.countDocuments(),
       ProblemValidation.countDocuments(),
+      ProblemBookmark.countDocuments(),
     ]);
 
   console.log("\n✓ Seed complete");
@@ -506,6 +526,7 @@ async function main() {
   console.log(`  ${solutionTotal} solutions`);
   console.log(`  ${commentTotal} comments`);
   console.log(`  ${validationTotal} validation records`);
+  console.log(`  ${bookmarkTotal} bookmarks`);
   console.log(`  ${notifications.length} notifications`);
   console.log("\n  Seeded accounts are placeholders — sign in with Google to");
   console.log("  create your own. Set ADMIN_EMAILS to get admin access.\n");

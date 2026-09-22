@@ -526,6 +526,20 @@
   }
 }
 
+/* Onboarding keeps its browser scroll behavior for short viewports, but the
+   thumb is visually distracting beside the centered setup card. Scope this
+   to the route so every other page keeps the normal scrollbar affordance. */
+html:has(.onboard-page),
+body:has(.onboard-page) {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+html:has(.onboard-page)::-webkit-scrollbar,
+body:has(.onboard-page)::-webkit-scrollbar {
+  display: none;
+}
+
 /* Drives the theme-toggle wipe in animated-theme-toggler.tsx: turn off the
    browser's default cross-fade so only the JS-driven clip-path animation on
    ::view-transition-new(root) is visible, sync the transition group's

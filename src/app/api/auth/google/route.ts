@@ -9,9 +9,9 @@ export const maxDuration = 15;
 
 export const dynamic = "force-dynamic";
 
-const STATE_COOKIE = "pl_oauth_state";
-const VERIFIER_COOKIE = "pl_oauth_verifier";
-const NEXT_COOKIE = "pl_oauth_next";
+const STATE_COOKIE_PREFIX = "pl_oauth_state_";
+const VERIFIER_COOKIE_PREFIX = "pl_oauth_verifier_";
+const NEXT_COOKIE_PREFIX = "pl_oauth_next_";
 const TEN_MINUTES = 600;
 
 function base64url(buffer: Buffer): string {
@@ -54,9 +54,15 @@ export async function GET(request: NextRequest) {
     maxAge: TEN_MINUTES,
   };
 
-  response.cookies.set(STATE_COOKIE, state, options);
-  response.cookies.set(VERIFIER_COOKIE, codeVerifier, options);
-  response.cookies.set(NEXT_COOKIE, next, options);
+  // Suffixing by (a slice of) this attempt's own state keeps concurrent
+  // sign-in attempts — two tabs, a double click, a link-prefetching browser
+  // extension — from clobbering each other's cookies. A single shared cookie
+  // name would let a second attempt overwrite the first's state right before
+  // the first's Google redirect comes back, producing a false state_mismatch.
+  const attempt = state.slice(0, 16);
+  response.cookies.set(`${STATE_COOKIE_PREFIX}${attempt}`, state, options);
+  response.cookies.set(`${VERIFIER_COOKIE_PREFIX}${attempt}`, codeVerifier, options);
+  response.cookies.set(`${NEXT_COOKIE_PREFIX}${attempt}`, next, options);
 
   return response;
 }

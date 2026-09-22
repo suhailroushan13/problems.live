@@ -235,7 +235,7 @@ export function AvatarPickerModal({
         </DialogHeader>
 
         <div className="mt-5 flex items-center gap-3">
-          <Image src={preview ?? generatedPreview} alt="Selected avatar" width={72} height={72} unoptimized className="size-16 rounded-full bg-sunken object-cover sm:size-[4.5rem]" />
+          <Image src={preview ?? generatedPreview} alt="Selected avatar" width={72} height={72} unoptimized referrerPolicy="no-referrer" className="size-16 rounded-full bg-sunken object-cover sm:size-[4.5rem]" />
           <div>
             <p className="font-semibold text-foreground">u/{username}</p>
             <p className="mt-0.5 text-sm text-muted-foreground">Current avatar</p>
@@ -413,7 +413,7 @@ function IdentityOption({
         selected && "bg-blue-50 text-blue-700",
       )}
     >
-      <Image src={image} alt="" width={28} height={28} unoptimized className="size-7 rounded-full object-cover" />
+      <Image src={image} alt="" width={28} height={28} unoptimized referrerPolicy="no-referrer" className="size-7 rounded-full object-cover" />
       {label}
       {selected ? <Check className="size-3.5" aria-hidden="true" /> : null}
     </button>
