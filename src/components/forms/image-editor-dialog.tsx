@@ -75,6 +75,8 @@ export function ImageEditorDialog({
   onOpenChange: (open: boolean) => void;
   onSave: (file: File) => void;
 }) {
+  // Callers key this dialog by file identity, so this local URL is freshly
+  // created for each selected image and safely released when it closes.
   const [src] = useState<string | null>(() => file ? URL.createObjectURL(file) : null);
   const [image, setImage] = useState<HTMLImageElement | null>(null);
   const [zoom, setZoom] = useState(1);
@@ -152,11 +154,6 @@ export function ImageEditorDialog({
             />
           ) : null}
           <div className="pointer-events-none absolute inset-0 border border-white/70" aria-hidden="true" />
-          {shape === "square" ? (
-            <div className="pointer-events-none absolute inset-0 grid grid-cols-3 grid-rows-3 opacity-35" aria-hidden="true">
-              {Array.from({ length: 9 }, (_, index) => <span key={index} className="border border-white/50" />)}
-            </div>
-          ) : null}
         </div>
 
         <div className="space-y-4">

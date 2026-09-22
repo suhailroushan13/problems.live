@@ -45,6 +45,7 @@ export function MarkdownEditor({
   minRows = 6,
   folder = "problems",
   className,
+  compact = false,
   "aria-invalid": ariaInvalid,
 }: {
   id?: string;
@@ -54,6 +55,7 @@ export function MarkdownEditor({
   minRows?: number;
   folder?: "problems" | "solutions";
   className?: string;
+  compact?: boolean;
   "aria-invalid"?: boolean;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -188,7 +190,7 @@ export function MarkdownEditor({
         className
       )}
     >
-      <div className="flex flex-wrap items-center gap-0.5 border-b border-hairline px-1.5 py-1">
+      <div className={cn("flex flex-wrap items-center gap-0.5 border-b border-hairline px-1.5 py-1", compact && "py-0.5 [&>button]:size-7 [&>button_svg]:size-3.5")}>
         <ToolbarButton label="Bold" onClick={() => wrapSelection("**", "**", "bold text")}>
           <Bold className="size-4" />
         </ToolbarButton>
@@ -258,12 +260,12 @@ export function MarkdownEditor({
           rows={minRows}
           placeholder={placeholder}
           aria-invalid={ariaInvalid}
-          className="rounded-none border-0 shadow-none focus-visible:ring-0"
+          className={cn("rounded-none border-0 shadow-none focus-visible:ring-0", compact && "min-h-24 py-2")}
         />
       ) : (
         <div
-          className="min-h-36 px-3.5 py-3"
-          style={{ minHeight: `${minRows * 1.6}rem` }}
+          className={cn("min-h-36 px-3.5 py-3", compact && "min-h-24 py-2")}
+          style={{ minHeight: `${minRows * (compact ? 1.5 : 1.6)}rem` }}
         >
           {value.trim() ? (
             <MarkdownContent>{value}</MarkdownContent>

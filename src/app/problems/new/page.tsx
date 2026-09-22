@@ -25,10 +25,12 @@ export default async function NewProblemPage() {
   ]);
 
   return (
-    <div className="page py-6 sm:py-10">
-      <header className="mt-2 mb-6 sm:mt-4 sm:mb-8">
-        <h1 className="text-h1 text-foreground">Share a problem</h1>
-        <p className="mt-2 text-sm text-muted-foreground sm:text-base">
+    <div className="page py-4 sm:py-8 lg:h-[calc(100dvh-3.75rem)] lg:overflow-y-auto">
+      <header className="mb-4 sm:mb-5">
+        <h1 className="text-3xl font-bold tracking-[-0.035em] text-foreground sm:text-4xl">
+          Share a problem
+        </h1>
+        <p className="mt-1.5 text-sm text-muted-foreground">
           Describe what&apos;s hard.
         </p>
       </header>

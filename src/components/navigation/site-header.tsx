@@ -40,10 +40,6 @@ export function SiteHeader({
       <header className="sticky top-0 z-50 border-b border-hairline bg-background/95 backdrop-blur-md">
         <div className="flex h-15 items-center gap-4 px-4 sm:h-16 sm:px-6 lg:px-8">
           <Logo />
-          <AnimatedThemeToggler
-            className={cn(ICON_BUTTON_CLASS, "ml-auto hidden lg:inline-flex")}
-            aria-label="Toggle dark mode"
-          />
           <Link
             href="/problems"
             className="ml-auto inline-flex h-10 shrink-0 items-center gap-2 rounded-lg border border-transparent px-2.5 text-sm font-medium text-muted-foreground transition-colors hover:border-hairline hover:bg-sunken hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/25 sm:px-3"
@@ -53,6 +49,10 @@ export function SiteHeader({
             <span className="sm:hidden">Back</span>
             <span className="hidden sm:inline">Back to problems</span>
           </Link>
+          <AnimatedThemeToggler
+            className={cn(ICON_BUTTON_CLASS, "hidden lg:inline-flex")}
+            aria-label="Toggle dark mode"
+          />
         </div>
       </header>
     );
@@ -65,10 +65,6 @@ export function SiteHeader({
 
         <div className="ml-auto flex items-center gap-1 sm:gap-6">
           <LivePill className="hidden md:inline-flex" initialStats={liveStats} />
-          <AnimatedThemeToggler
-            className={cn(ICON_BUTTON_CLASS, "hidden lg:inline-flex")}
-            aria-label="Toggle dark mode"
-          />
           {!isAuthenticating ? <Button asChild className="hidden shrink-0 gap-1.5 sm:inline-flex">
             <Link href={postHref} title={postLabel}>
               {user ? <Plus className="size-4" aria-hidden="true" /> : null}
@@ -119,6 +115,10 @@ export function SiteHeader({
               </Link>
             </Button> : null
           )}
+          <AnimatedThemeToggler
+            className={cn(ICON_BUTTON_CLASS, "hidden lg:inline-flex")}
+            aria-label="Toggle dark mode"
+          />
         </div>
       </div>
     </header>

@@ -271,8 +271,8 @@ export function ProblemForm({
         showMobileActions && "pb-24 sm:pb-0",
       )}
     >
-      <div className={cn("space-y-7", compact && "space-y-5")}>
-        <section className="space-y-2">
+      <div className={cn("space-y-7", compact && "space-y-3.5")}>
+        <section className={cn("space-y-2", compact && "space-y-1.5")}>
           <div className="flex items-baseline justify-between gap-4">
             <Label
               htmlFor="title"
@@ -302,7 +302,7 @@ export function ProblemForm({
             className="h-12 rounded-md border-input px-3.5 text-base font-medium shadow-none placeholder:font-normal"
             aria-invalid={Boolean(errors.title)}
           />
-          <p className="text-xs text-muted-foreground">
+          <p className={cn("text-xs text-muted-foreground", compact && "leading-4")}>
             {titleWordCount > 10
               ? `${titleWordCount} words, shorten it to 10 or fewer so the full title stays easy to read, especially on phones.`
               : "Describe the problem, not the solution. Aim for 10 words or fewer so the full title stays easy to read, especially on phones."}
@@ -326,7 +326,7 @@ export function ProblemForm({
           />
         ) : null}
 
-        <section className="space-y-2">
+        <section className={cn("space-y-2", compact && "space-y-1.5")}>
           <div className="flex items-baseline justify-between gap-4">
             <Label
               htmlFor="description"
@@ -348,22 +348,23 @@ export function ProblemForm({
                 id="description"
                 value={field.value ?? ""}
                 onChange={field.onChange}
-                minRows={5}
+                minRows={compact ? 4 : 5}
                 folder="problems"
+                compact={compact}
                 placeholder="Who faces this problem? When does it happen? What makes it difficult?"
                 aria-invalid={Boolean(errors.description)}
               />
             )}
           />
-          <p className="text-xs text-muted-foreground">
+          <p className={cn("text-xs text-muted-foreground", compact && "leading-4")}>
             A real example or specific detail helps. Markdown is supported,
             paste an image straight in.
           </p>
           <FieldError message={errors.description?.message} />
         </section>
 
-        <section className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
+        <section className={cn("grid gap-4 sm:grid-cols-2", compact && "gap-3 lg:grid-cols-3")}>
+          <div className={cn("space-y-2", compact && "space-y-1.5")}>
             <Label className="text-sm font-semibold text-foreground">
               Category
             </Label>
@@ -382,7 +383,7 @@ export function ProblemForm({
             />
             <FieldError message={errors.categoryId?.message} />
           </div>
-          <div className="space-y-2">
+          <div className={cn("space-y-2", compact && "space-y-1.5")}>
             <Label className="text-sm font-semibold text-foreground">
               Where?
             </Label>
@@ -403,8 +404,30 @@ export function ProblemForm({
               )}
             />
           </div>
+          {compact ? (
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold text-foreground">Priority</Label>
+              <Controller
+                control={control}
+                name="priority"
+                render={({ field }) => (
+                  <SearchablePicker
+                    value={field.value ?? "normal"}
+                    onValueChange={field.onChange}
+                    placeholder="Normal"
+                    searchPlaceholder="Search…"
+                    items={PROBLEM_PRIORITIES.map((value) => ({
+                      value,
+                      label: PROBLEM_PRIORITY_LABELS[value],
+                    }))}
+                  />
+                )}
+              />
+            </div>
+          ) : null}
         </section>
 
+        {!compact ? (
         <section className="space-y-2">
           <Label className="text-sm font-semibold text-foreground">
             Priority
@@ -431,6 +454,7 @@ export function ProblemForm({
             Mark it Important or Urgent only if it truly can&apos;t wait.
           </p>
         </section>
+        ) : null}
 
         {scope !== "global" ? (
           <section className="grid gap-4 border-l-2 border-hairline pl-4 sm:grid-cols-2">
@@ -478,9 +502,10 @@ export function ProblemForm({
             value={images}
             onChange={setImages}
             folder="problems"
+            className={compact ? "space-y-1.5" : undefined}
           />
         ) : null}
-        <label className="flex cursor-pointer items-start gap-3 py-1">
+        <label className={cn("flex cursor-pointer items-start gap-3 py-1", compact && "gap-2.5 py-0.5")}>
           <Controller
             control={control}
             name="isAnonymous"
@@ -496,7 +521,7 @@ export function ProblemForm({
             <span className="block text-sm font-medium text-foreground">
               Post anonymously
             </span>
-            <span className="mt-0.5 block text-xs text-muted-foreground">
+            <span className="mt-0.5 block text-xs leading-4 text-muted-foreground">
               Your name stays private; moderators can still keep the space safe.
             </span>
           </span>
@@ -523,7 +548,7 @@ export function ProblemForm({
         ) : null}
       </div>
 
-      <div className={cn("mt-8 hidden items-center justify-between border-t border-hairline pt-4 sm:flex", compact && "mt-5")}>
+      <div className={cn("mt-8 hidden items-center justify-between border-t border-hairline pt-4 sm:flex", compact && "mt-4 pt-3 lg:sticky lg:bottom-0 lg:z-10 lg:bg-background lg:pb-3")}>
         <CreditNote credits={credits} isEditing={isEditing} />
         <FormActions
           pending={pending}
