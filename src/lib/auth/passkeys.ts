@@ -6,8 +6,16 @@ export const PASSKEY_CHALLENGE_MAX_AGE = 300;
 
 export function passkeyConfig() {
   const origin = env.appUrl;
-  const rpID = new URL(origin).hostname;
-  return { origin, rpID, rpName: "problems.live" };
+  const hostname = new URL(origin).hostname;
+  const rpID = hostname.replace(/^www\./, "");
+  // The two production aliases share an RP ID. Explicitly allow only both
+  // canonical origins so passkey verification never trusts a Host header.
+  const origins = new Set([origin]);
+  if (rpID === "problems.live") {
+    origins.add("https://problems.live");
+    origins.add("https://www.problems.live");
+  }
+  return { origins: [...origins], rpID, rpName: "problems.live" };
 }
 
 export function safePasskeyNext(value: unknown) {

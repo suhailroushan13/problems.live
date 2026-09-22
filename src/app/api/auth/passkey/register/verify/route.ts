@@ -17,8 +17,8 @@ export async function POST(request: NextRequest) {
     const challenge = request.cookies.get(PASSKEY_CHALLENGE_COOKIE)?.value;
     if (!challenge) return NextResponse.json({ error: "Passkey setup expired. Try again." }, { status: 400 });
     const body = await request.json() as RegistrationResponseJSON;
-    const { origin, rpID } = passkeyConfig();
-    const verification = await verifyRegistrationResponse({ response: body, expectedChallenge: challenge, expectedOrigin: origin, expectedRPID: rpID, requireUserVerification: true });
+    const { origins, rpID } = passkeyConfig();
+    const verification = await verifyRegistrationResponse({ response: body, expectedChallenge: challenge, expectedOrigin: origins, expectedRPID: rpID, requireUserVerification: true });
     if (!verification.verified || !verification.registrationInfo) return NextResponse.json({ error: "We could not verify that passkey." }, { status: 400 });
     const { credential, credentialDeviceType, credentialBackedUp } = verification.registrationInfo;
     await connectToDatabase();

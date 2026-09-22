@@ -18,8 +18,8 @@ export async function POST(request: NextRequest) {
     await connectToDatabase();
     const credential = await Passkey.findOne({ credentialID: response.id }).exec();
     if (!credential) return NextResponse.json({ error: "That passkey is not registered here." }, { status: 401 });
-    const { origin, rpID } = passkeyConfig();
-    const verification = await verifyAuthenticationResponse({ response, expectedChallenge: challenge, expectedOrigin: origin, expectedRPID: rpID, requireUserVerification: true, credential: { id: credential.credentialID, publicKey: new Uint8Array(credential.publicKey), counter: credential.counter, transports: credential.transports } });
+    const { origins, rpID } = passkeyConfig();
+    const verification = await verifyAuthenticationResponse({ response, expectedChallenge: challenge, expectedOrigin: origins, expectedRPID: rpID, requireUserVerification: true, credential: { id: credential.credentialID, publicKey: new Uint8Array(credential.publicKey), counter: credential.counter, transports: credential.transports } });
     if (!verification.verified) return NextResponse.json({ error: "We could not verify that passkey." }, { status: 401 });
     const user = await User.findById(credential.userId, { _id: 1, dateOfBirth: 1 }).lean().exec();
     if (!user) return NextResponse.json({ error: "This passkey's account no longer exists." }, { status: 401 });

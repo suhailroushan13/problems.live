@@ -103,6 +103,11 @@ export function SiteHeader({
                 ) : null}
               </Link>
 
+              <AnimatedThemeToggler
+                className={cn(ICON_BUTTON_CLASS, "hidden lg:inline-flex")}
+                aria-label="Toggle dark mode"
+              />
+
               <UserMenu user={user} unreadCount={unreadCount} />
             </div>
           ) : (
@@ -115,10 +120,10 @@ export function SiteHeader({
               </Link>
             </Button> : null
           )}
-          <AnimatedThemeToggler
+          {!user ? <AnimatedThemeToggler
             className={cn(ICON_BUTTON_CLASS, "hidden lg:inline-flex")}
             aria-label="Toggle dark mode"
-          />
+          /> : null}
         </div>
       </div>
     </header>
