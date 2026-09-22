@@ -9,7 +9,9 @@ import {
   Category,
   Comment,
   CommentVote,
+  Invite,
   Notification,
+  Passkey,
   Problem,
   ProblemBookmark,
   ProblemClick,
@@ -21,6 +23,7 @@ import {
   Solution,
   SolutionVote,
   User,
+  WaitlistSignup,
 } from "../src/models";
 
 config({ path: [".env.local", ".env"], quiet: true });
@@ -51,6 +54,9 @@ const MODELS = [
   Setting,
   RateLimit,
   SiteVisit,
+  Invite,
+  Passkey,
+  WaitlistSignup,
 ];
 
 async function main() {
