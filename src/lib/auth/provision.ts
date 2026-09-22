@@ -2,12 +2,11 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { connectToDatabase } from "@/lib/db/mongoose";
 import { User, type IUser } from "@/models";
-import { usernameFromEmail } from "@/lib/utils/slug";
-import { toTitleCase } from "@/lib/utils/text";
 import { env } from "@/lib/env";
 import { getSetting } from "@/lib/config/settings";
 import { isReservedUsername } from "@/lib/constants";
 import { generatedAvatarUrl } from "@/lib/avatar";
+import { anonymousDisplayName, randomAnonymousUsername } from "@/lib/utils/anonymous-identity";
 import type { GoogleProfile } from "./google";
 
 async function claimUsername(seed: string): Promise<string> {
@@ -46,7 +45,6 @@ export async function provisionUserFromGoogle(
     existing.googleId = profile.googleId;
     existing.email = profile.email;
     existing.emailVerified = profile.emailVerified;
-    existing.name = toTitleCase(profile.name);
     if (profile.picture) {
       existing.googleAvatarUrl = profile.picture;
       if (existing.avatarType === "google" || !existing.avatarType) {
@@ -70,17 +68,17 @@ export async function provisionUserFromGoogle(
   }
 
   const startingCredits = await getSetting("startingProblemCredits");
-  const username = await claimUsername(usernameFromEmail(profile.email));
+  const username = await claimUsername(randomAnonymousUsername());
   const avatarSeed = randomUUID();
 
   const created = await User.create({
     googleId: profile.googleId,
     email: profile.email,
     emailVerified: profile.emailVerified,
-    name: toTitleCase(profile.name),
+    name: anonymousDisplayName(username),
     username,
-    avatar: profile.picture ?? generatedAvatarUrl(avatarSeed, "people"),
-    avatarType: profile.picture ? "google" : "generated",
+    avatar: generatedAvatarUrl(avatarSeed, "people"),
+    avatarType: "generated",
     avatarStyle: "people",
     avatarSeed,
     googleAvatarUrl: profile.picture,

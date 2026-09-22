@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/empty-state";
 import { WaitlistSignupActions } from "@/components/admin/waitlist-signup-actions";
+import { ApproveAllWaitlistButton } from "@/components/admin/approve-all-waitlist-button";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { listWaitlistSignups } from "@/lib/data/admin";
 import { formatDateTimeWithSeconds } from "@/lib/utils/time";
@@ -33,8 +34,12 @@ export default async function AdminWaitingListPage() {
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-hairline">
-      <Table>
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <ApproveAllWaitlistButton count={signups.length} />
+      </div>
+      <div className="overflow-x-auto rounded-xl border border-hairline">
+        <Table>
         <TableHeader className="bg-tint">
           <TableRow className="hover:bg-transparent">
             <TableHead className="w-10 text-center">#</TableHead>
@@ -59,7 +64,8 @@ export default async function AdminWaitingListPage() {
             </TableRow>
           ))}
         </TableBody>
-      </Table>
+        </Table>
+      </div>
     </div>
   );
 }

@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { randomInt } from "node:crypto";
 import { z } from "zod";
 import { connectToDatabase } from "@/lib/db/mongoose";
 import { Comment, Notification, Passkey, Problem, ProblemBookmark, Report, Solution, User } from "@/models";
@@ -16,6 +15,7 @@ import {
   updateProfileSchema,
 } from "@/lib/validation/schemas";
 import { stripUnsafe } from "@/lib/utils/text";
+import { randomAnonymousUsername } from "@/lib/utils/anonymous-identity";
 import { objectId } from "@/lib/utils/sanitize-query";
 import { isReservedUsername } from "@/lib/constants";
 import { AVATAR_STYLES, generatedAvatarUrl, type AvatarStyle } from "@/lib/avatar";
@@ -192,59 +192,6 @@ export async function updateProfile(
   }
 }
 
-const ANONYMOUS_ADJECTIVES = [
-  "amber",
-  "brisk",
-  "calm",
-  "clever",
-  "covert",
-  "distant",
-  "eager",
-  "gentle",
-  "hidden",
-  "kind",
-  "lunar",
-  "mellow",
-  "nimble",
-  "quiet",
-  "sable",
-  "solar",
-  "steady",
-  "tidy",
-  "velvet",
-  "witty",
-] as const;
-
-const ANONYMOUS_NOUNS = [
-  "atlas",
-  "badger",
-  "comet",
-  "drift",
-  "finch",
-  "harbor",
-  "juniper",
-  "kestrel",
-  "lantern",
-  "meadow",
-  "otter",
-  "pioneer",
-  "quartz",
-  "river",
-  "sparrow",
-  "thicket",
-  "umbra",
-  "voyager",
-  "willow",
-  "zephyr",
-] as const;
-
-function randomAnonymousUsername(): string {
-  const adjective = ANONYMOUS_ADJECTIVES[randomInt(ANONYMOUS_ADJECTIVES.length)];
-  const noun = ANONYMOUS_NOUNS[randomInt(ANONYMOUS_NOUNS.length)];
-  const number = randomInt(100, 1000);
-  return `${adjective}-${noun}-${number}`;
-}
-
 export async function generateAnonymousUsername(): Promise<ActionResult<{ username: string }>> {
   try {
     const user = await requireUser();
@@ -335,11 +282,12 @@ export async function completeOnboarding(
 
     const current = await User.findById(objectId(user.id), {
       dateOfBirth: 1,
+      onboardedAt: 1,
     })
       .lean()
       .exec();
 
-    if (current?.dateOfBirth) {
+    if (current?.onboardedAt ?? current?.dateOfBirth) {
       throw new DomainError("Your account setup is already complete.");
     }
     if (isReservedUsername(input.username)) {
@@ -350,15 +298,15 @@ export async function completeOnboarding(
       const result = await User.updateOne(
         {
           _id: objectId(user.id),
-          // Accounts created before date-of-birth was introduced have no
-          // field at all, whereas newer accounts have an explicit null.
-          // Treat both as incomplete, but never overwrite a real value.
-          $or: [{ dateOfBirth: null }, { dateOfBirth: { $exists: false } }],
+          $and: [
+            { $or: [{ onboardedAt: null }, { onboardedAt: { $exists: false } }] },
+            { $or: [{ dateOfBirth: null }, { dateOfBirth: { $exists: false } }] },
+          ],
         },
         {
           $set: {
             username: input.username,
-            dateOfBirth: new Date(input.dateOfBirth as string),
+            onboardedAt: new Date(),
           },
         }
       ).exec();

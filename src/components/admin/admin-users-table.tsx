@@ -147,9 +147,7 @@ export function AdminUsersTable({
               if (user.pending) {
                 return (
                   <TableRow key={`pending:${user.id}`} className="bg-tint/40">
-                    <TableCell>
-                      <PendingInviteActions invite={user} />
-                    </TableCell>
+                    <TableCell />
                     <TableCell className="num text-center text-muted-foreground">
                       {index + 1}
                     </TableCell>
@@ -186,7 +184,11 @@ export function AdminUsersTable({
                     >
                       Invited {formatDate(user.createdAt)}
                     </TableCell>
-                    <TableCell />
+                    <TableCell>
+                      <div className="flex justify-end">
+                        <PendingInviteActions invite={user} />
+                      </div>
+                    </TableCell>
                   </TableRow>
                 );
               }

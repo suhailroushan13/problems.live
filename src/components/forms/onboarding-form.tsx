@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Dice5, Loader2, Sparkles, X } from "lucide-react";
+import { Check, Dice5, Loader2, RefreshCw, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import {
   checkUsernameAvailable,
   completeOnboarding,
   generateAnonymousUsername,
+  updateAvatar,
 } from "@/actions/auth";
 import { usernameSchema } from "@/lib/validation/schemas";
 import type { AvatarStyle, AvatarType } from "@/lib/avatar";
@@ -48,7 +49,6 @@ export function OnboardingForm({
 }) {
   const router = useRouter();
   const [username, setUsername] = useState(initialUsername);
-  const [dateOfBirth, setDateOfBirth] = useState("");
   const [usernameStatus, setUsernameStatus] = useState<UsernameStatus>({
     state: "idle",
   });
@@ -105,7 +105,7 @@ export function OnboardingForm({
     }
 
     startSubmitting(async () => {
-      const result = await completeOnboarding({ username, dateOfBirth });
+      const result = await completeOnboarding({ username });
       if (!result.ok) {
         toast.error(result.error);
         return;
@@ -118,12 +118,28 @@ export function OnboardingForm({
 
   const busy = generating || submitting;
 
+  function randomizeAvatar() {
+    startGenerating(async () => {
+      const result = await updateAvatar({
+        avatarType: "generated",
+        avatarStyle: "people",
+        avatarSeed: crypto.randomUUID(),
+      });
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success("New avatar selected.");
+      router.refresh();
+    });
+  }
+
   return (
     <form onSubmit={submit} className="space-y-7">
       <section>
         <Label>Profile photo</Label>
         <p className="mt-1 text-sm text-muted-foreground">
-          Your Google photo is used by default. Click it to pick an illustrated avatar or upload your own instead.
+          We picked an illustrated avatar and anonymous name for you. Change either one whenever you like.
         </p>
         <div className="mt-3">
           <AvatarPicker
@@ -136,6 +152,17 @@ export function OnboardingForm({
             uploadedAvatarUrl={uploadedAvatarUrl}
             googleAvatarUrl={googleAvatarUrl}
           />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={randomizeAvatar}
+            disabled={busy}
+            className="mt-3 w-full gap-1.5 sm:hidden"
+          >
+            {generating ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />}
+            Randomize avatar
+          </Button>
         </div>
       </section>
 
@@ -214,26 +241,10 @@ export function OnboardingForm({
         </p>
       </section>
 
-      <section className="border-t border-hairline pt-7">
-        <Label htmlFor="onboard-date-of-birth">Date of birth</Label>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Used to confirm you are old enough to use problems.live. This is private and cannot be changed after setup.
-        </p>
-        <Input
-          id="onboard-date-of-birth"
-          type="date"
-          value={dateOfBirth}
-          onChange={(event) => setDateOfBirth(event.target.value)}
-          max={new Date().toISOString().slice(0, 10)}
-          className="mt-3 w-full sm:w-60"
-          required
-        />
-      </section>
-
       <Button
         type="submit"
         size="lg"
-        disabled={busy || !usernameIsValid || usernameStatus.state !== "available" || !dateOfBirth}
+        disabled={busy || !usernameIsValid || usernameStatus.state !== "available"}
         className="h-11 w-full gap-2 sm:w-auto"
       >
         {submitting ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}

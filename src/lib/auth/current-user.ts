@@ -41,7 +41,7 @@ export interface SessionUser {
   isModerator: boolean;
   isSuspended: boolean;
   suspendedUntil: Date | null;
-  /** False until the one-time onboarding step (username + date of birth) is done. */
+  /** False until the one-time profile setup is complete. */
   isOnboarded: boolean;
 }
 
@@ -77,7 +77,9 @@ function toSessionUser(doc: IUser): SessionUser {
     isModerator: doc.role === "admin" || doc.role === "moderator",
     isSuspended: stillSuspended,
     suspendedUntil,
-    isOnboarded: Boolean(doc.dateOfBirth),
+    // Keep accounts completed under the former DOB-based onboarding flow
+    // working while new accounts use the explicit completion timestamp.
+    isOnboarded: Boolean(doc.onboardedAt ?? doc.dateOfBirth),
   };
 }
 

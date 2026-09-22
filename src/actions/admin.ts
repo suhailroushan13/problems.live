@@ -1353,26 +1353,35 @@ export async function approveWaitlistSignup(rawId: string): Promise<ActionResult
     }
 
     const token = randomBytes(32).toString("base64url");
+    let inviteId: string;
     try {
-      await Invite.create({
+      const invite = await Invite.create({
         name: signup.name,
         email: signup.email,
         type: "email",
         tokenHash: hashInviteToken(token),
         inviterId: admin.id,
       });
+      inviteId = String(invite._id);
     } catch (error) {
       if (isDuplicateKeyError(error)) throw new DomainError("This email already has a pending invitation.");
       throw error;
     }
 
-    await sendInvitationEmail({
-      name: signup.name,
-      email: signup.email,
-      inviteToken: token,
-      inviteUrl: googleAuthUrlForInvite(token),
-      source: "waitlist",
-    });
+    try {
+      await sendInvitationEmail({
+        name: signup.name,
+        email: signup.email,
+        inviteToken: token,
+        inviteUrl: googleAuthUrlForInvite(token),
+        source: "waitlist",
+      });
+    } catch (error) {
+      // If delivery failed, remove the unpublished invite so an admin can
+      // safely retry instead of being blocked by a link the person never got.
+      await Invite.deleteOne({ _id: objectId(inviteId), status: "pending" }).exec();
+      throw error;
+    }
 
     await WaitlistSignup.updateOne(
       { _id: signup._id },
@@ -1389,6 +1398,44 @@ export async function approveWaitlistSignup(rawId: string): Promise<ActionResult
 
     revalidatePath("/admin/waiting-list");
     return okVoid(`Approved ${signup.name} and sent the invitation email to ${signup.email}.`);
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+/** Approves every currently pending signup, sending each eligible person their own invite. */
+export async function approveAllWaitlistSignups(): Promise<ActionResult<{ approvedCount: number; failedCount: number }>> {
+  try {
+    const admin = await requireAdmin();
+    await connectToDatabase();
+    const signups = await WaitlistSignup.find({ status: "pending" }, { _id: 1 }).lean().exec();
+
+    if (signups.length === 0) {
+      return ok({ approvedCount: 0, failedCount: 0 }, "There are no pending waitlist requests.");
+    }
+
+    let approvedCount = 0;
+    let failedCount = 0;
+    for (const signup of signups) {
+      // Reuse the single-approval path so every invitation, audit entry, and
+      // email follows exactly the same access-control rules.
+      const result = await approveWaitlistSignup(String(signup._id));
+      if (result.ok) approvedCount += 1;
+      else failedCount += 1;
+    }
+
+    await audit({
+      actorId: admin.id,
+      action: "waitlist.approve_all",
+      targetType: "waitlist_signup",
+      meta: { approvedCount, failedCount },
+    });
+    revalidatePath("/admin/waiting-list");
+
+    const message = failedCount === 0
+      ? `Approved ${approvedCount} waitlist request${approvedCount === 1 ? "" : "s"} and sent invitation emails.`
+      : `Approved ${approvedCount} request${approvedCount === 1 ? "" : "s"}. ${failedCount} could not be approved.`;
+    return ok({ approvedCount, failedCount }, message);
   } catch (error) {
     return toActionError(error);
   }

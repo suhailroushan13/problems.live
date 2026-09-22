@@ -40,6 +40,8 @@ export interface IUser {
   /** Set once, by the user, and never changed after that, so it stays a
    * reliable value rather than something people can edit at will. */
   dateOfBirth?: Date | null;
+  /** Marks completion of the one-time profile setup without collecting DOB. */
+  onboardedAt?: Date | null;
   avatar?: string;
   avatarType?: AvatarType;
   avatarStyle?: AvatarStyle;
@@ -89,6 +91,7 @@ const UserSchema = new Schema<IUser>(
     },
     usernameChangedAt: { type: Date, default: null },
     dateOfBirth: { type: Date, default: null },
+    onboardedAt: { type: Date, default: null },
     avatar: { type: String },
     avatarType: { type: String, enum: ["google", "generated", "uploaded"], default: "generated" },
     avatarStyle: { type: String, enum: ["people", "characters", "pixel", "abstract", "fun"], default: "people" },

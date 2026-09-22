@@ -282,9 +282,6 @@ export const updateProfileSchema = z.object({
 
 export const onboardingSchema = z.object({
   username: usernameSchema,
-  dateOfBirth: dateOfBirthSchema.refine((value) => Boolean(value), {
-    message: "Your date of birth is required.",
-  }),
 });
 
 export const checkUsernameSchema = z.object({

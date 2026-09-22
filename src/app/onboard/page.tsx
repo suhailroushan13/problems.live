@@ -32,6 +32,7 @@ export default async function OnboardPage({
   const [account, startingCredits] = await Promise.all([
     User.findById(toObjectId(user.id), {
       dateOfBirth: 1,
+      onboardedAt: 1,
       avatar: 1,
       avatarType: 1,
       avatarStyle: 1,
@@ -42,7 +43,7 @@ export default async function OnboardPage({
     getSetting("startingProblemCredits"),
   ]);
 
-  if (account?.dateOfBirth) redirect(destination);
+  if (account?.onboardedAt ?? account?.dateOfBirth) redirect(destination);
 
   return (
     <main className="page flex min-h-[calc(100vh-16rem)] items-center py-12 sm:py-16">
