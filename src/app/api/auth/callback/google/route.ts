@@ -6,7 +6,8 @@ import { provisionUserFromGoogle } from "@/lib/auth/provision";
 import { createSessionToken, SESSION_COOKIE } from "@/lib/auth/session";
 import { env } from "@/lib/env";
 import { connectToDatabase } from "@/lib/db/mongoose";
-import { User } from "@/models";
+import { Invite, User } from "@/models";
+import { hashInviteToken } from "@/lib/utils/invite-token";
 
 // Outer backstop: bounds what one stuck request can cost if an
 // inner timeout is ever missed or raised.
@@ -127,8 +128,36 @@ export async function GET(request: NextRequest) {
     }
     const token = await createSessionToken(String(user._id));
 
-    const destination =
+    let destination =
       next.startsWith("/") && !next.startsWith("//") ? next : "/";
+
+    // Consume email invitations before account setup. Previously onboarding
+    // preserved `/invite/<token>` as its destination, so users could finish
+    // setup and return to a one-time URL that had already become unavailable.
+    // Claiming here gives the new account its invite credits and makes the
+    // post-onboarding destination deterministic.
+    const emailInvite = destination.match(/^\/invite\/([A-Za-z0-9_-]{20,128})$/);
+    if (emailInvite) {
+      const claimed = await Invite.findOneAndUpdate(
+        {
+          tokenHash: hashInviteToken(emailInvite[1]),
+          type: "email",
+          status: "pending",
+          email: profile.email,
+        },
+        { $set: { status: "accepted", claimedBy: user._id, claimedAt: new Date() } },
+        { new: true },
+      ).lean().exec();
+
+      if (!claimed) return clearOAuthCookies(failure("invite_unavailable"));
+
+      await User.updateOne(
+        { _id: user._id },
+        { $set: { inviteCredits: 5, invitedBy: claimed.inviterId ?? null } },
+        { strict: false },
+      ).exec();
+      destination = "/problems/new";
+    }
 
     // /onboard immediately redirects to `next` for anyone who already has a
     // dateOfBirth on file, so this is a no-op hop for returning users and
