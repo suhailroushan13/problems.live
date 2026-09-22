@@ -20,6 +20,8 @@ export async function sendInvitationEmail(params: {
   inviteToken: string;
   /** The direct sign-in link (Google OAuth `next`-chained to the invite) — clicking it goes straight to the consent screen, no landing page first. */
   inviteUrl: string;
+  /** Waitlist approvals receive an explicit approval message before the invitation. */
+  source?: "invite" | "waitlist";
 }): Promise<void> {
   const name = escapeHtml(params.name);
   const recipient = escapeHtml(params.email);
@@ -28,8 +30,18 @@ export async function sendInvitationEmail(params: {
   const termsUrl = `${env.appUrl}/terms`;
   const privacyUrl = `${env.appUrl}/privacy`;
   const mailingAddress = escapeHtml(env.legalMailingAddress).replaceAll("\n", "<br>");
-  const text = `Hi ${params.name},\n\nYou've been invited to problems.live, a directory of real problems worth solving.\n\nSign in with the Google account for ${params.email} to accept the invitation and set up your account:\n${params.inviteUrl}\n\nThis invitation is personal and shouldn't be forwarded. If you weren't expecting it, you can ignore this email, or cancel it here: ${unsubscribeUrl}\n\nTerms: ${termsUrl}\nPrivacy: ${privacyUrl}\n\nproblems.live\n${env.legalMailingAddress}`;
-  const subject = "Your invitation to problems.live";
+  const isWaitlistApproval = params.source === "waitlist";
+  const subject = isWaitlistApproval
+    ? "Your waitlist request is approved · problems.live"
+    : "Your invitation to problems.live";
+  const text = isWaitlistApproval
+    ? `Hi ${params.name},\n\nGood news — your waitlist request has been approved.\n\nSign in with the Google account for ${params.email} to join problems.live:\n${params.inviteUrl}\n\nThis invitation is personal and shouldn't be forwarded. If you weren't expecting it, you can ignore this email, or cancel it here: ${unsubscribeUrl}\n\nTerms: ${termsUrl}\nPrivacy: ${privacyUrl}\n\nproblems.live\n${env.legalMailingAddress}`
+    : `Hi ${params.name},\n\nYou've been invited to problems.live, a directory of real problems worth solving.\n\nSign in with the Google account for ${params.email} to accept the invitation and set up your account:\n${params.inviteUrl}\n\nThis invitation is personal and shouldn't be forwarded. If you weren't expecting it, you can ignore this email, or cancel it here: ${unsubscribeUrl}\n\nTerms: ${termsUrl}\nPrivacy: ${privacyUrl}\n\nproblems.live\n${env.legalMailingAddress}`;
+  const preheader = isWaitlistApproval ? "Your waitlist request has been approved." : "You've been invited to join problems.live.";
+  const opening = isWaitlistApproval
+    ? "Good news — your waitlist request has been approved."
+    : "You&apos;ve been invited to join <strong style=\"color:#0f172a\">problems.live</strong>, a directory of real problems worth solving.";
+  const buttonLabel = isWaitlistApproval ? "Join problems.live" : "Accept invitation";
   const html = `<!doctype html>
 <html lang="en">
   <head>
@@ -39,7 +51,7 @@ export async function sendInvitationEmail(params: {
     <title>${subject}</title>
   </head>
   <body style="margin:0;padding:0;background:#f8fafc;color:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased">
-    <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">You've been invited to join problems.live.</div>
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">${preheader}</div>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;background:#f8fafc">
       <tr>
         <td align="center" style="padding:48px 16px">
@@ -53,7 +65,7 @@ export async function sendInvitationEmail(params: {
                   <tr>
                     <td style="padding:36px 36px 0">
                       <p style="margin:0;color:#0f172a;font-size:15px;line-height:24px">Hi ${name},</p>
-                      <p style="margin:16px 0 0;color:#334155;font-size:15px;line-height:24px">You&apos;ve been invited to join <strong style="color:#0f172a">problems.live</strong>, a directory of real problems worth solving.</p>
+                      <p style="margin:16px 0 0;color:#334155;font-size:15px;line-height:24px">${opening}</p>
                       <p style="margin:16px 0 0;color:#334155;font-size:15px;line-height:24px">Sign in with the Google account for <strong style="color:#0f172a">${recipient}</strong> to accept and set up your account.</p>
                     </td>
                   </tr>
@@ -62,7 +74,7 @@ export async function sendInvitationEmail(params: {
                       <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                         <tr>
                           <td align="center" bgcolor="#0f172a" style="border-radius:6px">
-                            <a href="${params.inviteUrl}" style="display:inline-block;padding:11px 20px;border-radius:6px;color:#ffffff;font-size:14px;font-weight:600;line-height:20px;text-decoration:none">Accept invitation</a>
+                            <a href="${params.inviteUrl}" style="display:inline-block;padding:11px 20px;border-radius:6px;color:#ffffff;font-size:14px;font-weight:600;line-height:20px;text-decoration:none">${buttonLabel}</a>
                           </td>
                         </tr>
                       </table>

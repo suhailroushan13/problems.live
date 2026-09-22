@@ -30,22 +30,22 @@ export function WaitlistCard({
   function celebrateJoin() {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    void confetti({
-      particleCount: 90,
-      spread: 68,
-      startVelocity: 34,
-      origin: { y: 0.68 },
-      colors: ["#2563eb", "#60a5fa", "#f59e0b", "#16a34a"],
-    });
-    window.setTimeout(() => {
-      void confetti({
-        particleCount: 45,
-        angle: 58,
-        spread: 55,
-        origin: { x: 0.08, y: 0.72 },
-        colors: ["#2563eb", "#93c5fd", "#f59e0b"],
-      });
-    }, 160);
+    const colors = ["#2563eb", "#7c3aed", "#ec4899", "#f59e0b", "#16a34a", "#06b6d4"];
+    const burst = (x: number, particleCount: number, delay: number) => {
+      window.setTimeout(() => {
+        void confetti({
+          particleCount,
+          spread: 68,
+          startVelocity: 34,
+          origin: { x, y: 0.72 },
+          colors,
+        });
+      }, delay);
+    };
+
+    burst(0.1, 65, 0);
+    burst(0.5, 95, 100);
+    burst(0.9, 65, 200);
   }
 
   function submit(event: React.FormEvent<HTMLFormElement>) {

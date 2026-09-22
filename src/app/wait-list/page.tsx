@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { WaitlistCard } from "./waitlist-card";
 import { Button } from "@/components/ui/button";
 import { XIcon } from "@/components/shared/social-icons";
 import { ACCESS_CONTACT_X_URL } from "@/lib/constants";
+import { getCurrentUser } from "@/lib/auth/current-user";
 import { issueRenderProof } from "@/lib/utils/waitlist-proof";
 
 export const metadata: Metadata = {
@@ -32,6 +34,9 @@ async function pendingProfile(): Promise<{ name: string; email: string } | null>
 }
 
 export default async function WaitListPage() {
+  const user = await getCurrentUser();
+  if (user) redirect("/problems");
+
   const proof = issueRenderProof();
   const prefill = await pendingProfile();
 

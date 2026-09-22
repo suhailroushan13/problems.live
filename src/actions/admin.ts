@@ -1280,6 +1280,7 @@ export async function approveWaitlistSignup(rawId: string): Promise<ActionResult
       email: signup.email,
       inviteToken: token,
       inviteUrl: googleAuthUrlForInvite(token),
+      source: "waitlist",
     });
 
     await WaitlistSignup.updateOne(
@@ -1296,7 +1297,7 @@ export async function approveWaitlistSignup(rawId: string): Promise<ActionResult
     });
 
     revalidatePath("/admin/waiting-list");
-    return okVoid(`Invited ${signup.name}.`);
+    return okVoid(`Approved ${signup.name} and sent the invitation email to ${signup.email}.`);
   } catch (error) {
     return toActionError(error);
   }
