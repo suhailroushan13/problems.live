@@ -39,6 +39,7 @@ export async function hasInviteAccess(next: string, email: string): Promise<bool
         type: "link",
         status: "pending",
         inviterUsername: username.data,
+        $expr: { $lt: [{ $ifNull: ["$usedCount", 0] }, { $ifNull: ["$maxUses", 1] }] },
       }),
     );
   }

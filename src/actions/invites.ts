@@ -1,6 +1,7 @@
 "use server";
 
 import { randomBytes } from "node:crypto";
+import { Types } from "mongoose";
 import { revalidatePath } from "next/cache";
 import { DomainError, isDuplicateKeyError, ok, okVoid, toActionError } from "@/lib/action-helpers";
 import { requireUser } from "@/lib/auth/current-user";
@@ -8,7 +9,7 @@ import { connectToDatabase } from "@/lib/db/mongoose";
 import { env } from "@/lib/env";
 import { sendInvitationEmail } from "@/lib/services/email";
 import { googleAuthUrlForInvite, hashInviteToken as tokenHash } from "@/lib/utils/invite-token";
-import { inviteLinkCodeSchema, inviteSchema, usernameSchema } from "@/lib/validation/schemas";
+import { adminInviteLinkLimitSchema, inviteLinkCodeSchema, inviteSchema, usernameSchema } from "@/lib/validation/schemas";
 import { Invite, User } from "@/models";
 import type { ActionResult } from "@/types";
 
@@ -80,11 +81,10 @@ export async function acceptInvite(token: string): Promise<ActionResult> {
 }
 
 /**
- * A personal, shareable, single-use link: `/invite/link/{username}/{code}`.
- * Unlike `sendInvite`, it isn't tied to a specific email address — anyone
- * with the link can claim it, once.
+ * A personal, shareable link: `/invite/link/{username}/{code}`. Member links
+ * stay single-use; administrators can set an explicit reusable-link limit.
  */
-export async function createInviteLink(): Promise<ActionResult<{ url: string }>> {
+export async function createInviteLink(rawLimit?: unknown): Promise<ActionResult<{ url: string }>> {
   try {
     const inviter = await requireUser();
     await connectToDatabase();
@@ -92,12 +92,17 @@ export async function createInviteLink(): Promise<ActionResult<{ url: string }>>
       throw new DomainError("You have no invitations remaining.", "forbidden");
     }
 
+    const maxUses = inviter.isAdmin
+      ? adminInviteLinkLimitSchema.parse(rawLimit ?? 1)
+      : 1;
+
     const code = randomBytes(8).toString("base64url");
     await Invite.create({
       type: "link",
       tokenHash: tokenHash(code),
       inviterId: inviter.id,
       inviterUsername: inviter.username,
+      maxUses,
     });
     if (!inviter.isAdmin) {
       await User.updateOne(
@@ -109,7 +114,7 @@ export async function createInviteLink(): Promise<ActionResult<{ url: string }>>
     revalidatePath("/invites");
     return ok(
       { url: `${env.appUrl}/invite/link/${inviter.username}/${code}` },
-      "Invite link created. Copy it now — it won’t be shown again.",
+      `Invite link created for ${maxUses} ${maxUses === 1 ? "person" : "people"}. Copy it now — it won’t be shown again.`,
     );
   } catch (error) {
     return toActionError(error);
@@ -127,17 +132,48 @@ export async function acceptInviteLink(username: string, code: string): Promise<
       tokenHash: tokenHash(safeCode),
       type: "link",
       inviterUsername: safeUsername,
+      status: "pending",
+      claimedByIds: { $ne: new Types.ObjectId(user.id) },
+      $expr: { $lt: [{ $ifNull: ["$usedCount", 0] }, { $ifNull: ["$maxUses", 1] }] },
     }).lean().exec();
-    if (!invite || invite.status !== "pending") {
+    if (!invite) {
       throw new DomainError("This invitation link is unavailable or has already been used.", "forbidden");
     }
     if (invite.inviterId && String(invite.inviterId) === user.id) {
       throw new DomainError("You can’t accept your own invite link.");
     }
 
+    const claimTime = new Date();
+    const claimantId = new Types.ObjectId(user.id);
     const claimed = await Invite.findOneAndUpdate(
-      { _id: invite._id, status: "pending" },
-      { $set: { status: "accepted", claimedBy: user.id, claimedAt: new Date() } },
+      {
+        _id: invite._id,
+        status: "pending",
+        claimedByIds: { $ne: claimantId },
+        $expr: { $lt: [{ $ifNull: ["$usedCount", 0] }, { $ifNull: ["$maxUses", 1] }] },
+      },
+      [
+        {
+          $set: {
+            usedCount: { $add: [{ $ifNull: ["$usedCount", 0] }, 1] },
+            claimedBy: claimantId,
+            claimedByIds: { $concatArrays: [{ $ifNull: ["$claimedByIds", []] }, [claimantId]] },
+            claimedAt: claimTime,
+            status: {
+              $cond: [
+                {
+                  $gte: [
+                    { $add: [{ $ifNull: ["$usedCount", 0] }, 1] },
+                    { $ifNull: ["$maxUses", 1] },
+                  ],
+                },
+                "accepted",
+                "pending",
+              ],
+            },
+          },
+        },
+      ],
       { new: true },
     ).lean().exec();
     if (!claimed) throw new DomainError("This invitation link is unavailable or has already been used.", "forbidden");

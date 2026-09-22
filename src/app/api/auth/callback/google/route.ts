@@ -8,6 +8,7 @@ import { env } from "@/lib/env";
 import { connectToDatabase } from "@/lib/db/mongoose";
 import { Invite, User, WaitlistSignup } from "@/models";
 import { hashInviteToken } from "@/lib/utils/invite-token";
+import { inviteLinkCodeSchema, usernameSchema } from "@/lib/validation/schemas";
 import { sendWaitlistSignupNotification } from "@/lib/services/email";
 
 // Outer backstop: bounds what one stuck request can cost if an
@@ -195,6 +196,81 @@ export async function GET(request: NextRequest) {
         { $set: { inviteCredits: 5, invitedBy: claimed.inviterId ?? null } },
         { strict: false },
       ).exec();
+      destination = "/problems/new";
+    }
+
+    // Personal invitation links are accepted as part of the verified Google
+    // sign-in. A recipient should never have to land on a second "accept"
+    // screen after opening an invite link.
+    const linkInvite = destination.match(/^\/invite\/link\/([^/]+)\/([^/]+)$/);
+    if (linkInvite) {
+      const inviterUsername = usernameSchema.safeParse(linkInvite[1]);
+      const inviteCode = inviteLinkCodeSchema.safeParse(linkInvite[2]);
+      if (!inviterUsername.success || !inviteCode.success) {
+        return clearOAuthCookies(failure("invite_unavailable"));
+      }
+
+      const pendingInvite = await Invite.findOne(
+        {
+          tokenHash: hashInviteToken(inviteCode.data),
+          type: "link",
+          status: "pending",
+          inviterUsername: inviterUsername.data,
+          $expr: { $lt: [{ $ifNull: ["$usedCount", 0] }, { $ifNull: ["$maxUses", 1] }] },
+        },
+        { inviterId: 1 },
+      ).lean().exec();
+
+      if (!pendingInvite) return clearOAuthCookies(failure("invite_unavailable"));
+
+      // Opening your own link is harmless: keep the account flowing to the
+      // compose page without consuming one of your available invitations.
+      const alreadyClaimed = pendingInvite.claimedByIds?.some(
+        (claimantId) => String(claimantId) === String(user._id),
+      );
+      if (String(pendingInvite.inviterId) !== String(user._id) && !alreadyClaimed) {
+        const claimTime = new Date();
+        const claimed = await Invite.findOneAndUpdate(
+          {
+            _id: pendingInvite._id,
+            status: "pending",
+            claimedByIds: { $ne: user._id },
+            $expr: { $lt: [{ $ifNull: ["$usedCount", 0] }, { $ifNull: ["$maxUses", 1] }] },
+          },
+          [
+            {
+              $set: {
+                usedCount: { $add: [{ $ifNull: ["$usedCount", 0] }, 1] },
+                claimedBy: user._id,
+                claimedByIds: { $concatArrays: [{ $ifNull: ["$claimedByIds", []] }, [user._id]] },
+                claimedAt: claimTime,
+                status: {
+                  $cond: [
+                    {
+                      $gte: [
+                        { $add: [{ $ifNull: ["$usedCount", 0] }, 1] },
+                        { $ifNull: ["$maxUses", 1] },
+                      ],
+                    },
+                    "accepted",
+                    "pending",
+                  ],
+                },
+              },
+            },
+          ],
+          { new: true },
+        ).lean().exec();
+
+        if (!claimed) return clearOAuthCookies(failure("invite_unavailable"));
+
+        await User.updateOne(
+          { _id: user._id },
+          { $set: { inviteCredits: 5, invitedBy: claimed.inviterId ?? null } },
+          { strict: false },
+        ).exec();
+      }
+
       destination = "/problems/new";
     }
 

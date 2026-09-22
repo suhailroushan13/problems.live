@@ -309,6 +309,13 @@ export const inviteLinkCodeSchema = z
   .trim()
   .regex(/^[A-Za-z0-9_-]{8,20}$/, "This invitation link is invalid.");
 
+/** Admin-only cap for a reusable personal invite link. */
+export const adminInviteLinkLimitSchema = z.coerce
+  .number()
+  .int("Enter a whole number.")
+  .min(1, "An invite link must allow at least one person.")
+  .max(10_000, "An invite link can allow at most 10,000 people.");
+
 export const adminSettingSchema = z.object({
   key: z.string().min(1).max(60),
   value: z.string().min(1).max(200),

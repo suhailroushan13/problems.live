@@ -1,12 +1,10 @@
-import { notFound } from "next/navigation";
-import { AcceptInviteLinkButton } from "@/components/invites/accept-invite-link-button";
-import { Button } from "@/components/ui/button";
+import { notFound, redirect } from "next/navigation";
+import { Types } from "mongoose";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { connectToDatabase } from "@/lib/db/mongoose";
-import { getProfileByUsername } from "@/lib/data/users";
 import { hashInviteToken } from "@/lib/utils/invite-token";
 import { inviteLinkCodeSchema, usernameSchema } from "@/lib/validation/schemas";
-import { Invite } from "@/models";
+import { Invite, User } from "@/models";
 
 export default async function InviteLinkPage({
   params,
@@ -19,44 +17,75 @@ export default async function InviteLinkPage({
   if (!username.success || !code.success) notFound();
 
   await connectToDatabase();
-  const [invite, inviter] = await Promise.all([
-    Invite.findOne(
-      { tokenHash: hashInviteToken(code.data), type: "link", status: "pending", inviterUsername: username.data },
-      { inviterUsername: 1 },
-    ).lean().exec(),
-    getProfileByUsername(username.data),
-  ]);
-  if (!invite || !inviter) notFound();
-
-  const user = await getCurrentUser();
-  const isOwnLink = user?.username === username.data;
   const next = `/invite/link/${username.data}/${code.data}`;
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect(`/api/auth/google?next=${encodeURIComponent(next)}`);
+  }
+  const claimantId = new Types.ObjectId(user.id);
 
-  return (
-    <main className="page flex min-h-[calc(100svh-12rem)] items-center py-12">
-      <section className="mx-auto w-full max-w-md rounded-2xl border border-hairline bg-card p-7 shadow-sm">
-        <p className="label text-brand">Personal invitation</p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight">
-          {inviter.name} invited you
-        </h1>
-        <p className="mt-3 text-sm leading-6 text-muted-foreground">
-          You&apos;ve been invited to problems.live by u/{inviter.username}. Once you join, you&apos;ll have five
-          invitations to share with people you trust.
-        </p>
-        {!user ? (
-          <Button asChild className="mt-7 w-full">
-            <a href={`/api/auth/google?next=${encodeURIComponent(next)}`}>Continue with Google</a>
-          </Button>
-        ) : isOwnLink ? (
-          <p className="mt-7 rounded-lg border border-hairline bg-sunken p-3 text-sm text-muted-foreground">
-            This is your own invite link — share it with someone else to have them join.
-          </p>
-        ) : (
-          <div className="mt-7">
-            <AcceptInviteLinkButton username={username.data} code={code.data} />
-          </div>
-        )}
-      </section>
-    </main>
-  );
+  const invite = await Invite.findOne(
+    {
+      tokenHash: hashInviteToken(code.data),
+      type: "link",
+      status: "pending",
+      inviterUsername: username.data,
+      $expr: { $lt: [{ $ifNull: ["$usedCount", 0] }, { $ifNull: ["$maxUses", 1] }] },
+    },
+    { inviterId: 1 },
+  ).lean().exec();
+  if (!invite) notFound();
+
+  // A member may open their own share link. They already have access, so do
+  // not consume the invitation; simply take them to the compose page.
+  if (String(invite.inviterId) === user.id) {
+    redirect("/problems/new");
+  }
+  if (invite.claimedByIds?.some((claimedBy) => String(claimedBy) === user.id)) {
+    redirect("/problems/new");
+  }
+
+  // This covers an already signed-in recipient. New recipients are claimed
+  // in the OAuth callback above, before onboarding starts.
+  const claimTime = new Date();
+  const claimed = await Invite.findOneAndUpdate(
+    {
+      _id: invite._id,
+      status: "pending",
+      claimedByIds: { $ne: claimantId },
+      $expr: { $lt: [{ $ifNull: ["$usedCount", 0] }, { $ifNull: ["$maxUses", 1] }] },
+    },
+    [
+      {
+        $set: {
+          usedCount: { $add: [{ $ifNull: ["$usedCount", 0] }, 1] },
+          claimedBy: claimantId,
+          claimedByIds: { $concatArrays: [{ $ifNull: ["$claimedByIds", []] }, [claimantId]] },
+          claimedAt: claimTime,
+          status: {
+            $cond: [
+              {
+                $gte: [
+                  { $add: [{ $ifNull: ["$usedCount", 0] }, 1] },
+                  { $ifNull: ["$maxUses", 1] },
+                ],
+              },
+              "accepted",
+              "pending",
+            ],
+          },
+        },
+      },
+    ],
+    { new: true },
+  ).lean().exec();
+  if (!claimed) notFound();
+
+  await User.updateOne(
+    { _id: user.id },
+    { $set: { inviteCredits: 5, invitedBy: claimed.inviterId ?? null } },
+    { strict: false },
+  ).exec();
+
+  redirect("/onboard?next=/problems/new");
 }

@@ -38,7 +38,7 @@ export async function sendInvitationEmail(params: {
   const opening = isWaitlistApproval
     ? "Good news — your waitlist request has been approved."
     : "You&apos;ve been invited to join <strong style=\"color:#0f172a\">problems.live</strong>, a directory of real problems worth solving.";
-  const buttonLabel = isWaitlistApproval ? "Join problems.live" : "Accept invitation";
+  const buttonLabel = "Join problems.live";
   const html = `<!doctype html>
 <html lang="en">
   <head>
