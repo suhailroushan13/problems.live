@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { formatCount } from "@/lib/utils/format";
@@ -53,8 +52,10 @@ export function LivePill({
     : "Loading live visitor statistics.";
 
   return (
-    <Link
-      href="/problems"
+    <a
+      href="https://datafa.st/share/6aaa2d245c385394e3eb1500?realtime=1"
+      target="_blank"
+      rel="noreferrer"
       aria-label={label}
       title={label}
       className={cn(
@@ -77,6 +78,6 @@ export function LivePill({
         <Users className="size-3" aria-hidden="true" />
         {stats ? formatCount(stats.totalVisits) : "—"}
       </span>
-    </Link>
+    </a>
   );
 }

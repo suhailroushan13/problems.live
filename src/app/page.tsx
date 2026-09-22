@@ -5,6 +5,7 @@ import { ProblemCard } from "@/components/problems/problem-card";
 import { MobileProblemsFeed } from "@/components/problems/mobile-problems-feed";
 import { PaginationBar } from "@/components/shared/pagination-bar";
 import { EmptyState } from "@/components/shared/empty-state";
+import { SignInButton } from "@/components/shared/sign-in-button";
 import { GithubBadge } from "@/components/shared/github-badge";
 import { DirectoryViewToggle } from "@/components/problems/directory-view-toggle";
 // import { SignInSoundControl } from "@/components/auth/sign-in-sound-control";
@@ -167,9 +168,9 @@ export default async function HomePage({
                         </div>
                         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-background/40 px-4 text-center backdrop-blur-[1px]">
                           <p className="text-sm font-semibold text-foreground">Sign in to see more problems</p>
-                          <Button asChild size="sm">
-                            <Link href="/login?next=%2F">Sign in</Link>
-                          </Button>
+                          <SignInButton size="sm" next="/">
+                            Sign in with Google
+                          </SignInButton>
                         </div>
                       </div>
                     );
@@ -210,7 +211,12 @@ export default async function HomePage({
             // description and CTA visible.
             <EmptyState
               description="Be the first person to share a problem worth solving."
-              action={{ label: "Sign in with Google", href: "/api/auth/google?next=%2Fproblems%2Fnew" }}
+              action={{
+                label: "Post a Problem",
+                href: isLoggedIn
+                  ? "/problems/new"
+                  : "/api/auth/google?next=%2Fproblems%2Fnew",
+              }}
             />
           )}
         </div>

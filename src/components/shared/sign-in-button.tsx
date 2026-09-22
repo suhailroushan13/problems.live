@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { ComponentProps, ReactNode } from "react";
 
-function GoogleMark({ className }: { className?: string }) {
+export function GoogleMark({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={cn("size-4", className)} aria-hidden="true">
       <path
@@ -36,6 +36,7 @@ export function SignInButton({
   showIcon = true,
   next,
   className,
+  variant = "outline",
   ...props
 }: {
   children?: ReactNode;
@@ -44,7 +45,15 @@ export function SignInButton({
 } & ComponentProps<typeof Button>) {
   const destination = next?.startsWith("/") && !next.startsWith("//") ? next : "/";
   return (
-    <Button asChild className={className} {...props}>
+    <Button
+      asChild
+      variant={variant}
+      className={cn(
+        "border-[#dadce0] bg-white text-[#3c4043] shadow-[0_1px_2px_rgb(60_64_67_/_0.22),0_1px_3px_1px_rgb(60_64_67_/_0.1)] hover:bg-[#f8f9fa] hover:text-[#202124]",
+        className,
+      )}
+      {...props}
+    >
       <a href={`/api/auth/google?next=${encodeURIComponent(destination)}`}>
         {showIcon ? <GoogleMark /> : null}
         {children}
