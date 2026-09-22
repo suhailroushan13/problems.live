@@ -54,7 +54,7 @@ export default async function OnboardPage({
             Choose how you appear here.
           </h1>
           <p className="mt-4 max-w-md text-[0.9375rem] leading-relaxed text-muted-foreground">
-            We&apos;ve created a private identity for you. Keep it, shuffle it, or make it your own.
+            Your name and username are prefilled from your Google account. Change them if you&apos;d like.
           </p>
           <p className="mt-6 inline-flex rounded-full border border-brand/15 bg-brand-muted px-3 py-1.5 text-sm font-medium text-brand">
             {startingCredits} Credits ready for your first problem

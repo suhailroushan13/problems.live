@@ -2,11 +2,12 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { connectToDatabase } from "@/lib/db/mongoose";
 import { User, type IUser } from "@/models";
+import { usernameFromEmail } from "@/lib/utils/slug";
+import { toTitleCase } from "@/lib/utils/text";
 import { env } from "@/lib/env";
 import { getSetting } from "@/lib/config/settings";
 import { isReservedUsername } from "@/lib/constants";
 import { generatedAvatarUrl } from "@/lib/avatar";
-import { anonymousDisplayName, randomAnonymousUsername } from "@/lib/utils/anonymous-identity";
 import type { GoogleProfile } from "./google";
 
 async function claimUsername(seed: string): Promise<string> {
@@ -68,14 +69,14 @@ export async function provisionUserFromGoogle(
   }
 
   const startingCredits = await getSetting("startingProblemCredits");
-  const username = await claimUsername(randomAnonymousUsername());
+  const username = await claimUsername(usernameFromEmail(profile.email));
   const avatarSeed = randomUUID();
 
   const created = await User.create({
     googleId: profile.googleId,
     email: profile.email,
     emailVerified: profile.emailVerified,
-    name: anonymousDisplayName(username),
+    name: toTitleCase(profile.name),
     username,
     avatar: generatedAvatarUrl(avatarSeed, "people"),
     avatarType: "generated",
