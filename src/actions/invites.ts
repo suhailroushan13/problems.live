@@ -99,6 +99,11 @@ export async function createInviteLink(rawLimit?: unknown): Promise<ActionResult
     const code = randomBytes(8).toString("base64url");
     await Invite.create({
       type: "link",
+      // Older deployments have a unique `{ email, status }` index without
+      // the newer partial filter. Giving links an internal unique address
+      // keeps them compatible with both index versions and never exposes it
+      // in the product UI.
+      email: `link-${code}@invites.problems.live`,
       tokenHash: tokenHash(code),
       inviterId: inviter.id,
       inviterUsername: inviter.username,

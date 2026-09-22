@@ -44,8 +44,9 @@ const InviteSchema = new Schema<IInvite>(
   { timestamps: true },
 );
 
-// Only email invites are constrained to one pending invite per address —
-// link invites have no email at creation time, so they're excluded here.
+// Only email invites are constrained to one pending invite per address.
+// Link records carry an internal unique placeholder email for compatibility
+// with older deployments whose equivalent index was not partial.
 InviteSchema.index(
   { email: 1, status: 1 },
   { unique: true, partialFilterExpression: { status: "pending", email: { $type: "string" } } },

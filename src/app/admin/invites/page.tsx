@@ -9,7 +9,7 @@ export default async function AdminInvitesPage() {
   const user = await getCurrentUser();
   await connectToDatabase();
   const [invites, people] = await Promise.all([
-    Invite.find({}, { name: 1, email: 1, inviterId: 1, inviterUsername: 1, claimedBy: 1, claimedByIds: 1, maxUses: 1, usedCount: 1, status: 1 }).sort({ createdAt: 1 }).lean().exec(),
+    Invite.find({}, { type: 1, name: 1, email: 1, inviterId: 1, inviterUsername: 1, claimedBy: 1, claimedByIds: 1, maxUses: 1, usedCount: 1, status: 1 }).sort({ createdAt: 1 }).lean().exec(),
     User.find({}, { name: 1, email: 1, inviteCredits: 1 }).sort({ createdAt: 1 }).lean().exec(),
   ]);
   // Every user is a node, not just ones already linked by an Invite — someone
@@ -23,7 +23,7 @@ export default async function AdminInvitesPage() {
     const remaining = Math.max((invite.maxUses ?? 1) - (invite.usedCount ?? 0), 0);
     if (remaining > 0) {
       const target = `invite:${invite._id}`;
-      nodes.push({ id: target, label: invite.name ?? `${invite.inviterUsername ?? "someone"}'s invite link`, email: invite.email ?? "", pending: true });
+      nodes.push({ id: target, label: invite.name ?? `${invite.inviterUsername ?? "someone"}'s invite link`, email: invite.type === "link" ? "" : invite.email ?? "", pending: true });
       claimedEdges.push({ from: `user:${invite.inviterId}`, to: target });
     }
     return claimedEdges;
