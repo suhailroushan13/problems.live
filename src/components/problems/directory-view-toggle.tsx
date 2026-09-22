@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 /** Shared switch for the two public landing-page representations. */
@@ -7,13 +8,24 @@ export function DirectoryViewToggle() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const machineView = searchParams.get("machine") === "1";
+  const [optimisticMachineView, setOptimisticMachineView] = useState(machineView);
+  const [, startTransition] = useTransition();
+
+  useEffect(() => {
+    router.prefetch(machineView ? "/" : "/?machine=1");
+  }, [machineView, router]);
 
   const setView = (view: "human" | "machine") => {
+    const nextMachineView = view === "machine";
+    if (nextMachineView === machineView) return;
+    setOptimisticMachineView(nextMachineView);
     const next = new URLSearchParams(searchParams.toString());
     if (view === "machine") next.set("machine", "1");
     else next.delete("machine");
     const query = next.toString();
-    router.replace(query ? `/?${query}` : "/");
+    startTransition(() => {
+      router.replace(query ? `/?${query}` : "/", { scroll: false });
+    });
   };
 
   return (
@@ -22,8 +34,8 @@ export function DirectoryViewToggle() {
       aria-label="Problems directory format"
       className="inline-flex items-center rounded-full border border-hairline bg-elevated p-1"
     >
-      <DirectoryViewOption label="Human" active={!machineView} onClick={() => setView("human")} />
-      <DirectoryViewOption label="Machine" active={machineView} onClick={() => setView("machine")} />
+      <DirectoryViewOption label="Human" active={!optimisticMachineView} onClick={() => setView("human")} />
+      <DirectoryViewOption label="Machine" active={optimisticMachineView} onClick={() => setView("machine")} />
     </div>
   );
 }

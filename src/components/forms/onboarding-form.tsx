@@ -135,11 +135,11 @@ export function OnboardingForm({
   }
 
   return (
-    <form onSubmit={submit} className="space-y-7">
+    <form onSubmit={submit} className="space-y-6 md:grid md:grid-cols-2 md:gap-x-7 md:space-y-0">
       <section>
         <Label>Profile photo</Label>
         <p className="mt-1 text-sm text-muted-foreground">
-          We picked an illustrated avatar and anonymous name for you. Change either one whenever you like.
+          We picked an illustrated avatar for you.
         </p>
         <div className="mt-3">
           <AvatarPicker
@@ -166,12 +166,12 @@ export function OnboardingForm({
         </div>
       </section>
 
-      <section className="border-t border-hairline pt-7">
+      <section className="border-t border-hairline pt-6 md:border-t-0 md:border-l md:pl-7 md:pt-0">
         <div className="mb-3 flex items-center justify-between gap-3">
           <div>
             <Label htmlFor="onboard-username">Choose a username</Label>
             <p className="mt-1 text-sm text-muted-foreground">
-              This is the name people see, it does not need to be your real name.
+              This is the name people see.
             </p>
           </div>
           <Button
@@ -245,7 +245,7 @@ export function OnboardingForm({
         type="submit"
         size="lg"
         disabled={busy || !usernameIsValid || usernameStatus.state !== "available"}
-        className="h-11 w-full gap-2 sm:w-auto"
+        className="h-11 w-full gap-2 sm:w-auto md:col-span-2 md:mt-6"
       >
         {submitting ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
         Complete setup

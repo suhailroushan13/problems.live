@@ -25,24 +25,21 @@ export default async function NewProblemPage() {
   ]);
 
   return (
-    <div className="page py-8 sm:py-12 lg:flex lg:h-[calc(100dvh-3.75rem)] lg:max-w-[90rem] lg:flex-col lg:overflow-hidden lg:py-8">
-      <header className="mt-4 mb-9 shrink-0 sm:mt-7 sm:mb-10 lg:mt-0 lg:mb-6">
+    <div className="page py-6 sm:py-10">
+      <header className="mt-2 mb-6 sm:mt-4 sm:mb-8">
         <h1 className="text-h1 text-foreground">Share a problem</h1>
-        <p className="mt-3 max-w-xl text-base leading-relaxed text-muted-foreground">
-          You don&apos;t need a solution. Just tell us what&apos;s difficult,
-          who it affects, and why it matters.
+        <p className="mt-2 text-sm text-muted-foreground sm:text-base">
+          Describe what&apos;s hard.
         </p>
       </header>
 
-      <div className="lg:min-h-0 lg:flex-1">
-        <ProblemForm
-          categories={categories}
-          viewer={user}
-          credits={credits}
-          initialLocation={user.defaultLocation}
-          fullScreenDesktop
-        />
-      </div>
+      <ProblemForm
+        categories={categories}
+        viewer={user}
+        credits={credits}
+        initialLocation={user.defaultLocation}
+        compact
+      />
     </div>
   );
 }

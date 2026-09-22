@@ -9,6 +9,8 @@ import {
   MinusCircle,
   MoreHorizontal,
   Pencil,
+  Link2,
+  Share2,
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -151,11 +153,55 @@ export function ProblemActions({
     router.push(`/problems/${slug}/edit`);
   }
 
+  async function share() {
+    const url = `${window.location.origin}/problems/${slug}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "problems.live", url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      toast.success("Problem link copied.");
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      toast.error("Couldn’t share the problem.");
+    }
+  }
+
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/problems/${slug}`);
+      toast.success("Problem link copied.");
+    } catch {
+      toast.error("Couldn’t copy the link.");
+    }
+  }
+
   return (
     <>
       <div className={cn("flex items-center gap-0.5", variant !== "header" && "contents")}>
         {variant === "header" && canManage ? (
           <>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label="Share problem"
+              title="Share problem"
+              className="text-muted-foreground hover:text-foreground"
+              onClick={() => void share()}
+            >
+              <Share2 className="size-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label="Copy problem link"
+              title="Copy link"
+              className="text-muted-foreground hover:text-foreground"
+              onClick={() => void copyLink()}
+            >
+              <Link2 className="size-4" />
+            </Button>
             <Button
               variant="ghost"
               size="icon-sm"

@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight, Check, ChevronDown, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -73,7 +74,7 @@ export function ProblemForm({
   initialCategoryId,
   onDone,
   onCancel,
-  fullScreenDesktop = false,
+  compact = false,
 }: {
   categories: CategoryDTO[];
   viewer: {
@@ -94,13 +95,12 @@ export function ProblemForm({
   initialCategoryId?: string;
   onDone?: (slug: string) => void;
   onCancel?: () => void;
-  /** Used only by the new-problem route for its desktop split workspace. */
-  fullScreenDesktop?: boolean;
+  /** A denser rhythm for the standalone new-problem composer. */
+  compact?: boolean;
 }) {
   const router = useRouter();
   const isEditing = Boolean(problem);
   const showMobileActions = !isEditing && !onDone && !onCancel;
-  const desktopWorkspace = fullScreenDesktop && !isEditing;
   const [pending, startTransition] = useTransition();
   const [images, setImages] = useState<ImageRef[]>(problem?.images ?? []);
   const [duplicates, setDuplicates] = useState<SimilarProblem[]>([]);
@@ -241,6 +241,26 @@ export function ProblemForm({
     });
   }
 
+  function saveDraft() {
+    try {
+      window.localStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({
+          title,
+          description,
+          categoryId,
+          location: { scope, country, city },
+          isAnonymous,
+          priority,
+          images,
+        }),
+      );
+      toast.success("Draft saved on this device.");
+    } catch {
+      toast.error("Couldn’t save this draft.");
+    }
+  }
+
   const showDuplicates =
     !isEditing && !dismissedDuplicates && duplicates.length > 0;
   return (
@@ -249,11 +269,9 @@ export function ProblemForm({
       className={cn(
         "min-w-0",
         showMobileActions && "pb-24 sm:pb-0",
-        desktopWorkspace && "lg:grid lg:h-full lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_minmax(24rem,0.9fr)] lg:gap-10",
       )}
     >
-      <div className={cn("min-w-0", desktopWorkspace && "lg:min-h-0 lg:overflow-y-auto lg:pr-6")}>
-      <div className="space-y-7">
+      <div className={cn("space-y-7", compact && "space-y-5")}>
         <section className="space-y-2">
           <div className="flex items-baseline justify-between gap-4">
             <Label
@@ -491,7 +509,7 @@ export function ProblemForm({
             {submitError}
           </p>
         ) : null}
-        {showPreview && !desktopWorkspace ? (
+        {showPreview ? (
           <PreviewCard
             title={title}
             description={description}
@@ -505,7 +523,7 @@ export function ProblemForm({
         ) : null}
       </div>
 
-      <div className="mt-8 hidden items-center justify-between border-t border-hairline pt-4 sm:flex">
+      <div className={cn("mt-8 hidden items-center justify-between border-t border-hairline pt-4 sm:flex", compact && "mt-5")}>
         <CreditNote credits={credits} isEditing={isEditing} />
         <FormActions
           pending={pending}
@@ -513,34 +531,9 @@ export function ProblemForm({
           onCancel={onCancel}
           onPreview={() => setShowPreview((visible) => !visible)}
           previewVisible={showPreview}
-          previewAlwaysVisible={desktopWorkspace}
+          onSaveDraft={!isEditing ? saveDraft : undefined}
         />
       </div>
-      </div>
-
-      {desktopWorkspace ? (
-        <aside className="hidden min-h-0 border-l border-hairline pl-8 lg:flex lg:flex-col">
-          <div className="flex items-center justify-between border-b border-hairline pb-4">
-            <div>
-              <p className="label text-brand">Live preview</p>
-              <p className="mt-1 text-sm text-muted-foreground">How your problem will appear.</p>
-            </div>
-          </div>
-          <div className="min-h-0 flex-1 overflow-y-auto py-6 pr-2">
-            <PreviewCard
-              title={title}
-              description={description}
-              category={selectedCategory}
-              priority={priority}
-              isAnonymous={isAnonymous}
-              viewer={viewer}
-              images={images}
-              onClose={() => undefined}
-              persistent
-            />
-          </div>
-        </aside>
-      ) : null}
       {showMobileActions ? (
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-background/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur sm:hidden">
           <div className="mx-auto flex max-w-[62rem] items-center gap-2">
@@ -679,14 +672,14 @@ function FormActions({
   onCancel,
   onPreview,
   previewVisible,
-  previewAlwaysVisible = false,
+  onSaveDraft,
 }: {
   pending: boolean;
   isEditing: boolean;
   onCancel?: () => void;
   onPreview: () => void;
   previewVisible: boolean;
-  previewAlwaysVisible?: boolean;
+  onSaveDraft?: () => void;
 }) {
   return (
     <div className="flex items-center gap-2">
@@ -701,18 +694,27 @@ function FormActions({
           Cancel
         </Button>
       ) : null}
-      {!previewAlwaysVisible ? (
+      {onSaveDraft ? (
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           size="lg"
-          className="rounded-md"
-          onClick={onPreview}
+          onClick={onSaveDraft}
           disabled={pending}
         >
-          {previewVisible ? "Keep writing" : "Preview"}
+          Save draft
         </Button>
       ) : null}
+      <Button
+        type="button"
+        variant="outline"
+        size="lg"
+        className="rounded-md"
+        onClick={onPreview}
+        disabled={pending}
+      >
+        {previewVisible ? "Keep writing" : "Preview"}
+      </Button>
       <Button
         type="submit"
         size="lg"
@@ -744,7 +746,6 @@ function PreviewCard({
   viewer,
   images,
   onClose,
-  persistent = false,
 }: {
   title: string;
   description: string;
@@ -754,24 +755,21 @@ function PreviewCard({
   viewer: { name: string; username: string; avatar?: string };
   images: ImageRef[];
   onClose: () => void;
-  persistent?: boolean;
 }) {
   return (
     <section
       aria-label="Problem preview"
-      className={cn(!persistent && "border-t border-hairline pt-6")}
+      className="border-t border-hairline pt-6"
     >
       <div className="mb-3 flex items-center justify-between">
         <p className="label text-muted-foreground">Preview</p>
-        {!persistent ? (
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-xs text-muted-foreground hover:text-foreground"
-          >
-            Keep writing
-          </button>
-        ) : null}
+        <button
+          type="button"
+          onClick={onClose}
+          className="text-xs text-muted-foreground hover:text-foreground"
+        >
+          Keep writing
+        </button>
       </div>
       <div className="space-y-3">
         {category ? (
