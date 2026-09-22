@@ -120,7 +120,7 @@ export function ImageEditorDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[94dvh] overflow-y-auto sm:max-w-lg" showCloseButton={!saving}>
+      <DialogContent className="max-h-[94dvh] overflow-y-auto p-5 sm:max-w-lg sm:p-6" showCloseButton={!saving}>
         <DialogHeader className="text-left">
           <DialogTitle>Adjust photo{total > 1 ? ` ${position + 1} of ${total}` : ""}</DialogTitle>
           <DialogDescription>
@@ -131,7 +131,7 @@ export function ImageEditorDialog({
         <div
           ref={previewRef}
           className={cn(
-            "relative mx-auto aspect-square w-full max-w-sm touch-none overflow-hidden bg-foreground",
+            "relative mx-auto aspect-square w-full max-w-[clamp(15rem,calc(100dvh-27rem),32rem)] touch-none overflow-hidden bg-foreground",
             shape === "circle" ? "rounded-full" : "rounded-lg",
           )}
           onPointerDown={onPointerDown}
@@ -156,16 +156,16 @@ export function ImageEditorDialog({
           <div className="pointer-events-none absolute inset-0 border border-white/70" aria-hidden="true" />
         </div>
 
-        <div className="space-y-4">
-          <div className="space-y-2">
+        <div className="space-y-3">
+          <div className="space-y-1.5">
             <div className="flex items-center justify-between"><Label htmlFor="photo-zoom">Zoom</Label><span className="num text-xs text-muted-foreground">{Math.round(zoom * 100)}%</span></div>
             <input id="photo-zoom" aria-label="Zoom photo" type="range" min="1" max="3" step="0.01" value={zoom} onChange={(event) => setZoom(Number(event.target.value))} className="w-full accent-primary" />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <div className="flex items-center justify-between"><Label htmlFor="photo-angle">Straighten</Label><span className="num text-xs text-muted-foreground">{rotation}°</span></div>
             <input id="photo-angle" aria-label="Straighten photo" type="range" min="-45" max="45" step="1" value={rotation} onChange={(event) => setRotation(Number(event.target.value))} className="w-full accent-primary" />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button type="button" variant="outline" size="sm" onClick={() => setRotation((value) => Math.max(-180, value - 90))}><RotateCcw className="size-3.5" /> Rotate left</Button>
             <Button type="button" variant="outline" size="sm" onClick={() => setRotation((value) => Math.min(180, value + 90))}><RotateCw className="size-3.5" /> Rotate right</Button>
             <Button type="button" variant="outline" size="sm" onClick={() => setFlipX((value) => !value)} aria-pressed={flipX}><FlipHorizontal className="size-3.5" /> Flip</Button>
