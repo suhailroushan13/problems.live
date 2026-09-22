@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { KeyRound, Loader2 } from "lucide-react";
 import { startAuthentication, startRegistration } from "@simplewebauthn/browser";
 import { toast } from "sonner";
@@ -14,6 +15,7 @@ async function json(url: string, body?: unknown) {
 }
 
 export function PasskeySetupButton() {
+  const router = useRouter();
   const [pending, setPending] = useState(false);
   async function setup() {
     try {
@@ -22,6 +24,7 @@ export function PasskeySetupButton() {
       const response = await startRegistration({ optionsJSON: options });
       await json("/api/auth/passkey/register/verify", response);
       toast.success("Passkey added. You can now sign in without Google.");
+      router.refresh();
     } catch (error) { toast.error(error instanceof Error ? error.message : "Could not add a passkey."); }
     finally { setPending(false); }
   }
