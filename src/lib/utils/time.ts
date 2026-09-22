@@ -45,11 +45,15 @@ export function timeAgoLong(date: Date | string | number): string {
   return plural(Math.floor(seconds / YEAR), "year");
 }
 
+/** All admin-facing timestamps read in IST, regardless of server locale. */
+const IST = "Asia/Kolkata";
+
 export function formatDate(date: Date | string | number): string {
   return new Intl.DateTimeFormat("en", {
     day: "numeric",
     month: "short",
     year: "numeric",
+    timeZone: IST,
   }).format(new Date(date));
 }
 
@@ -60,6 +64,7 @@ export function formatDateTime(date: Date | string | number): string {
     year: "numeric",
     hour: "numeric",
     minute: "2-digit",
+    timeZone: IST,
   }).format(new Date(date));
 }
 
@@ -71,6 +76,7 @@ export function formatDateTimeWithSeconds(date: Date | string | number): string 
     hour: "numeric",
     minute: "2-digit",
     second: "2-digit",
+    timeZone: IST,
   }).format(new Date(date));
 }
 
@@ -78,5 +84,6 @@ export function formatMonthYear(date: Date | string | number): string {
   return new Intl.DateTimeFormat("en", {
     month: "long",
     year: "numeric",
+    timeZone: IST,
   }).format(new Date(date));
 }

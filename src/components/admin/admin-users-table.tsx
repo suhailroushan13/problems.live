@@ -31,7 +31,7 @@ import { PendingInviteActions } from "@/components/admin/pending-invite-actions"
 import { bulkDeleteUsers } from "@/actions/admin";
 import type { AdminUserRow } from "@/lib/data/admin";
 import { formatCount } from "@/lib/utils/format";
-import { formatDate, formatDateTimeWithSeconds } from "@/lib/utils/time";
+import { formatDate, formatDateTime } from "@/lib/utils/time";
 import { cn } from "@/lib/utils";
 
 /** Right-aligned stat cell. Zero reads as neutral, not an error state. */
@@ -179,7 +179,7 @@ export function AdminUsersTable({
                     <TableCell className="text-right text-sm text-muted-foreground">—</TableCell>
                     <TableCell className="text-right text-sm text-muted-foreground">—</TableCell>
                     <TableCell
-                      title={`Invited ${formatDateTimeWithSeconds(user.createdAt)}`}
+                      title={`Invited ${formatDateTime(user.createdAt)}`}
                       className="text-sm whitespace-nowrap text-muted-foreground"
                     >
                       Invited {formatDate(user.createdAt)}
@@ -271,7 +271,7 @@ export function AdminUsersTable({
                     <StatValue value={user.solutions} />
                   </TableCell>
                   <TableCell
-                    title={formatDateTimeWithSeconds(user.createdAt)}
+                    title={formatDateTime(user.createdAt)}
                     className="text-sm whitespace-nowrap text-muted-foreground"
                   >
                     {formatDate(user.createdAt)}
