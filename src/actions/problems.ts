@@ -434,6 +434,35 @@ export async function refreshHotScore(problemId: string): Promise<void> {
   ).exec();
 }
 
+/** Records a completed share so the problem author receives their normal
+ * in-app and email activity notification. */
+export async function recordProblemShare(
+  problemId: string,
+): Promise<ActionResult> {
+  try {
+    const user = await requireUser();
+    await connectToDatabase();
+
+    const problem = await Problem.findOne(
+      { _id: objectId(problemId), moderationStatus: "approved" },
+      { authorId: 1 },
+    ).lean().exec();
+    if (!problem) throw new NotFoundError("That problem is not available.");
+
+    await notify({
+      userId: String(problem.authorId),
+      actorId: user.id,
+      type: "problem_shared",
+      problemId,
+    });
+    return okVoid();
+  } catch (error) {
+    // Sharing itself has already completed in the browser. A missing session
+    // or a notification problem must never turn that into a visible failure.
+    return toActionError(error);
+  }
+}
+
 /** Used by the "Post problem" entry point to bounce anonymous visitors. */
 export async function requireSignInRedirect(next: string): Promise<void> {
   const user = await getCurrentUser();

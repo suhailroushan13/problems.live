@@ -74,12 +74,36 @@ export const deleteAccountSchema = z.object({
   }),
 });
 
+const requiredProblemLocationSchema = locationSchema
+  .extend({ scope: z.enum(LOCATION_SCOPES).optional() })
+  .superRefine((value, ctx) => {
+    if (!value.scope) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["scope"],
+        message: "Choose where this problem happens.",
+      });
+    }
+  })
+  // `superRefine` guarantees `scope` is present on every successful parse.
+  .transform((value) => ({
+    ...value,
+    scope: value.scope as (typeof LOCATION_SCOPES)[number],
+  }));
+
+const requiredProblemPrioritySchema = z
+  .enum(PROBLEM_PRIORITIES)
+  .optional()
+  .refine((value) => value !== undefined, "Choose a priority.")
+  // The refinement above guarantees this for every successful parse.
+  .transform((value) => value as (typeof PROBLEM_PRIORITIES)[number]);
+
 export const createProblemSchema = z
   .object({
     title: trimmed(12, 140, "Title"),
     description: trimmed(30, 8000, "Description"),
     categoryId: objectId,
-    location: locationSchema.default({ scope: "global" }),
+    location: requiredProblemLocationSchema,
     images: z
       .array(
         z.object({
@@ -92,7 +116,7 @@ export const createProblemSchema = z
       .max(4)
       .default([]),
     isAnonymous: z.boolean().default(false),
-    priority: z.enum(PROBLEM_PRIORITIES).default("normal"),
+    priority: requiredProblemPrioritySchema,
     /** Set once the author has seen and dismissed the duplicate warning. */
     acknowledgedDuplicates: z.boolean().default(false),
   })

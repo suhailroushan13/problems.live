@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Check, Heart, Lightbulb, MessageCircle, Share2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { toggleProblemValidation } from "@/actions/votes";
+import { recordProblemShare } from "@/actions/problems";
 import { goToSignIn } from "@/lib/auth/sign-in-redirect";
 // Bookmarks are hidden for now — bring this back with the bookmark feature.
 // import { BookmarkButton } from "./bookmark-button";
@@ -127,10 +128,17 @@ export function ValidationPanel({
   async function share() {
     const data = { title: document.title, url: window.location.href };
     if (navigator.share) {
-      try { await navigator.share(data); } catch { /* Closing the sheet is expected. */ }
+      try {
+        await navigator.share(data);
+        if (isAuthenticated) void recordProblemShare(problemId);
+      } catch { /* Closing the sheet is expected. */ }
       return;
     }
-    try { await navigator.clipboard.writeText(window.location.href); toast.success("Link copied."); }
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success("Link copied.");
+      if (isAuthenticated) void recordProblemShare(problemId);
+    }
     catch { toast.error("Couldn’t copy the link."); }
   }
 
@@ -205,6 +213,7 @@ export function MobileProblemActions({
     if (navigator.share) {
       try {
         await navigator.share(data);
+        if (isAuthenticated) void recordProblemShare(problemId);
       } catch {
         // Closing the native share sheet is an expected outcome.
       }
@@ -214,6 +223,7 @@ export function MobileProblemActions({
     try {
       await navigator.clipboard.writeText(window.location.href);
       toast.success("Link copied.");
+      if (isAuthenticated) void recordProblemShare(problemId);
     } catch {
       toast.error("Couldn’t copy the link.");
     }

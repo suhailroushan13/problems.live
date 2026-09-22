@@ -295,24 +295,23 @@ export async function completeOnboarding(
     }
 
     try {
-      const result = await User.updateOne(
-        {
-          _id: objectId(user.id),
-          $and: [
-            { $or: [{ onboardedAt: null }, { onboardedAt: { $exists: false } }] },
-            { $or: [{ dateOfBirth: null }, { dateOfBirth: { $exists: false } }] },
-          ],
-        },
+      // The initial read above owns the "already complete" response. Write
+      // directly through MongoDB and use its acknowledgement instead of a
+      // hydrated document: legacy user records can omit fields Mongoose
+      // expects, but must still be able to finish this one-time setup.
+      const result = await User.collection.updateOne(
+        { _id: objectId(user.id) },
         {
           $set: {
             username: input.username,
             onboardedAt: new Date(),
           },
+          $currentDate: { updatedAt: true },
         }
-      ).exec();
+      );
 
-      if (result.modifiedCount !== 1) {
-        throw new DomainError("Your account setup is already complete.");
+      if (!result.acknowledged || result.matchedCount !== 1) {
+        throw new DomainError("We couldn't complete account setup. Please try again.");
       }
     } catch (error) {
       if (isDuplicateKeyError(error)) {

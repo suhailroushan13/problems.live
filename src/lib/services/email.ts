@@ -13,6 +13,101 @@ function escapeHtml(value: string): string {
     .replaceAll("'", "&#039;");
 }
 
+/**
+ * Sends a transactional email for an in-app activity notification. Delivery
+ * failures are handled by the notification service so they never undo the
+ * comment, vote, or solution that caused the activity.
+ */
+export async function sendActivityNotificationEmail(params: {
+  recipientName: string;
+  recipientEmail: string;
+  actorName?: string | null;
+  action: string;
+  problemTitle?: string | null;
+  problemUrl?: string | null;
+  message?: string | null;
+}): Promise<void> {
+  const recipientName = escapeHtml(params.recipientName);
+  const actorName = params.actorName ? escapeHtml(params.actorName) : null;
+  const action = escapeHtml(params.action);
+  const problemTitle = params.problemTitle ? escapeHtml(params.problemTitle) : null;
+  const message = params.message ? escapeHtml(params.message) : null;
+  const problemUrl = params.problemUrl ?? `${env.appUrl}/notifications`;
+  const termsUrl = `${env.appUrl}/terms`;
+  const privacyUrl = `${env.appUrl}/privacy`;
+  const mailingAddress = escapeHtml(env.legalMailingAddress).replaceAll("\n", "<br>");
+  const activity = actorName
+    ? `<strong style="color:#0f172a">${actorName}</strong> ${action}`
+    : action;
+  const context = problemTitle
+    ? ` on <strong style="color:#0f172a">${problemTitle}</strong>`
+    : "";
+  const subject = `${params.actorName ? `${params.actorName} ` : ""}${params.action} · problems.live`.slice(0, 200);
+  const text = `Hi ${params.recipientName},\n\n${params.actorName ? `${params.actorName} ` : ""}${params.action}${params.problemTitle ? ` on ${params.problemTitle}` : ""}.${params.message ? `\n\n${params.message}` : ""}\n\nView the update: ${problemUrl}\n\nproblems.live\n${env.legalMailingAddress}`;
+  const html = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="x-apple-disable-message-reformatting">
+    <title>${subject}</title>
+  </head>
+  <body style="margin:0;padding:0;background:#f8fafc;color:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;background:#f8fafc">
+      <tr>
+        <td align="center" style="padding:48px 16px">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:560px;margin:0 auto">
+            <tr><td style="padding:0 4px 20px;color:#0f172a;font-size:15px;font-weight:700">problems<span style="color:#2563eb">.live</span></td></tr>
+            <tr>
+              <td style="overflow:hidden;border:1px solid #e2e8f0;border-radius:12px;background:#ffffff">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr><td style="padding:36px 36px 0"><p style="margin:0;color:#0f172a;font-size:15px;line-height:24px">Hi ${recipientName},</p><p style="margin:16px 0 0;color:#334155;font-size:15px;line-height:24px">${activity}${context}.</p>${message ? `<p style="margin:16px 0 0;color:#334155;font-size:15px;line-height:24px">${message}</p>` : ""}</td></tr>
+                  <tr><td style="padding:24px 36px 32px"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" bgcolor="#0f172a" style="border-radius:6px"><a href="${problemUrl}" style="display:inline-block;padding:11px 20px;border-radius:6px;color:#ffffff;font-size:14px;font-weight:600;line-height:20px;text-decoration:none">View update</a></td></tr></table></td></tr>
+                </table>
+              </td>
+            </tr>
+            <tr><td align="center" style="padding:24px 24px 0;color:#94a3b8;font-size:12px;line-height:19px"><p style="margin:0"><a href="${termsUrl}" style="color:#64748b;text-decoration:underline">Terms &amp; conditions</a><span style="padding:0 7px;color:#cbd5e1">·</span><a href="${privacyUrl}" style="color:#64748b;text-decoration:underline">Privacy policy</a></p><p style="margin:12px 0 0">problems.live<br>${mailingAddress}</p></td></tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
+
+  const log = await EmailLog.create({
+    recipient: params.recipientEmail,
+    subject,
+    text,
+    html,
+    status: "failed",
+  });
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: { user: env.smtpUser, pass: env.smtpPassword },
+    });
+    const sent = await transporter.sendMail({
+      from: `problems.live <${env.smtpUser}>`,
+      to: params.recipientEmail,
+      replyTo: env.smtpUser,
+      subject,
+      text,
+      html,
+    });
+    await EmailLog.updateOne(
+      { _id: log._id },
+      { $set: { status: "sent", providerMessageId: sent.messageId } },
+    ).exec();
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown email delivery error";
+    await EmailLog.updateOne(
+      { _id: log._id },
+      { $set: { errorMessage: errorMessage.slice(0, 2_000) } },
+    ).exec();
+    throw error;
+  }
+}
+
 export async function sendInvitationEmail(params: {
   name: string;
   email: string;

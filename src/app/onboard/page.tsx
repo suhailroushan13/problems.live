@@ -104,10 +104,11 @@ export default async function OnboardPage({
             initialUsername={user.username}
             next={destination}
             name={user.name}
-            // During first-run setup, surface the verified Google photo when
-            // available, even if an older provisional account has no avatar.
-            avatar={account?.googleAvatarUrl ?? account?.avatar ?? user.avatar}
-            avatarType={account?.googleAvatarUrl ? "google" : account?.avatarType}
+            // Prefer the saved selection. Google is a first-run fallback only:
+            // otherwise choosing a generated or uploaded avatar would appear
+            // to do nothing while a Google photo is available.
+            avatar={account?.avatar ?? account?.googleAvatarUrl ?? user.avatar}
+            avatarType={account?.avatarType ?? (account?.googleAvatarUrl ? "google" : undefined)}
             avatarStyle={account?.avatarStyle}
             avatarSeed={account?.avatarSeed}
             uploadedAvatarUrl={account?.avatarUrl}

@@ -39,7 +39,6 @@ export default async function NewProblemPage() {
         categories={categories}
         viewer={user}
         credits={credits}
-        initialLocation={user.defaultLocation}
         compact
       />
     </div>

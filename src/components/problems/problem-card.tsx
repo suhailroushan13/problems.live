@@ -13,6 +13,7 @@ import { ProblemLink } from "./problem-link";
 import { PriorityBadge } from "./priority-badge";
 import { StatusDot } from "./status-dot";
 import { useValidation } from "./validate-button";
+import { recordProblemShare } from "@/actions/problems";
 import { formatCount } from "@/lib/utils/format";
 import { timeAgo } from "@/lib/utils/time";
 import { cn } from "@/lib/utils";
@@ -57,10 +58,24 @@ export function ProblemCard({ problem, isAuthenticated, isModerator }: { problem
     recordOpen();
     router.push(destination);
   }
-  function handleShare() {
+  async function handleShare() {
     const url = `${window.location.origin}/problems/${problem.slug}`;
-    if (navigator.share) { navigator.share({ title: problem.title, url }).catch(() => undefined); return; }
-    navigator.clipboard.writeText(url).then(() => toast.success("Link copied.")).catch(() => toast.error("Couldn't copy the link."));
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: problem.title, url });
+        if (isAuthenticated) void recordProblemShare(problem.id);
+      } catch {
+        // Closing the native share sheet is expected.
+      }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copied.");
+      if (isAuthenticated) void recordProblemShare(problem.id);
+    } catch {
+      toast.error("Couldn't copy the link.");
+    }
   }
   function handleCardNavigation(event: MouseEvent<HTMLElement>) {
     if (!(event.target as HTMLElement).closest("a, button, input, select, textarea")) openProblem();
@@ -133,7 +148,7 @@ export function ProblemCard({ problem, isAuthenticated, isModerator }: { problem
             showCount={false}
             className="size-8 min-h-8! shrink-0 rounded-lg text-muted-foreground/60 hover:bg-sunken hover:text-foreground"
           />
-          <button type="button" onClick={handleShare} aria-label="Share problem" title="Share" className="tap flex size-8 min-h-8! shrink-0 items-center justify-center rounded-lg text-muted-foreground/60 transition-colors hover:bg-sunken hover:text-foreground">
+          <button type="button" onClick={() => void handleShare()} aria-label="Share problem" title="Share" className="tap flex size-8 min-h-8! shrink-0 items-center justify-center rounded-lg text-muted-foreground/60 transition-colors hover:bg-sunken hover:text-foreground">
             <Share2 className="size-3.5" />
           </button>
           <ProblemActions

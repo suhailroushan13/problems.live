@@ -127,14 +127,14 @@ export function ProblemForm({
       description: problem?.description ?? "",
       categoryId: problem?.category?.id ?? initialCategoryId ?? "",
       location: {
-        scope: problem?.location.scope ?? initialLocation?.scope ?? "global",
+        scope: problem?.location.scope ?? initialLocation?.scope,
         country: problem?.location.country ?? initialLocation?.country ?? "",
         region: problem?.location.region ?? initialLocation?.region ?? "",
         city: problem?.location.city ?? initialLocation?.city ?? "",
       },
       images: problem?.images ?? [],
       isAnonymous: problem?.isAnonymous ?? false,
-      priority: problem?.priority ?? "normal",
+      priority: problem?.priority,
       acknowledgedDuplicates: Boolean(problem),
     },
   });
@@ -142,7 +142,7 @@ export function ProblemForm({
   const title = watched.title ?? "";
   const titleWordCount = title.trim() ? title.trim().split(/\s+/).length : 0;
   const description = watched.description ?? "";
-  const scope = watched.location?.scope ?? "global";
+  const scope = watched.location?.scope;
   const country = watched.location?.country ?? "";
   const city = watched.location?.city ?? "";
   const isAnonymous = watched.isAnonymous ?? false;
@@ -278,7 +278,7 @@ export function ProblemForm({
               htmlFor="title"
               className="text-sm font-semibold text-foreground"
             >
-              What&apos;s the problem?
+              What&apos;s the problem? <span aria-hidden="true" className="text-destructive">*</span>
             </Label>
             {title.length > 100 ? (
               <span
@@ -332,7 +332,7 @@ export function ProblemForm({
               htmlFor="description"
               className="text-sm font-semibold text-foreground"
             >
-              Tell us more
+              Tell us more <span aria-hidden="true" className="text-destructive">*</span>
             </Label>
             {description.length > 500 ? (
               <span className="num text-xs text-muted-foreground">
@@ -366,7 +366,7 @@ export function ProblemForm({
         <section className={cn("grid gap-4 sm:grid-cols-2", compact && "gap-3 lg:grid-cols-3")}>
           <div className={cn("space-y-2", compact && "space-y-1.5")}>
             <Label className="text-sm font-semibold text-foreground">
-              Category
+              Category <span aria-hidden="true" className="text-destructive">*</span>
             </Label>
             <Controller
               control={control}
@@ -385,16 +385,16 @@ export function ProblemForm({
           </div>
           <div className={cn("space-y-2", compact && "space-y-1.5")}>
             <Label className="text-sm font-semibold text-foreground">
-              Where?
+              Where? <span aria-hidden="true" className="text-destructive">*</span>
             </Label>
             <Controller
               control={control}
               name="location.scope"
               render={({ field }) => (
                 <SearchablePicker
-                  value={field.value ?? "global"}
+                  value={field.value ?? ""}
                   onValueChange={field.onChange}
-                  placeholder="Everywhere"
+                  placeholder="Choose where"
                   searchPlaceholder="Search locations…"
                   items={LOCATION_SCOPES.map((value) => ({
                     value,
@@ -403,18 +403,19 @@ export function ProblemForm({
                 />
               )}
             />
+            <FieldError message={errors.location?.scope?.message} />
           </div>
           {compact ? (
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold text-foreground">Priority</Label>
+              <Label className="text-sm font-semibold text-foreground">Priority <span aria-hidden="true" className="text-destructive">*</span></Label>
               <Controller
                 control={control}
                 name="priority"
                 render={({ field }) => (
                   <SearchablePicker
-                    value={field.value ?? "normal"}
+                    value={field.value ?? ""}
                     onValueChange={field.onChange}
-                    placeholder="Normal"
+                    placeholder="Choose priority"
                     searchPlaceholder="Search…"
                     items={PROBLEM_PRIORITIES.map((value) => ({
                       value,
@@ -423,6 +424,7 @@ export function ProblemForm({
                   />
                 )}
               />
+              <FieldError message={errors.priority?.message} />
             </div>
           ) : null}
         </section>
@@ -430,7 +432,7 @@ export function ProblemForm({
         {!compact ? (
         <section className="space-y-2">
           <Label className="text-sm font-semibold text-foreground">
-            Priority
+            Priority <span aria-hidden="true" className="text-destructive">*</span>
           </Label>
           <Controller
             control={control}
@@ -438,9 +440,9 @@ export function ProblemForm({
             render={({ field }) => (
               <div className="sm:max-w-56">
                 <SearchablePicker
-                  value={field.value ?? "normal"}
+                  value={field.value ?? ""}
                   onValueChange={field.onChange}
-                  placeholder="Normal"
+                  placeholder="Choose priority"
                   searchPlaceholder="Search…"
                   items={PROBLEM_PRIORITIES.map((value) => ({
                     value,
@@ -453,10 +455,11 @@ export function ProblemForm({
           <p className="text-xs text-muted-foreground">
             Mark it Important or Urgent only if it truly can&apos;t wait.
           </p>
+          <FieldError message={errors.priority?.message} />
         </section>
         ) : null}
 
-        {scope !== "global" ? (
+        {scope === "country" || scope === "city" ? (
           <section className="grid gap-4 border-l-2 border-hairline pl-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label className="text-sm font-semibold text-foreground">
@@ -522,7 +525,7 @@ export function ProblemForm({
               Post anonymously
             </span>
             <span className="mt-0.5 block text-xs leading-4 text-muted-foreground">
-              Your name stays private; moderators can still keep the space safe.
+              Your identity stays protected while your problem is shared.
             </span>
           </span>
         </label>
@@ -566,7 +569,7 @@ export function ProblemForm({
               type="button"
               variant="outline"
               size="lg"
-              className="h-11 flex-1 rounded-md"
+              className="h-11 flex-1 cursor-pointer rounded-md"
               onClick={() => setShowPreview((visible) => !visible)}
               disabled={pending}
             >
@@ -575,7 +578,7 @@ export function ProblemForm({
             <Button
               type="submit"
               size="lg"
-              className="h-11 flex-[1.35]"
+              className="h-11 flex-[1.35] cursor-pointer"
               disabled={pending}
             >
               {pending ? (
@@ -726,6 +729,7 @@ function FormActions({
           size="lg"
           onClick={onSaveDraft}
           disabled={pending}
+          className="cursor-pointer"
         >
           Save draft
         </Button>
@@ -734,7 +738,7 @@ function FormActions({
         type="button"
         variant="outline"
         size="lg"
-        className="rounded-md"
+        className="cursor-pointer rounded-md"
         onClick={onPreview}
         disabled={pending}
       >
@@ -743,7 +747,7 @@ function FormActions({
       <Button
         type="submit"
         size="lg"
-        className="px-5"
+        className="cursor-pointer px-5"
         disabled={pending}
       >
         {pending ? (

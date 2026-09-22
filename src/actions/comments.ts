@@ -137,13 +137,26 @@ export async function createComment(
       await refreshProblemHotScore(problem._id);
 
       if (parentAuthorId) {
-        await notify({
-          userId: parentAuthorId,
-          actorId: user.id,
-          type: "comment_replied",
-          problemId: String(problem._id),
-          commentId: String(comment._id),
-        });
+        await Promise.all([
+          notify({
+            userId: parentAuthorId,
+            actorId: user.id,
+            type: "comment_replied",
+            problemId: String(problem._id),
+            commentId: String(comment._id),
+          }),
+          // The conversation belongs to the problem author too. Do not
+          // duplicate it when they wrote the parent comment themselves.
+          parentAuthorId !== String(problem.authorId)
+            ? notify({
+                userId: String(problem.authorId),
+                actorId: user.id,
+                type: "problem_discussed",
+                problemId: String(problem._id),
+                commentId: String(comment._id),
+              })
+            : Promise.resolve(),
+        ]);
       } else {
         await notify({
           userId: String(problem.authorId),

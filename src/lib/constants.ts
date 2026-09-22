@@ -166,6 +166,9 @@ export const REPORT_REASON_LABELS: Record<ReportReason, string> = {
 
 export const NOTIFICATION_TYPES = [
   "problem_validated",
+  "problem_shared",
+  "problem_discussed",
+  "problem_liked",
   "problem_commented",
   "comment_replied",
   "solution_suggested",
@@ -182,6 +185,9 @@ export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 /** Client-safe copy for each notification type. */
 export const NOTIFICATION_COPY: Record<NotificationType, string> = {
   problem_validated: "also has your problem",
+  problem_shared: "shared your problem",
+  problem_discussed: "replied in your problem's discussion",
+  problem_liked: "liked activity on your problem",
   problem_commented: "commented on your problem",
   comment_replied: "replied to your comment",
   solution_suggested: "suggested a solution to your problem",

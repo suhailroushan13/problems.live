@@ -241,19 +241,30 @@ export async function toggleSolutionHelpful(
       { key: "helpfulVotes", delta }
     );
 
-    if (active) {
-      await notify({
-        userId: String(solution.authorId),
-        actorId: user.id,
-        type: "solution_voted",
-        problemId: String(solution.problemId),
-        solutionId,
-      });
-    }
-
-    const problem = await Problem.findById(solution.problemId, { slug: 1 })
+    const problem = await Problem.findById(solution.problemId, { slug: 1, authorId: 1 })
       .lean()
       .exec();
+    if (active) {
+      await Promise.all([
+        notify({
+          userId: String(solution.authorId),
+          actorId: user.id,
+          type: "solution_voted",
+          problemId: String(solution.problemId),
+          solutionId,
+        }),
+        problem && String(problem.authorId) !== String(solution.authorId)
+          ? notify({
+              userId: String(problem.authorId),
+              actorId: user.id,
+              type: "problem_liked",
+              problemId: String(solution.problemId),
+              solutionId,
+            })
+          : Promise.resolve(),
+      ]);
+    }
+
     if (problem) revalidatePath(`/problems/${problem.slug}`);
 
     return ok({ count, active });
@@ -331,13 +342,27 @@ export async function voteComment(
     });
 
     if (resultDirection === "up" && !wasUpvote) {
-      await notify({
-        userId: String(comment.authorId),
-        actorId: user.id,
-        type: "comment_voted",
-        problemId: String(comment.problemId),
-        commentId,
-      });
+      const problem = await Problem.findById(comment.problemId, { authorId: 1 })
+        .lean()
+        .exec();
+      await Promise.all([
+        notify({
+          userId: String(comment.authorId),
+          actorId: user.id,
+          type: "comment_voted",
+          problemId: String(comment.problemId),
+          commentId,
+        }),
+        problem && String(problem.authorId) !== String(comment.authorId)
+          ? notify({
+              userId: String(problem.authorId),
+              actorId: user.id,
+              type: "problem_liked",
+              problemId: String(comment.problemId),
+              commentId,
+            })
+          : Promise.resolve(),
+      ]);
     }
 
     return ok({ score, direction: resultDirection });

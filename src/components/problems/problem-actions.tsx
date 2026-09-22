@@ -36,7 +36,7 @@ import {
 import { ReportDialog } from "@/components/shared/report-dialog";
 // Bookmarks are hidden for now — bring this back with the bookmark feature.
 // import { BookmarkButton } from "./bookmark-button";
-import { deleteProblem, setProblemStatus } from "@/actions/problems";
+import { deleteProblem, recordProblemShare, setProblemStatus } from "@/actions/problems";
 import type { ProblemStatus } from "@/lib/constants";
 import { goToSignIn } from "@/lib/auth/sign-in-redirect";
 import { cn } from "@/lib/utils";
@@ -158,10 +158,12 @@ export function ProblemActions({
     try {
       if (navigator.share) {
         await navigator.share({ title: "problems.live", url });
+        if (isAuthenticated) void recordProblemShare(problemId);
         return;
       }
       await navigator.clipboard.writeText(url);
       toast.success("Problem link copied.");
+      if (isAuthenticated) void recordProblemShare(problemId);
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
       toast.error("Couldn’t share the problem.");
