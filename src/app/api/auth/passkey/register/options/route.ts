@@ -30,7 +30,7 @@ export async function POST() {
     });
     const response = NextResponse.json(options);
     response.cookies.set(PASSKEY_CHALLENGE_COOKIE, options.challenge, {
-      httpOnly: true, secure: env.isProduction, sameSite: "lax", path: "/", maxAge: PASSKEY_CHALLENGE_MAX_AGE,
+      httpOnly: true, secure: env.isProduction, sameSite: "lax", path: "/", domain: env.cookieDomain, maxAge: PASSKEY_CHALLENGE_MAX_AGE,
     });
     return response;
   } catch {

@@ -48,6 +48,18 @@ export const env = {
       "http://localhost:3000";
     return raw.replace(/\/$/, "");
   },
+  /**
+   * `problems.live` and `www.problems.live` are both live production
+   * aliases (see the passkey RP config), but auth cookies default to
+   * host-only. Sharing them across the parent domain keeps a sign-in begun
+   * on one alias readable by the fixed-host OAuth callback and by pages
+   * loaded from the other alias. `undefined` (any non-canonical host, e.g.
+   * localhost or a preview deployment) keeps today's host-only behaviour.
+   */
+  get cookieDomain(): string | undefined {
+    const hostname = new URL(this.appUrl).hostname.replace(/^www\./, "");
+    return hostname === "problems.live" ? `.${hostname}` : undefined;
+  },
   get imageProvider() {
     return optional("IMAGE_PROVIDER", "local") as
       | "local"

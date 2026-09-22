@@ -29,8 +29,8 @@ export async function POST(request: NextRequest) {
     await credential.save();
     const destination = safePasskeyNext(next);
     const result = NextResponse.json({ ok: true, destination });
-    result.cookies.set(SESSION_COOKIE, await createSessionToken(String(user._id)), { httpOnly: true, secure: env.isProduction, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 30 });
-    result.cookies.set(PASSKEY_CHALLENGE_COOKIE, "", { path: "/", maxAge: 0 });
+    result.cookies.set(SESSION_COOKIE, await createSessionToken(String(user._id)), { httpOnly: true, secure: env.isProduction, sameSite: "lax", path: "/", domain: env.cookieDomain, maxAge: 60 * 60 * 24 * 30 });
+    result.cookies.set(PASSKEY_CHALLENGE_COOKIE, "", { path: "/", domain: env.cookieDomain, maxAge: 0 });
     return result;
   } catch (error) { console.error("[passkey] login verification failed", error); return NextResponse.json({ error: "Passkey sign-in failed. Try again." }, { status: 400 }); }
 }

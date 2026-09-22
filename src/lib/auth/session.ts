@@ -51,6 +51,7 @@ export async function setSessionCookie(userId: string): Promise<void> {
     secure: env.isProduction,
     sameSite: "lax",
     path: "/",
+    domain: env.cookieDomain,
     maxAge: SESSION_MAX_AGE_SECONDS,
   });
 }
@@ -62,6 +63,7 @@ export async function clearSessionCookie(): Promise<void> {
     secure: env.isProduction,
     sameSite: "lax",
     path: "/",
+    domain: env.cookieDomain,
     maxAge: 0,
   });
 }

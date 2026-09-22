@@ -104,7 +104,7 @@ async function noAccessFailure(profile: { name: string; email: string }): Promis
 
 function clearOAuthCookies(response: NextResponse): NextResponse {
   for (const name of [STATE_COOKIE, VERIFIER_COOKIE, NEXT_COOKIE]) {
-    response.cookies.set(name, "", { path: "/", maxAge: 0 });
+    response.cookies.set(name, "", { path: "/", domain: env.cookieDomain, maxAge: 0 });
   }
   return response;
 }
@@ -286,6 +286,7 @@ export async function GET(request: NextRequest) {
       secure: env.isProduction,
       sameSite: "lax",
       path: "/",
+      domain: env.cookieDomain,
       maxAge: SESSION_MAX_AGE,
     });
 

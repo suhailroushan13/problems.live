@@ -3,6 +3,7 @@ import { verifyRegistrationResponse, type RegistrationResponseJSON } from "@simp
 import { requireUser } from "@/lib/auth/current-user";
 import { connectToDatabase } from "@/lib/db/mongoose";
 import { Passkey } from "@/models";
+import { env } from "@/lib/env";
 import { PASSKEY_CHALLENGE_COOKIE, passkeyConfig } from "@/lib/auth/passkeys";
 
 // Outer backstop: bounds what one stuck request can cost if an
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
     await connectToDatabase();
     await Passkey.create({ userId: user.id, credentialID: credential.id, publicKey: Buffer.from(credential.publicKey), counter: credential.counter, transports: body.response.transports ?? [], deviceType: credentialDeviceType, backedUp: credentialBackedUp });
     const response = NextResponse.json({ ok: true });
-    response.cookies.set(PASSKEY_CHALLENGE_COOKIE, "", { path: "/", maxAge: 0 });
+    response.cookies.set(PASSKEY_CHALLENGE_COOKIE, "", { path: "/", domain: env.cookieDomain, maxAge: 0 });
     return response;
   } catch (error) {
     console.error("[passkey] registration verification failed", error);

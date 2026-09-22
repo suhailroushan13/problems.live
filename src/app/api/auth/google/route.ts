@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
     secure: env.isProduction,
     sameSite: "lax" as const,
     path: "/",
+    domain: env.cookieDomain,
     maxAge: TEN_MINUTES,
   };
 
