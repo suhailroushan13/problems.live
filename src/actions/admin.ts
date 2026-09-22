@@ -83,6 +83,11 @@ const updateAdminUserSchema = z.object({
   username: usernameSchema,
 });
 
+const pendingInviteSchema = z.object({
+  name: z.string().trim().min(2, "Name must be at least 2 characters.").max(80, "Name must be 80 characters or fewer."),
+  email: z.string().trim().email("Enter a valid email address.").max(254),
+});
+
 /** Permanently removes every problem and its dependent community records. */
 export async function deleteAllProblems(): Promise<ActionResult<{ deletedCount: number }>> {
   try {
@@ -530,6 +535,92 @@ export async function updateAdminUser(
     revalidatePath(`/u/${existing.username}`);
     revalidatePath(`/u/${input.username}`);
     return okVoid(`@${input.username} updated.`);
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+/** Updates an unclaimed email invitation before its recipient joins. */
+export async function updatePendingInvite(
+  inviteId: string,
+  raw: unknown,
+): Promise<ActionResult<undefined>> {
+  try {
+    const admin = await requireAdmin();
+    objectIdSchema.parse(inviteId);
+    const input = pendingInviteSchema.parse(raw);
+    await connectToDatabase();
+
+    const invite = await Invite.findOne({
+      _id: objectId(inviteId),
+      type: "email",
+      status: "pending",
+    }).lean().exec();
+    if (!invite) throw new NotFoundError("That pending invitation is no longer available.");
+
+    const email = input.email.toLowerCase();
+    const emailChanged = invite.email !== email;
+    const token = emailChanged ? randomBytes(32).toString("base64url") : null;
+    try {
+      await Invite.updateOne(
+        { _id: invite._id, status: "pending" },
+        {
+          $set: {
+            name: stripUnsafe(input.name),
+            email,
+            ...(token ? { tokenHash: hashInviteToken(token) } : {}),
+          },
+        },
+      ).exec();
+    } catch (error) {
+      if (isDuplicateKeyError(error)) throw new DomainError("That email already has a pending invitation.", "duplicate");
+      throw error;
+    }
+
+    // A link sent to the old inbox must not stay valid after an address
+    // change. Rotate it and send the replacement to the edited address.
+    if (token) {
+      await sendInvitationEmail({
+        name: input.name,
+        email,
+        inviteToken: token,
+        inviteUrl: googleAuthUrlForInvite(token),
+      });
+    }
+
+    await audit({
+      actorId: admin.id,
+      action: "invite.update_pending",
+      targetType: "invite",
+      targetId: inviteId,
+      meta: { email, resent: Boolean(token) },
+    });
+    revalidatePath("/admin/users");
+    revalidatePath("/admin/invites");
+    return okVoid(token ? `Invitation updated and resent to ${email}.` : `Invitation updated for ${email}.`);
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+/** Cancels a pending email invitation without touching any user account. */
+export async function deletePendingInvite(inviteId: string): Promise<ActionResult<undefined>> {
+  try {
+    const admin = await requireAdmin();
+    objectIdSchema.parse(inviteId);
+    await connectToDatabase();
+
+    const invite = await Invite.findOneAndDelete({
+      _id: objectId(inviteId),
+      type: "email",
+      status: "pending",
+    }).lean().exec();
+    if (!invite) throw new NotFoundError("That pending invitation is no longer available.");
+
+    await audit({ actorId: admin.id, action: "invite.delete_pending", targetType: "invite", targetId: inviteId, meta: { email: invite.email } });
+    revalidatePath("/admin/users");
+    revalidatePath("/admin/invites");
+    return okVoid(`Deleted the invitation for ${invite.email}.`);
   } catch (error) {
     return toActionError(error);
   }

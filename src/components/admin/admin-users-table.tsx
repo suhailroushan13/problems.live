@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { UserActions } from "@/components/admin/user-actions";
+import { PendingInviteActions } from "@/components/admin/pending-invite-actions";
 import { bulkDeleteUsers } from "@/actions/admin";
 import type { AdminUserRow } from "@/lib/data/admin";
 import { formatCount } from "@/lib/utils/format";
@@ -146,7 +147,9 @@ export function AdminUsersTable({
               if (user.pending) {
                 return (
                   <TableRow key={`pending:${user.id}`} className="bg-tint/40">
-                    <TableCell />
+                    <TableCell>
+                      <PendingInviteActions invite={user} />
+                    </TableCell>
                     <TableCell className="num text-center text-muted-foreground">
                       {index + 1}
                     </TableCell>

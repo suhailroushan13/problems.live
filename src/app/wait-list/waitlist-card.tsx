@@ -30,22 +30,13 @@ export function WaitlistCard({
   function celebrateJoin() {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    const colors = ["#2563eb", "#7c3aed", "#ec4899", "#f59e0b", "#16a34a", "#06b6d4"];
-    const burst = (x: number, particleCount: number, delay: number) => {
-      window.setTimeout(() => {
-        void confetti({
-          particleCount,
-          spread: 68,
-          startVelocity: 34,
-          origin: { x, y: 0.72 },
-          colors,
-        });
-      }, delay);
-    };
-
-    burst(0.1, 65, 0);
-    burst(0.5, 95, 100);
-    burst(0.9, 65, 200);
+    void confetti({
+      particleCount: 110,
+      spread: 72,
+      startVelocity: 36,
+      origin: { x: 0.5, y: 0.7 },
+      colors: ["#2563eb", "#7c3aed", "#ec4899", "#f59e0b", "#16a34a", "#06b6d4"],
+    });
   }
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -81,7 +72,10 @@ export function WaitlistCard({
         const message = result.message ?? JOINED_CONFIRMATION;
         setConfirmation(message);
         setDone(true);
-        if (message === JOINED_CONFIRMATION) celebrateJoin();
+        if (message === JOINED_CONFIRMATION) {
+          celebrateJoin();
+          toast.success("You’ve successfully joined the waitlist.");
+        }
       } catch (error) {
         console.error("[waitlist] submission failed", error);
         toast.error("We couldn’t join you to the waitlist right now. Please try again.");

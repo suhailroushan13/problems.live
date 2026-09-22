@@ -17,10 +17,11 @@ import { formatDateTimeWithSeconds } from "@/lib/utils/time";
 export const metadata: Metadata = { title: "Waiting list" };
 
 export default async function AdminWaitingListPage() {
-  const user = await getCurrentUser();
+  const [user, signups] = await Promise.all([
+    getCurrentUser(),
+    listWaitlistSignups(),
+  ]);
   if (!user?.isAdmin) redirect("/admin");
-
-  const signups = await listWaitlistSignups();
 
   if (signups.length === 0) {
     return (
