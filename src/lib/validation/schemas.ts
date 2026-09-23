@@ -23,6 +23,10 @@ const objectId = z
   .string()
   .regex(/^[a-f\d]{24}$/i, "That reference is not valid.");
 
+const problemCategoryId = z
+  .string()
+  .regex(/^[a-f\d]{24}$/i, "Choose a category.");
+
 const trimmed = (min: number, max: number, label: string) =>
   z
     .string()
@@ -102,7 +106,7 @@ export const createProblemSchema = z
   .object({
     title: trimmed(12, 140, "Title"),
     description: trimmed(30, 8000, "Description"),
-    categoryId: objectId,
+    categoryId: problemCategoryId,
     location: requiredProblemLocationSchema,
     images: z
       .array(

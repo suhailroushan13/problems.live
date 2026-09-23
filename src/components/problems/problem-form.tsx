@@ -10,7 +10,7 @@ import {
 import { useRouter } from "next/navigation";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowRight, Check, ChevronDown, Loader2 } from "lucide-react";
+import { ArrowRight, Check, ChevronDown, Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -565,6 +565,17 @@ export function ProblemForm({
       {showMobileActions ? (
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-background/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur sm:hidden">
           <div className="mx-auto flex max-w-[62rem] items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              className="h-11 shrink-0 cursor-pointer rounded-md px-2.5 text-sm"
+              onClick={saveDraft}
+              disabled={pending}
+            >
+              <Save className="size-4" />
+              Save
+            </Button>
             <Button
               type="button"
               variant="outline"

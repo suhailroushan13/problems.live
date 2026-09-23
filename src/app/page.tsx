@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { CategoryBar } from "@/components/navigation/category-bar";
 import { ProblemsToolbar } from "@/components/problems/problems-toolbar";
 import { ProblemCard } from "@/components/problems/problem-card";
@@ -10,7 +9,6 @@ import { GithubBadge } from "@/components/shared/github-badge";
 import { DirectoryViewToggle } from "@/components/problems/directory-view-toggle";
 // import { SignInSoundControl } from "@/components/auth/sign-in-sound-control";
 import { NumberTicker } from "@/components/ui/number-ticker";
-import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { listProblems } from "@/lib/data/problems";
 import { listCategories } from "@/lib/data/categories";
@@ -116,6 +114,7 @@ export default async function HomePage({
           <p className="mb-2.5 hidden items-baseline gap-1.5 text-[0.8125rem] font-medium text-muted-foreground sm:flex sm:text-sm">
             <NumberTicker
               value={result.total}
+              startValue={result.total}
               className="num text-[1.0625rem] leading-none font-extrabold tracking-[-0.01em] text-brand sm:text-lg"
             />
             <span>

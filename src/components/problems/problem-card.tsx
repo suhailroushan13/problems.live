@@ -27,7 +27,7 @@ function VoteRail({ count, active, pending, toggle, dense = false }: { count: nu
         <ArrowUp className="size-3.5" />
       </button>
       <span className={cn("num min-w-6 text-center text-[0.8125rem] font-semibold sm:text-sm", active ? "text-brand" : "text-foreground/80")}>{formatCount(count)}</span>
-      <button type="button" onClick={() => active && toggle()} disabled={pending} aria-label="Retract, I don't have this" className={cn("flex items-center justify-center rounded-md transition-colors hover:bg-sunken hover:text-foreground sm:hover:bg-error-subtle sm:hover:text-destructive disabled:opacity-60", dense ? "size-7" : "size-8")}>
+      <button type="button" onClick={() => active && toggle()} disabled={pending || !active} aria-label={active ? "Retract, I don't have this" : "No validation to retract"} className={cn("flex items-center justify-center rounded-md transition-colors hover:bg-sunken hover:text-foreground sm:hover:bg-error-subtle sm:hover:text-destructive disabled:cursor-not-allowed disabled:opacity-40", dense ? "size-7" : "size-8")}>
         <ArrowDown className="size-3.5" />
       </button>
     </div>
