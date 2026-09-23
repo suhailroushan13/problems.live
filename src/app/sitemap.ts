@@ -15,7 +15,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/categories`, changeFrequency: "daily", priority: 0.8 },
     { url: `${base}/solutions`, changeFrequency: "daily", priority: 0.7 },
     { url: `${base}/leaderboard`, changeFrequency: "daily", priority: 0.5 },
+    { url: `${base}/how-it-works`, changeFrequency: "monthly", priority: 0.4 },
+    { url: `${base}/score`, changeFrequency: "monthly", priority: 0.4 },
+    { url: `${base}/credits`, changeFrequency: "monthly", priority: 0.4 },
+    { url: `${base}/contribute`, changeFrequency: "monthly", priority: 0.3 },
     { url: `${base}/guidelines`, changeFrequency: "monthly", priority: 0.3 },
+    { url: `${base}/privacy`, changeFrequency: "yearly", priority: 0.2 },
+    { url: `${base}/terms`, changeFrequency: "yearly", priority: 0.2 },
   ];
 
   // A database outage must degrade the sitemap, not break the build.
