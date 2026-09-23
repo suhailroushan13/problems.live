@@ -135,6 +135,26 @@ export default async function RootLayout({
           data-domain="problems.live"
           src="https://datafa.st/js/script.js"
         />
+        {env.gaMeasurementId ? (
+          <>
+            <Script
+              strategy="afterInteractive"
+              src={`https://www.googletagmanager.com/gtag/js?id=${env.gaMeasurementId}`}
+            />
+            <Script
+              id="gtag-init"
+              strategy="afterInteractive"
+              dangerouslySetInnerHTML={{
+                __html: `
+                  window.dataLayer = window.dataLayer || [];
+                  function gtag(){dataLayer.push(arguments);}
+                  gtag('js', new Date());
+                  gtag('config', '${env.gaMeasurementId}');
+                `,
+              }}
+            />
+          </>
+        ) : null}
       </body>
     </html>
   );

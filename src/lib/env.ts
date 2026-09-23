@@ -104,6 +104,9 @@ export const env = {
   get indexNowKey() {
     return optional("INDEXNOW_KEY");
   },
+  get gaMeasurementId() {
+    return optional("NEXT_PUBLIC_GA_MEASUREMENT_ID");
+  },
   get isProduction() {
     return process.env.NODE_ENV === "production";
   },
