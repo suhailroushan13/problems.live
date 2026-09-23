@@ -101,6 +101,9 @@ export const env = {
   get legalMailingAddress() {
     return required("LEGAL_MAILING_ADDRESS");
   },
+  get indexNowKey() {
+    return optional("INDEXNOW_KEY");
+  },
   get isProduction() {
     return process.env.NODE_ENV === "production";
   },

@@ -32,6 +32,8 @@ import {
   refundProblemCredit,
 } from "@/lib/services/reputation";
 import { notify } from "@/lib/services/notify";
+import { submitToIndexNow } from "@/lib/services/indexnow";
+import { env } from "@/lib/env";
 import {
   DomainError,
   NotFoundError,
@@ -154,6 +156,7 @@ export async function createProblem(
           ).exec(),
           awardReputation(user.id, 0, { key: "problems", delta: 1 }),
         ]);
+        void submitToIndexNow([`${env.appUrl}/problems/${problem.slug}`]);
       }
 
       revalidatePath("/");
@@ -253,6 +256,10 @@ export async function updateProblem(
           { $inc: { problemCount: 1 } }
         ).exec(),
       ]);
+    }
+
+    if (problem.moderationStatus === "approved") {
+      void submitToIndexNow([`${env.appUrl}/problems/${problem.slug}`]);
     }
 
     revalidatePath(`/problems/${problem.slug}`);

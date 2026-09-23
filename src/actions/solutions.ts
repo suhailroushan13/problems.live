@@ -21,6 +21,8 @@ import { normalizeWhitespace, stripUnsafe } from "@/lib/utils/text";
 import { objectId } from "@/lib/utils/sanitize-query";
 import { awardReputation } from "@/lib/services/reputation";
 import { notify } from "@/lib/services/notify";
+import { submitToIndexNow } from "@/lib/services/indexnow";
+import { env } from "@/lib/env";
 import {
   DomainError,
   NotFoundError,
@@ -117,6 +119,7 @@ export async function createSolution(
         solutionId: String(solution._id),
       });
       await syncProblemCounters(problem._id);
+      void submitToIndexNow([`${env.appUrl}/problems/${problem.slug}`]);
     }
 
     revalidatePath(`/problems/${problem.slug}`);
