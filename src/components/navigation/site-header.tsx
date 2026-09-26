@@ -78,7 +78,9 @@ export function SiteHeader({
 
           {user ? (
             <div className="flex items-center gap-1">
-              {!isAuthenticating ? (
+              {/* Setup is intentionally distraction-free: no mobile quick-post
+                  shortcut, no notifications, no theme switch while onboarding. */}
+              {!isAuthenticating && !isOnboarding ? (
                 <Link
                   href={postHref}
                   aria-label={postLabel}
@@ -89,25 +91,29 @@ export function SiteHeader({
                 </Link>
               ) : null}
 
-              <Link
-                href="/notifications"
-                aria-label={
-                  unreadCount > 0
-                    ? `Notifications, ${unreadCount} unread`
-                    : "Notifications"
-                }
-                className={ICON_BUTTON_CLASS}
-              >
-                <Bell strokeWidth={1.8} aria-hidden="true" />
-                {unreadCount > 0 ? (
-                  <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-brand ring-2 ring-background" />
-                ) : null}
-              </Link>
+              {!isOnboarding ? (
+                <Link
+                  href="/notifications"
+                  aria-label={
+                    unreadCount > 0
+                      ? `Notifications, ${unreadCount} unread`
+                      : "Notifications"
+                  }
+                  className={ICON_BUTTON_CLASS}
+                >
+                  <Bell strokeWidth={1.8} aria-hidden="true" />
+                  {unreadCount > 0 ? (
+                    <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-brand ring-2 ring-background" />
+                  ) : null}
+                </Link>
+              ) : null}
 
-              <AnimatedThemeToggler
-                className={cn(ICON_BUTTON_CLASS, "hidden lg:inline-flex")}
-                aria-label="Toggle dark mode"
-              />
+              {!isOnboarding ? (
+                <AnimatedThemeToggler
+                  className={cn(ICON_BUTTON_CLASS, "hidden lg:inline-flex")}
+                  aria-label="Toggle dark mode"
+                />
+              ) : null}
 
               {/* Setup is intentionally distraction-free; account controls
                   return as soon as the profile is complete. */}
@@ -123,7 +129,7 @@ export function SiteHeader({
               </Link>
             </Button> : null
           )}
-          {!user ? <AnimatedThemeToggler
+          {!user && !isOnboarding ? <AnimatedThemeToggler
             className={cn(ICON_BUTTON_CLASS, "hidden lg:inline-flex")}
             aria-label="Toggle dark mode"
           /> : null}

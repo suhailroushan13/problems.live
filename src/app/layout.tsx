@@ -84,7 +84,10 @@ export const viewport: Viewport = {
  * Runs before hydration (`beforeInteractive`), reading the same "theme"
  * localStorage key AnimatedThemeToggler writes to.
  */
-const THEME_INIT_SCRIPT = `(function(){try{if(localStorage.getItem("theme")==="dark")document.documentElement.classList.add("dark");}catch(e){}})();`;
+// /onboard is forced to light mode (see ForceLightMode), so a saved "dark"
+// preference must not be applied there either, or a hard refresh on that
+// page would flash dark before hydration strips it back off.
+const THEME_INIT_SCRIPT = `(function(){try{if(localStorage.getItem("theme")==="dark"&&location.pathname!=="/onboard")document.documentElement.classList.add("dark");}catch(e){}})();`;
 
 /** A browser can restore a previous scroll offset on refresh; reloads start at the top instead. */
 const SCROLL_RESET_ON_RELOAD_SCRIPT = `(function(){try{var n=performance.getEntriesByType("navigation")[0];var r=n&&n.type==="reload";if(!r&&performance.navigation)r=performance.navigation.type===1;if(r){if("scrollRestoration" in history)history.scrollRestoration="manual";window.scrollTo(0,0);requestAnimationFrame(function(){window.scrollTo(0,0);});}}catch(e){}})();`;

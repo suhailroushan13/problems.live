@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Check, ShieldCheck, Sparkles } from "lucide-react";
 import { OnboardingForm } from "@/components/forms/onboarding-form";
 import { PageBackButton } from "@/components/navigation/page-back-button";
+import { ForceLightMode } from "@/components/shared/force-light-mode";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { connectToDatabase } from "@/lib/db/mongoose";
 import { User } from "@/models";
@@ -52,6 +53,7 @@ export default async function OnboardPage({
 
   return (
     <main className="onboard-page relative isolate overflow-hidden bg-tint">
+      <ForceLightMode />
       <div aria-hidden="true" className="absolute inset-x-0 top-0 -z-10 h-72 bg-gradient-to-b from-brand-muted to-transparent" />
       <div className="page-wide flex min-h-[calc(100dvh-3.75rem)] items-center py-6 sm:py-10 lg:py-4">
         <div className="grid w-full overflow-hidden rounded-2xl border border-hairline bg-elevated shadow-[0_18px_55px_rgb(15_23_42_/_0.08)] lg:grid-cols-[0.82fr_1.18fr]">
