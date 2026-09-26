@@ -20,6 +20,8 @@
     "seed": "tsx scripts/seed.ts",
     "demo": "tsx scripts/demo.ts",
     "seed:highlights": "tsx scripts/seed-highlights.ts",
+    "seed:in10": "tsx scripts/seed-in10.ts",
+    "seed:in10:undo": "tsx scripts/undo-seed-in10.ts",
     "db:indexes": "tsx scripts/sync-indexes.ts",
     "db:reset": "tsx scripts/reset-db.ts",
     "deleteall": "tsx scripts/delete-all-users.ts"
