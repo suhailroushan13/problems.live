@@ -569,37 +569,38 @@ export function ProblemForm({
               type="button"
               variant="outline"
               size="lg"
-              className="h-11 shrink-0 cursor-pointer rounded-md px-2.5 text-sm"
+              aria-label="Save draft"
+              className="h-11 w-11 shrink-0 cursor-pointer rounded-md p-0"
               onClick={saveDraft}
               disabled={pending}
             >
               <Save className="size-4" />
-              Save
             </Button>
             <Button
               type="button"
               variant="outline"
               size="lg"
-              className="h-11 flex-1 cursor-pointer rounded-md"
+              className="h-11 min-w-0 flex-1 shrink! cursor-pointer rounded-md"
               onClick={() => setShowPreview((visible) => !visible)}
               disabled={pending}
             >
-              Preview
+              <span className="truncate">Preview</span>
             </Button>
             <Button
               type="submit"
               size="lg"
-              className="h-11 flex-[1.35] cursor-pointer"
+              className="h-11 min-w-0 flex-[1.6] shrink! cursor-pointer text-sm"
               disabled={pending}
             >
               {pending ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  Publishing…
+                  <span className="truncate">Publishing…</span>
                 </>
               ) : (
                 <>
-                  Publish problem <ArrowRight className="size-4" />
+                  <span className="truncate">Publish problem</span>
+                  <ArrowRight className="size-4" />
                 </>
               )}
             </Button>
