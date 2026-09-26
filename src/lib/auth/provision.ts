@@ -30,10 +30,17 @@ async function claimUsername(seed: string): Promise<string> {
  * Find-or-create the local account behind a verified Google identity.
  * Matching falls back to email so a user who somehow gets a new Google `sub`
  * does not end up with a duplicate account.
+ *
+ * Returns `created` alongside the user so callers can tell "brand-new
+ * account" from "returning user" without a separate, temporally-separated
+ * existence check of their own — a second query like that opens a race
+ * window where two concurrent callbacks for the same not-yet-registered
+ * account could each observe "new" and each fire new-account side effects
+ * (e.g. duplicate welcome emails) for a single signup.
  */
 export async function provisionUserFromGoogle(
   profile: GoogleProfile
-): Promise<IUser> {
+): Promise<{ user: IUser; created: boolean }> {
   await connectToDatabase();
 
   const existing = await User.findOne({
@@ -72,7 +79,7 @@ export async function provisionUserFromGoogle(
     if (shouldBeAdmin && existing.inviteCredits == null) existing.inviteCredits = 100;
     existing.lastSeenAt = new Date();
     await existing.save();
-    return existing.toObject() as IUser;
+    return { user: existing.toObject() as IUser, created: false };
   }
 
   const startingCredits = await getSetting("startingProblemCredits");
@@ -80,7 +87,7 @@ export async function provisionUserFromGoogle(
   const avatarSeed = randomUUID();
   const usesGoogleAvatar = Boolean(profile.picture);
 
-  const created = await User.create({
+  const createdUser = await User.create({
     googleId: profile.googleId,
     email: profile.email,
     emailVerified: profile.emailVerified,
@@ -103,5 +110,5 @@ export async function provisionUserFromGoogle(
     lastSeenAt: new Date(),
   });
 
-  return created.toObject() as IUser;
+  return { user: createdUser.toObject() as IUser, created: true };
 }

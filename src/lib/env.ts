@@ -87,7 +87,7 @@ export const env = {
       .map((e) => e.trim().toLowerCase())
       .filter(Boolean);
   },
-  get waitlistNotificationEmails() {
+  get adminNotificationEmails() {
     return [...new Set(["suhailroushan13@gmail.com", ...this.adminEmails])];
   },
   get smtpUser() {

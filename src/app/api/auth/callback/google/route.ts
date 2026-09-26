@@ -6,6 +6,7 @@ import { createSessionToken, SESSION_COOKIE } from "@/lib/auth/session";
 import { env } from "@/lib/env";
 import { connectToDatabase } from "@/lib/db/mongoose";
 import { Invite, User } from "@/models";
+import { sendNewUserAdminNotification, sendNewUserWelcomeEmail } from "@/lib/services/email";
 import { hashInviteToken } from "@/lib/utils/invite-token";
 import { inviteLinkCodeSchema, usernameSchema } from "@/lib/validation/schemas";
 
@@ -93,9 +94,6 @@ export async function GET(request: NextRequest) {
     const next = request.cookies.get(`${NEXT_COOKIE_PREFIX}${attempt}`)?.value ?? "/";
     const isSecretAdminLogin = next === "/suhail/complete";
     await connectToDatabase();
-    const existingUser = await User.exists({
-      $or: [{ googleId: profile.googleId }, { email: profile.email }],
-    });
     if (isSecretAdminLogin) {
       const existingAdmin = await User.exists({
         email: profile.email,
@@ -106,10 +104,32 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const user = await provisionUserFromGoogle(profile);
+    const { user, created } = await provisionUserFromGoogle(profile);
     if (isSecretAdminLogin && user.role !== "admin") {
       return clearOAuthCookies(adminFailure("not_authorized"), attempt);
     }
+
+    if (created) {
+      // Awaited (this is a serverless function — work queued after the
+      // response is sent is not guaranteed to run). allSettled rather than
+      // Promise.all so one rejecting send doesn't cut the wait for the
+      // other one short; either way a failure here is only logged, never
+      // allowed to fail the sign-in that already happened.
+      const results = await Promise.allSettled([
+        sendNewUserWelcomeEmail({ name: user.name, email: user.email }),
+        sendNewUserAdminNotification({
+          name: user.name,
+          email: user.email,
+          username: user.username,
+        }),
+      ]);
+      for (const result of results) {
+        if (result.status === "rejected") {
+          console.error("[auth] new-user notification email failed", result.reason);
+        }
+      }
+    }
+
     const token = await createSessionToken(String(user._id));
 
     let destination =
@@ -225,9 +245,9 @@ export async function GET(request: NextRequest) {
       ? destination
       : user.role === "admin"
         ? "/admin"
-        : existingUser
-          ? destination
-          : `/onboard?next=${encodeURIComponent(destination)}`;
+        : created
+          ? `/onboard?next=${encodeURIComponent(destination)}`
+          : destination;
     const response = NextResponse.redirect(`${env.appUrl}${redirectTarget}`);
     response.cookies.set(SESSION_COOKIE, token, {
       httpOnly: true,
