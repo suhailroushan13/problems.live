@@ -149,11 +149,11 @@ export default async function ProblemPage({ params }: PageProps) {
       <article className="page-wide py-4 pb-16 sm:py-7 lg:py-8">
         <div className="mx-auto max-w-[68.75rem]">
         <Link
-          href="/problems"
+          href="/"
           className="tap inline-flex h-10 items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
-          Back to problems
+          Back to home
         </Link>
 
         {problem.moderationStatus !== "approved" ? (
