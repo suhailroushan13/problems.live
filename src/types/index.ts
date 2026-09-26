@@ -24,6 +24,8 @@ export interface AuthorRef {
   username: string;
   avatar?: string;
   reputation: number;
+  /** Verified company/person badge, shown next to their name. */
+  verified?: boolean;
 }
 
 /** `null` means the post was published anonymously. */

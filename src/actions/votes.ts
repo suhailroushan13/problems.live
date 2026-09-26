@@ -22,7 +22,7 @@ import {
   awardReputation,
   maybeRewardValidatedProblem,
 } from "@/lib/services/reputation";
-import { notify } from "@/lib/services/notify";
+import { notify, notifyProblemMilestone } from "@/lib/services/notify";
 import {
   NotFoundError,
   isDuplicateKeyError,
@@ -176,6 +176,11 @@ export async function toggleProblemValidation(
         problemId,
       });
       await maybeRewardValidatedProblem({
+        authorId: String(problem.authorId),
+        validationCount: count,
+      });
+      await notifyProblemMilestone({
+        problemId,
         authorId: String(problem.authorId),
         validationCount: count,
       });

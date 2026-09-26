@@ -55,6 +55,11 @@ export interface IUser {
   gender: AccountGender;
   defaultLocation: UserDefaultLocation;
   role: UserRole;
+  /** A verified company/person badge — distinct from `emailVerified` (which
+   * is about proving the address, not the account's real-world identity).
+   * Set by an admin; drives the "verified_response" notification and the
+   * checkmark shown next to their name. */
+  verified: boolean;
   reputation: number;
   problemCredits: number;
   inviteCredits: number;
@@ -118,6 +123,7 @@ const UserSchema = new Schema<IUser>(
       city: { type: String, trim: true, maxlength: 80 },
     },
     role: { type: String, enum: USER_ROLES, default: "user", index: true },
+    verified: { type: Boolean, default: false, index: true },
     reputation: { type: Number, default: 0, index: true },
     problemCredits: { type: Number, default: 10 },
     inviteCredits: { type: Number, default: 0, min: 0 },

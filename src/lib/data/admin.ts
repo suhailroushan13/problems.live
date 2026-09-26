@@ -281,6 +281,7 @@ export interface AdminUser {
   email: string;
   avatar?: string;
   role: IUser["role"];
+  verified: boolean;
   status: IUser["status"];
   reputation: number;
   problems: number;
@@ -339,6 +340,7 @@ export async function listAdminUsers(
     email: doc.email,
     avatar: doc.avatar,
     role: doc.role,
+    verified: doc.verified ?? false,
     status: doc.status,
     reputation: doc.reputation ?? 0,
     problems: doc.stats?.problems ?? 0,
@@ -412,6 +414,7 @@ export interface AdminUserDetail {
   location: string;
   socialLinks?: IUser["socialLinks"];
   role: IUser["role"];
+  verified: boolean;
   status: IUser["status"];
   reputation: number;
   problemCredits: number;
@@ -585,6 +588,7 @@ export async function getAdminUserDetail(
       location: locationLabel(doc.defaultLocation),
       socialLinks: doc.socialLinks,
       role: doc.role,
+      verified: doc.verified ?? false,
       status: doc.status,
       reputation: doc.reputation ?? 0,
       problemCredits: doc.problemCredits ?? 0,

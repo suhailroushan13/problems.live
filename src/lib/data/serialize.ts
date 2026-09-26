@@ -46,6 +46,7 @@ export function toAuthorRef(value: unknown): AuthorRef | null {
     username: value.username,
     avatar: value.avatar,
     reputation: value.reputation ?? 0,
+    verified: value.verified ?? false,
   };
 }
 
@@ -254,5 +255,5 @@ export function toProfileDTO(doc: IUser): ProfileDTO {
   };
 }
 
-export const AUTHOR_FIELDS = "name username avatar reputation";
+export const AUTHOR_FIELDS = "name username avatar reputation verified";
 export const CATEGORY_FIELDS = "name slug icon";

@@ -491,6 +491,45 @@ export async function setUserRole(
   }
 }
 
+/**
+ * Toggles the verified company/person badge — drives the "verified_response"
+ * notification and the checkmark shown next to their name.
+ */
+export async function setUserVerified(
+  userId: string,
+  verified: boolean
+): Promise<ActionResult<undefined>> {
+  try {
+    const admin = await requireAdmin();
+    objectIdSchema.parse(userId);
+    await connectToDatabase();
+
+    const target = await User.findByIdAndUpdate(
+      objectId(userId),
+      { $set: { verified } },
+      { returnDocument: "after" }
+    )
+      .lean()
+      .exec();
+    if (!target) throw new NotFoundError();
+
+    await audit({
+      actorId: admin.id,
+      action: "user.verified",
+      targetType: "user",
+      targetId: userId,
+      meta: { verified },
+    });
+
+    revalidatePath("/admin/users");
+    return okVoid(
+      verified ? `@${target.username} is now verified.` : `@${target.username} is no longer verified.`
+    );
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
 /** Updates the public profile fields an administrator is allowed to manage. */
 export async function updateAdminUser(
   userId: string,

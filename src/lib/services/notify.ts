@@ -1,7 +1,11 @@
 import "server-only";
 import { Notification, Problem, User, type INotification } from "@/models";
 import { toObjectId } from "@/lib/utils/sanitize-query";
-import { notificationCopy, type NotificationType } from "@/lib/constants";
+import {
+  notificationCopy,
+  PROBLEM_VALIDATION_MILESTONES,
+  type NotificationType,
+} from "@/lib/constants";
 import { sendActivityNotificationEmail } from "@/lib/services/email";
 import { env } from "@/lib/env";
 
@@ -63,5 +67,43 @@ export async function notify(input: NotifyInput): Promise<void> {
     // Activity is already complete. A notification or email failure must not
     // make a comment, vote, or solution submission fail for its author.
     console.error("[notify] failed to deliver notification", error);
+  }
+}
+
+/**
+ * Fires "your problem reached N people" the moment `validationCount` lands
+ * exactly on a configured threshold. `$addToSet` under a `$ne` filter claims
+ * the milestone atomically — the update only matches (and only one caller
+ * ever wins it) if that threshold hasn't already been recorded, so two
+ * concurrent validations landing on the same count can't double-notify.
+ */
+export async function notifyProblemMilestone(params: {
+  problemId: string;
+  authorId: string;
+  validationCount: number;
+}): Promise<void> {
+  const milestone = PROBLEM_VALIDATION_MILESTONES.find(
+    (threshold) => threshold === params.validationCount,
+  );
+  if (!milestone) return;
+
+  const problemId = toObjectId(params.problemId);
+  if (!problemId) return;
+
+  try {
+    const claimed = await Problem.findOneAndUpdate(
+      { _id: problemId, milestonesNotified: { $ne: milestone } },
+      { $addToSet: { milestonesNotified: milestone } },
+    ).exec();
+    if (!claimed) return;
+
+    await notify({
+      userId: params.authorId,
+      type: "problem_milestone",
+      problemId: params.problemId,
+      message: `Your problem reached ${milestone} people who have this too.`,
+    });
+  } catch (error) {
+    console.error("[notify] failed to deliver milestone notification", error);
   }
 }

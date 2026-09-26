@@ -165,6 +165,19 @@ export async function createComment(
           problemId: String(problem._id),
           commentId: String(comment._id),
         });
+
+        // A verified company/person weighing in on the problem itself (not
+        // buried in a reply thread) is worth a distinct notification from an
+        // ordinary comment. notify() already no-ops for self-notifications.
+        if (user.verified) {
+          await notify({
+            userId: String(problem.authorId),
+            actorId: user.id,
+            type: "verified_response",
+            problemId: String(problem._id),
+            commentId: String(comment._id),
+          });
+        }
       }
     }
 

@@ -33,6 +33,8 @@ export interface SessionUser {
     city?: string;
   };
   role: UserRole;
+  /** Verified company/person badge — see the `verified` field on IUser. */
+  verified: boolean;
   reputation: number;
   problemCredits: number;
   inviteCredits: number;
@@ -69,6 +71,7 @@ function toSessionUser(doc: IUser): SessionUser {
     gender: doc.gender ?? "not_specified",
     defaultLocation: doc.defaultLocation ?? { scope: "global" },
     role: doc.role,
+    verified: doc.verified ?? false,
     reputation: doc.reputation,
     problemCredits: doc.problemCredits,
     inviteCredits: doc.inviteCredits ?? 0,

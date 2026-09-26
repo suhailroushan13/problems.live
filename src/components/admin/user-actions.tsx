@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Ban,
+  BadgeCheck,
   MoreHorizontal,
   Pencil,
   ShieldCheck,
@@ -34,6 +35,7 @@ import {
 import {
   bulkDeleteUsers,
   setUserRole,
+  setUserVerified,
   suspendUser,
   unsuspendUser,
   updateAdminUser,
@@ -163,6 +165,15 @@ export function UserActions({
                   Make {role}
                 </DropdownMenuItem>
               ))}
+
+            <DropdownMenuSeparator />
+
+            <DropdownMenuItem
+              onSelect={() => run(() => setUserVerified(user.id, !user.verified))}
+            >
+              <BadgeCheck className="size-4" />
+              {user.verified ? "Remove verified badge" : "Mark as verified"}
+            </DropdownMenuItem>
 
             <DropdownMenuSeparator />
 

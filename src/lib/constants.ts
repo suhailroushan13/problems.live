@@ -176,6 +176,8 @@ export const NOTIFICATION_TYPES = [
   "comment_voted",
   "problem_being_solved",
   "problem_solved",
+  "problem_milestone",
+  "verified_response",
   "content_removed",
   "content_approved",
   "category_approved",
@@ -195,10 +197,19 @@ export const NOTIFICATION_COPY: Record<NotificationType, string> = {
   comment_voted: "found your comment helpful",
   problem_being_solved: "is working on your problem",
   problem_solved: "marked your problem as solved",
+  problem_milestone: "Your problem reached a new milestone",
+  verified_response: "responded to your problem",
   content_removed: "Your content was removed by a moderator",
   content_approved: "Your post passed review and is now public",
   category_approved: "The category you suggested was approved",
 };
+
+/**
+ * Validation-count thresholds that earn the author a one-time "your problem
+ * reached N people" notification (see notifyProblemMilestone). Each fires
+ * exactly once per problem, tracked in `Problem.milestonesNotified`.
+ */
+export const PROBLEM_VALIDATION_MILESTONES = [50, 100, 500] as const;
 
 export function notificationCopy(type: NotificationType): string {
   return NOTIFICATION_COPY[type] ?? "sent you an update";

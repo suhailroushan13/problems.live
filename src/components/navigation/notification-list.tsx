@@ -16,7 +16,7 @@ import { timeAgo } from "@/lib/utils/time";
 import { cn } from "@/lib/utils";
 import type { NotificationDTO } from "@/types";
 
-const SYSTEM_TYPES = new Set(["content_removed","content_approved","category_approved",
+const SYSTEM_TYPES = new Set(["content_removed","content_approved","category_approved","problem_milestone",
 ]);
 
 export function NotificationList({

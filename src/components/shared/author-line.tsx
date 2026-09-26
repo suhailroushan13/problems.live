@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BadgeCheck } from "lucide-react";
 import { timeAgoLong } from "@/lib/utils/time";
 import { cn } from "@/lib/utils";
 import type { MaybeAuthor } from "@/types";
@@ -52,11 +53,17 @@ export function AuthorLine({
           <Link
             href={`/u/${author.username}`}
             className={cn(
-              "truncate text-foreground/80 transition-colors hover:text-foreground",
+              "inline-flex min-w-0 items-center gap-1 truncate text-foreground/80 transition-colors hover:text-foreground",
               avatarSize === "md" && "font-medium text-foreground"
             )}
           >
-            {author.name}
+            <span className="truncate">{author.name}</span>
+            {author.verified ? (
+              <BadgeCheck
+                className="size-3.5 shrink-0 text-brand"
+                aria-label="Verified"
+              />
+            ) : null}
           </Link>
         ) : (
           <span className="truncate text-foreground/70">Anonymous</span>

@@ -49,6 +49,10 @@ export interface IProblem {
   moderationStatus: ModerationStatus;
   moderation: ModerationMeta;
   validationCount: number;
+  /** Validation-count thresholds (see PROBLEM_VALIDATION_MILESTONES) already
+   * notified for. Read-modify-write on `$addToSet` so a milestone fires
+   * exactly once even under concurrent validations. */
+  milestonesNotified: number[];
   bookmarkCount: number;
   commentCount: number;
   solutionCount: number;
@@ -155,6 +159,7 @@ const ProblemSchema = new Schema<IProblem>(
     },
     moderation: { type: ModerationSchema, default: () => ({}) },
     validationCount: { type: Number, default: 0 },
+    milestonesNotified: { type: [Number], default: [] },
     bookmarkCount: { type: Number, default: 0 },
     commentCount: { type: Number, default: 0 },
     solutionCount: { type: Number, default: 0 },

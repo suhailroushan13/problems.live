@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, BadgeCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -68,6 +68,7 @@ export default async function AdminUserDetailPage({
     email: user.email,
     avatar: user.avatar,
     role: user.role,
+    verified: user.verified,
     status: user.status,
     reputation: user.reputation,
     problems: user.stats.problems,
@@ -168,6 +169,12 @@ export default async function AdminUserDetailPage({
               >
                 {user.role}
               </Badge>
+              {user.verified ? (
+                <Badge variant="secondary" className="gap-1">
+                  <BadgeCheck className="size-3.5" aria-hidden="true" />
+                  Verified
+                </Badge>
+              ) : null}
               {user.status === "suspended" ? (
                 <Badge variant="destructive">Suspended</Badge>
               ) : null}
