@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
 import { ProblemCard } from "./problem-card";
+import { SignInButton } from "@/components/shared/sign-in-button";
 import type { ProblemFilters } from "@/lib/validation/schemas";
 import type { Paginated, ProblemDTO } from "@/types";
 
@@ -98,7 +98,9 @@ export function MobileProblemsFeed({
         <section className="border-t border-hairline py-7 text-center">
           <p className="text-sm font-semibold text-foreground">Sign in to see more problems</p>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">Join the community to explore the full directory.</p>
-          <Link href={`/login?next=${encodeURIComponent(pathname)}`} className="mt-4 inline-flex h-10 items-center justify-center rounded-md bg-brand px-4 text-sm font-semibold text-brand-foreground transition-colors hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/25">Sign in</Link>
+          <SignInButton next={pathname} size="default" className="mt-4">
+            Sign in with Google
+          </SignInButton>
         </section>
       ) : (
         <div ref={sentinelRef} className="flex h-16 items-center justify-center" aria-live="polite">

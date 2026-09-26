@@ -167,7 +167,7 @@ export default async function HomePage({
                         </div>
                         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-background/40 px-4 text-center backdrop-blur-[1px]">
                           <p className="text-sm font-semibold text-foreground">Sign in to see more problems</p>
-                          <SignInButton size="sm" next="/">
+                          <SignInButton size="lg" next="/">
                             Sign in with Google
                           </SignInButton>
                         </div>
