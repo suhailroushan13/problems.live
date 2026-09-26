@@ -52,7 +52,8 @@ export function OnboardingForm({
   const [usernameStatus, setUsernameStatus] = useState<UsernameStatus>({
     state: "idle",
   });
-  const [generating, startGenerating] = useTransition();
+  const [generatingUsername, startGeneratingUsername] = useTransition();
+  const [generatingAvatar, startGeneratingAvatar] = useTransition();
   const [submitting, startSubmitting] = useTransition();
   const requestId = useRef(0);
   const usernameIsValid = usernameSchema.safeParse(username.trim().toLowerCase()).success;
@@ -86,7 +87,7 @@ export function OnboardingForm({
   }, [username]);
 
   function chooseRandomUsername() {
-    startGenerating(async () => {
+    startGeneratingUsername(async () => {
       const result = await generateAnonymousUsername();
       if (!result.ok) {
         toast.error(result.error);
@@ -117,10 +118,10 @@ export function OnboardingForm({
     });
   }
 
-  const busy = generating || submitting;
+  const busy = generatingUsername || generatingAvatar || submitting;
 
   function randomizeAvatar() {
-    startGenerating(async () => {
+    startGeneratingAvatar(async () => {
       const result = await updateAvatar({
         avatarType: "generated",
         avatarStyle: "people",
@@ -167,7 +168,7 @@ export function OnboardingForm({
             disabled={busy}
             className="mt-4 w-full gap-1.5 sm:mt-0 sm:w-auto"
           >
-            {generating ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />}
+            {generatingAvatar ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />}
             Randomize avatar
           </Button>
         </div>
@@ -190,7 +191,7 @@ export function OnboardingForm({
             disabled={busy}
             className="shrink-0 gap-1.5"
           >
-            {generating ? <Loader2 className="size-3.5 animate-spin" /> : <Dice5 className="size-3.5" />}
+            {generatingUsername ? <Loader2 className="size-3.5 animate-spin" /> : <Dice5 className="size-3.5" />}
             Random
           </Button>
         </div>
